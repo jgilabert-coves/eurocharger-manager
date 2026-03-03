@@ -5,6 +5,8 @@ import type { RateItem, RatesDataTableResponse } from 'src/types/rates';
 import { useNavigate } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
@@ -70,9 +72,19 @@ export default function RatesView() {
         <title>{metadata.title}</title>
       </Helmet>
       <DashboardContent>
-        <Typography variant="h2" sx={{ mb: 5 }}>
-          Tarifas
-        </Typography>
+        <Box
+          sx={{
+            mb: 5,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Typography variant="h2">Tarifas</Typography>
+          <Button variant="contained" onClick={() => navigate(paths.rates.create)}>
+            + Nueva tarifa
+          </Button>
+        </Box>
         <DataTable
           columns={columns}
           fetchData={(

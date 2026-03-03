@@ -63,3 +63,30 @@ export type RateDetailResponse = {
   error: string | null;
   data: RateDetail;
 };
+
+// ── Create-rate wizard ──────────────────────────────────────────────────────
+
+/** Represents one rate to be confirmed in the summary step (manual or parsed from Excel). */
+export type RateDraft = {
+  name: string;
+  price: number;
+  priceAfterCommission: number;
+  commission: number;
+  evseIds: string[];
+};
+
+export type CreateRatePayload = {
+  clientId: number | null;
+  operatorId: number | null;
+  rateName: string;
+  commission: number;
+  price: number;
+  stationIds: number[];
+};
+
+export type CreateRateFromExcelPayload = {
+  clientId: number | null;
+  commission: number;
+  assignmentMethod: 'power' | 'excel';
+  file: File;
+};

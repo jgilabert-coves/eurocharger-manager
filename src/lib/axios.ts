@@ -97,6 +97,15 @@ export const endpoints = {
   rates: {
     list: '/rates',
     single: '/rates/',
+    create: '/rates',
+    createFromExcel: '/rates/excel',
+    previewExcel: '/rates/excel/preview',
+  },
+  clients: {
+    list: '/clients',
+  },
+  operators: {
+    list: '/operators',
   },
   chargepoints: {
     list: '/chargingstations/datatable',

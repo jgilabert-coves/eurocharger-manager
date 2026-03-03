@@ -42,7 +42,7 @@ export const paths = {
   },
   // DASHBOARD
   dashboard: {
-    root: ROOTS.DASHBOARD
+    root: ROOTS.DASHBOARD,
   },
   transactions: {
     actives: `/transactions`,
@@ -57,5 +57,6 @@ export const paths = {
     list: `/rates`,
     empty: `/rate`,
     detail: (id: string) => `/rates/${id}`,
-  }
+    create: `/rates/new`,
+  },
 };

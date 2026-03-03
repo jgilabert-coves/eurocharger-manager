@@ -11,6 +11,7 @@ import { LoadingScreen } from '../../components/loading-screen';
 
 const ListPage = lazy(() => import('src/pages/rates/rates-view'));
 const DetailPage = lazy(() => import('src/pages/rates/single-rate-view'));
+const CreatePage = lazy(() => import('src/pages/rates/create-rate-view'));
 
 function SuspenseOutlet() {
   const pathname = usePathname();
@@ -31,6 +32,8 @@ const listLayout = () => <ListPage />;
 
 const detailLayout = () => <DetailPage />;
 
+const createLayout = () => <CreatePage />;
+
 export const ratesRoutes: RouteObject[] = [
   {
     path: 'rates',
@@ -39,6 +42,10 @@ export const ratesRoutes: RouteObject[] = [
       {
         path: '',
         element: CONFIG.auth.skip ? listLayout() : <AuthGuard>{listLayout()}</AuthGuard>,
+      },
+      {
+        path: 'new',
+        element: CONFIG.auth.skip ? createLayout() : <AuthGuard>{createLayout()}</AuthGuard>,
       },
       {
         path: ':id',
