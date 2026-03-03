@@ -52,5 +52,10 @@ export const paths = {
     list: `/chargingstations`,
     empty: `/chargingstation`,
     detail: (id: string) => `/chargingstations/${id}`,
+  },
+  rates: {
+    list: `/rates`,
+    empty: `/rate`,
+    detail: (id: string) => `/rates/${id}`,
   }
 };

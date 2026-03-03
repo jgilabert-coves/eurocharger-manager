@@ -8,15 +8,13 @@ import { CONFIG } from 'src/global-config';
 
 import { JWT_STORAGE_KEY } from 'src/auth/context/jwt';
 
-
-
 // ----------------------------------------------------------------------
 
 const axiosInstance = axios.create({
   baseURL: CONFIG.serverUrl,
   headers: {
-    'Content-Type': "application/json",
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 // Add request interceptor to handle CORS preflight
@@ -27,13 +25,13 @@ axiosInstance.interceptors.request.use((config) => {
   // Get the token from session storage
   const token = sessionStorage.getItem(JWT_STORAGE_KEY);
   if (token) {
-    console.log(`Token ${token}`)
+    console.log(`Token ${token}`);
     config.headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   // Add any additional headers if needed
   config.headers['Accept'] = 'application/json';
-  
+
   return config;
 });
 
@@ -44,7 +42,7 @@ axiosInstance.interceptors.response.use(
       // Clear session storage
       sessionStorage.removeItem(JWT_STORAGE_KEY);
       delete axiosInstance.defaults.headers.common.Authorization;
-      
+
       // Redirect to login page
       window.location.href = paths.auth.jwt.signIn;
     }
@@ -71,7 +69,7 @@ export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
 
 export const post = async (url: string, data: any) => {
   try {
-    console.log("Posting request with headers: " + JSON.stringify(axiosInstance.defaults.headers))
+    console.log('Posting request with headers: ' + JSON.stringify(axiosInstance.defaults.headers));
     const res = await axiosInstance.post(url, data);
     return res.data;
   } catch (error) {
@@ -82,9 +80,6 @@ export const post = async (url: string, data: any) => {
 
 // ----------------------------------------------------------------------
 
-
-
-
 export const endpoints = {
   chat: '/api/chat',
   kanban: '/api/kanban',
@@ -94,10 +89,14 @@ export const endpoints = {
     activeTransactions: '/dashboard/transactions/active',
     transactionsData: '/dashboard/transactions',
     alarms: '/dashboard/alarms',
-    chargepoints: '/dashboard/chargepoints'
+    chargepoints: '/dashboard/chargepoints',
   },
   transactions: {
-    current: '/transactions/datatable'
+    current: '/transactions/datatable',
+  },
+  rates: {
+    list: '/rates',
+    single: '/rates/',
   },
   chargepoints: {
     list: '/chargingstations/datatable',

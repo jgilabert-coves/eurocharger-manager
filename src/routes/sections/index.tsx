@@ -6,6 +6,7 @@ import { Navigate } from 'react-router';
 import { CONFIG } from 'src/global-config';
 
 import { authRoutes } from './auth';
+import { ratesRoutes } from './rates';
 import { dashboardRoutes } from './dashboard';
 import { transactionsRoutes } from './transactions';
 import { chargingStationsRoutes } from './chargingstations';
@@ -25,6 +26,8 @@ export const routesSection: RouteObject[] = [
   ...transactionsRoutes,
 
   ...chargingStationsRoutes,
+
+  ...ratesRoutes,
 
   {
     path: '/',

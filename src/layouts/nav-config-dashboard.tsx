@@ -92,5 +92,17 @@ export const navData: NavSectionProps['data'] = [
         path: paths.chargingstations.list
       }
     ],
+  },
+  /**
+   * Puntos de carga
+   */
+  {
+    subheader: 'Tarifas',
+    items: [
+      {
+        title: 'Tarifas',
+        path: paths.rates.list
+      }
+    ],
   }
 ];
