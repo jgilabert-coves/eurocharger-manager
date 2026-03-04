@@ -22,6 +22,7 @@ export type RateStretch = {
   price: number;
   inactivity_fee: number;
   fixed_price: number;
+  parking_price: number;
   rate_id: number;
   monday: 0 | 1;
   tuesday: 0 | 1;
@@ -32,30 +33,20 @@ export type RateStretch = {
   sunday: 0 | 1;
 };
 
-export type HubjectRate = {
-  id: number;
-  operator_id: number;
-  operator_name: string;
-  rate_id: number;
-  hubject_product_id: string;
-  charging_power: number;
-  additional_reference: string | null;
-  min_charging_power: number;
-  hubject_price: number;
-  hubject_fixed_price: number | null;
-};
-
 export type RateDetail = {
   id: number;
   name: string;
   type_id: number;
   type_name: string;
-  client_id: number | null;
-  client_name: string | null;
+  client_id: number;
+  client_name: string;
+  operator_id: number | null;
+  operator_name: string | null;
+  min_power: number | null;
+  max_power: number | null;
   created_at: string;
   updated_at: string;
   stretches: RateStretch[];
-  hubjectRate: HubjectRate | null;
 };
 
 export type RateDetailResponse = {
@@ -75,12 +66,35 @@ export type RateDraft = {
   evseIds: string[];
 };
 
-export type CreateRatePayload = {
+export type CreateStretchRequest = {
+  startTime: string;
+  endTime: string;
+  stretchStart: number;
+  stretchEnd: number;
+  inactivityFee: number;
+  price: number;
+  fixedPrice: number;
+  parkingPrice: number;
+  rateId: number;
+  daysOfWeek: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
+};
+
+export type CreateRateRequest = {
+  rateName: string;
+  rateType: number;
   clientId: number | null;
   operatorId: number | null;
-  rateName: string;
-  commission: number;
-  price: number;
+  minPower: number | null;
+  maxPower: number | null;
+  stretches: Omit<CreateStretchRequest, 'rateId'>[];
   stationIds: number[];
 };
 

@@ -88,7 +88,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
           </Grid>
 
           {/* Price */}
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 3 }}>
             <Box
               sx={{
                 p: 1.5,
@@ -107,7 +107,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
           </Grid>
 
           {/* Inactivity fee */}
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 3 }}>
             <Box
               sx={{
                 p: 1.5,
@@ -130,7 +130,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
           </Grid>
 
           {/* Fixed price */}
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 3 }}>
             <Box
               sx={{
                 p: 1.5,
@@ -148,6 +148,28 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
                 color={stretch.fixed_price > 0 ? 'info.dark' : 'text.disabled'}
               >
                 {stretch.fixed_price > 0 ? `${stretch.fixed_price.toFixed(3)} €` : '—'}
+              </Typography>
+            </Box>
+          </Grid>
+          {/* Parking price */}
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 1,
+                bgcolor: stretch.parking_price > 0 ? 'info.lighter' : 'action.hover',
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary" display="block">
+                Precio de estacionamiento
+              </Typography>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                color={stretch.parking_price > 0 ? 'info.dark' : 'text.disabled'}
+              >
+                {stretch.parking_price > 0 ? `${stretch.parking_price.toFixed(3)} €/min` : '—'}
               </Typography>
             </Box>
           </Grid>
@@ -197,13 +219,9 @@ export default function SingleRateView() {
                   variant="outlined"
                   size="small"
                 />
-                {isHubject ? (
-                  <Chip label="Hubject" color="warning" size="small" />
-                ) : rate?.client_id ? (
-                  <Chip label={`${rate?.client_name ?? 'EuroCharger'}`} color="default" size="small" />
-                ) : (
-                  <Chip label="Tarifa Eurocharger" color="success" size="small" />
-                )}
+                {rate?.client_name && <Chip label={rate.client_name} color="warning" size="small" />}
+                {rate?.operator_name && <Chip label={`${rate.operator_name}`} color="primary" size="small" />}
+                
               </Stack>
               <Typography variant="body2" color="text.secondary">
                 Tarifa #{rate?.id} · Creada el{' '}
@@ -213,7 +231,7 @@ export default function SingleRateView() {
 
             <Grid container spacing={3}>
               {/* ── Stretches ── */}
-              <Grid size={{ xs: 12, md: isHubject ? 7 : 12 }}>
+              <Grid size={{ xs: 12}}>
                 <Typography variant="h6" sx={{ mb: 2 }}>
                   Tramos
                 </Typography>
@@ -232,70 +250,6 @@ export default function SingleRateView() {
                 )}
               </Grid>
 
-              {/* ── Hubject data ── */}
-              {isHubject && rate?.hubjectRate && (
-                <Grid size={{ xs: 12, md: 5 }}>
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    Configuración Hubject
-                  </Typography>
-                  <Card variant="outlined">
-                    <CardHeader
-                      title={rate.hubjectRate.hubject_product_id}
-                      subheader={`CPO ${rate.hubjectRate.operator_name}`}
-                      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 'bold' }}
-                    />
-                    <CardContent>
-                      <Stack spacing={1.5}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Precio
-                          </Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            {rate.hubjectRate.hubject_price.toFixed(3)} {rate.type_name}
-                          </Typography>
-                        </Box>
-                        {rate.hubjectRate.hubject_fixed_price !== null && (
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Precio fijo
-                            </Typography>
-                            <Typography variant="body2" fontWeight="bold">
-                              {rate.hubjectRate.hubject_fixed_price.toFixed(3)} €
-                            </Typography>
-                          </Box>
-                        )}
-                        <Divider />
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Potencia máxima
-                          </Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            {rate.hubjectRate.charging_power} kW
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Potencia mínima
-                          </Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            {rate.hubjectRate.min_charging_power} kW
-                          </Typography>
-                        </Box>
-                        {rate.hubjectRate.additional_reference && (
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Referencia adicional
-                            </Typography>
-                            <Typography variant="body2" fontWeight="bold">
-                              {rate.hubjectRate.additional_reference}
-                            </Typography>
-                          </Box>
-                        )}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )}
             </Grid>
           </>
         )}

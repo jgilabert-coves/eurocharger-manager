@@ -1,8 +1,8 @@
 import type { ChangeEvent } from 'react';
 import type { Client } from 'src/types/clients';
-import type { RateDraft } from 'src/types/rates';
 import type { Operator } from 'src/types/operators';
 import type { ChargePoint } from 'src/types/chargepoint';
+import type { RateDraft, CreateStretchRequest } from 'src/types/rates';
 
 import { useNavigate } from 'react-router';
 import { Helmet } from 'react-helmet-async';
@@ -30,6 +30,7 @@ import {
   TableHead,
   TextField,
   Typography,
+  IconButton,
   CardContent,
   ToggleButton,
   InputAdornment,
@@ -45,6 +46,8 @@ import { CONFIG } from 'src/global-config';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
+import { Iconify } from 'src/components/iconify';
+
 // ----------------------------------------------------------------------
 
 type Method = 'manual' | 'excel';
@@ -53,15 +56,43 @@ type AssignmentMethod = 'power' | 'excel';
 const HUBJECT_CLIENT_ID = 18;
 
 // Steps definition per flow
-const MANUAL_STEPS = ['Método', 'Información básica', 'Precio', 'Estaciones', 'Resumen'];
-const MANUAL_STEPS_HUBJECT = ['Método', 'Información básica', 'Precio', 'Resumen'];
+const MANUAL_STEPS = ['Método', 'Información básica', 'Tramos', 'Asignación', 'Resumen'];
+const MANUAL_STEPS_HUBJECT = ['Método', 'Información básica', 'Tramos', 'Resumen'];
 const EXCEL_STEPS = ['Método', 'Cliente', 'Archivo', 'Resumen'];
 
 // ----------------------------------------------------------------------
 
-function applyCommission(price: number, commission: number): number {
-  return price * (1 + commission / 100);
-}
+type StretchDraft = Omit<CreateStretchRequest, 'rateId'>;
+
+const DAYS: { key: keyof StretchDraft['daysOfWeek']; label: string }[] = [
+  { key: 'monday', label: 'Lun' },
+  { key: 'tuesday', label: 'Mar' },
+  { key: 'wednesday', label: 'Mié' },
+  { key: 'thursday', label: 'Jue' },
+  { key: 'friday', label: 'Vie' },
+  { key: 'saturday', label: 'Sáb' },
+  { key: 'sunday', label: 'Dom' },
+];
+
+const DEFAULT_STRETCH: StretchDraft = {
+  startTime: '',
+  endTime: '',
+  stretchStart: 0,
+  stretchEnd: 0,
+  inactivityFee: 0,
+  price: 0,
+  fixedPrice: 0,
+  parkingPrice: 0,
+  daysOfWeek: {
+    monday: true,
+    tuesday: true,
+    wednesday: true,
+    thursday: true,
+    friday: true,
+    saturday: true,
+    sunday: true,
+  },
+};
 
 function formatPrice(value: number): string {
   return value.toFixed(4);
@@ -128,6 +159,8 @@ function ManualBasicInfoStep({
   setOperatorId,
   rateName,
   setRateName,
+  rateType,
+  setRateType,
   isHubject,
 }: {
   clients: Client[];
@@ -137,6 +170,8 @@ function ManualBasicInfoStep({
   setOperatorId: (id: number | null) => void;
   rateName: string;
   setRateName: (v: string) => void;
+  rateType: number;
+  setRateType: (v: number) => void;
   isHubject: boolean;
 }) {
   const [operators, setOperators] = useState<Operator[]>([]);
@@ -157,7 +192,7 @@ function ManualBasicInfoStep({
         Información básica
       </Typography>
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             select
             fullWidth
@@ -190,6 +225,19 @@ function ManualBasicInfoStep({
           />
         </Grid>
 
+        <Grid size={{ xs: 12, sm: 2 }}>
+          <TextField
+            select
+            fullWidth
+            label="Tipo de tarifa"
+            value={rateType}
+            onChange={(e) => setRateType(Number(e.target.value))}
+          >
+            <MenuItem value={1}>€/min</MenuItem>
+            <MenuItem value={2}>€/kWh</MenuItem>
+          </TextField>
+        </Grid>
+
         {isHubject && (
           <Grid size={{ xs: 12, sm: 6 }}>
             {opLoading ? (
@@ -219,80 +267,246 @@ function ManualBasicInfoStep({
 }
 
 // ----------------------------------------------------------------------
-// Step 2 (Manual) – Price & commission
+// Step 2 (Manual) – Stretches
 // ----------------------------------------------------------------------
 
-function PriceStep({
-  commission,
-  setCommission,
-  price,
-  setPrice,
-  typeName,
+function StretchesStep({
+  stretches,
+  setStretches,
 }: {
-  commission: number;
-  setCommission: (v: number) => void;
-  price: number;
-  setPrice: (v: number) => void;
-  typeName: string;
+  stretches: StretchDraft[];
+  setStretches: (s: StretchDraft[]) => void;
 }) {
-  const final = applyCommission(price, commission);
+  const [showForm, setShowForm] = useState(false);
+  const [draft, setDraft] = useState<StretchDraft>(DEFAULT_STRETCH);
+
+  const updateDraft = <K extends keyof StretchDraft>(key: K, val: StretchDraft[K]) =>
+    setDraft((prev) => ({ ...prev, [key]: val }));
+
+  const toggleDay = (day: keyof StretchDraft['daysOfWeek']) =>
+    setDraft((prev) => ({
+      ...prev,
+      daysOfWeek: { ...prev.daysOfWeek, [day]: !prev.daysOfWeek[day] },
+    }));
+
+  const addStretch = () => {
+    setStretches([...stretches, draft]);
+    setDraft(DEFAULT_STRETCH);
+    setShowForm(false);
+  };
+
+  const removeStretch = (i: number) => setStretches(stretches.filter((_, idx) => idx !== i));
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>
-        Precio y comisión
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            fullWidth
-            label="Precio base"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(Number(e.target.value))}
-            slotProps={{
-              input: {
-                endAdornment: <InputAdornment position="end">€/{typeName}</InputAdornment>,
-              },
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            fullWidth
-            label="Comisión"
-            type="number"
-            value={commission}
-            onChange={(e) => setCommission(Number(e.target.value))}
-            slotProps={{
-              input: {
-                endAdornment: <InputAdornment position="end">%</InputAdornment>,
-              },
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Box
-            sx={{
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              p: 2,
-              borderRadius: 1,
-              bgcolor: 'primary.lighter',
-              textAlign: 'center',
-            }}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h6">Tramos de precio</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Define uno o más tramos horarios con su precio y comisiones.
+          </Typography>
+        </Box>
+        {!showForm && (
+          <Button
+            startIcon={<Iconify icon="eva:plus-fill" />}
+            variant="contained"
+            size="small"
+            onClick={() => setShowForm(true)}
           >
-            <Typography variant="caption" color="text.secondary">
-              Precio final (con comisión)
-            </Typography>
-            <Typography variant="h5" color="primary.main" fontWeight="bold">
-              {formatPrice(final)} €/{typeName}
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
+            Añadir tramo
+          </Button>
+        )}
+      </Box>
+
+      {stretches.length > 0 && (
+        <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Horario</TableCell>
+                <TableCell>Tramo kWh</TableCell>
+                <TableCell align="right">Precio</TableCell>
+                <TableCell align="right">Conexión</TableCell>
+                <TableCell align="right">Parking</TableCell>
+                <TableCell align="right">Inactividad</TableCell>
+                <TableCell>Días</TableCell>
+                <TableCell padding="none" />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {stretches.map((s, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    {s.startTime || '—'} → {s.endTime || '—'}
+                  </TableCell>
+                  <TableCell>
+                    {s.stretchStart} – {s.stretchEnd}
+                  </TableCell>
+                  <TableCell align="right">{formatPrice(s.price)} €/kWh</TableCell>
+                  <TableCell align="right">{formatPrice(s.fixedPrice)} €</TableCell>
+                  <TableCell align="right">{formatPrice(s.parkingPrice)} €/min</TableCell>
+                  <TableCell align="right">{formatPrice(s.inactivityFee)} €/min</TableCell>
+                  <TableCell>
+                    {DAYS.filter((d) => s.daysOfWeek[d.key])
+                      .map((d) => d.label)
+                      .join(' ')}
+                  </TableCell>
+                  <TableCell padding="none">
+                    <IconButton size="small" color="error" onClick={() => removeStretch(i)}>
+                      <Iconify icon="eva:trash-2-outline" width={18} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {stretches.length === 0 && !showForm && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          No hay tramos aún. Añade al menos uno para continuar.
+        </Alert>
+      )}
+
+      {showForm && (
+        <Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2 }}>
+            Nuevo tramo
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Hora inicio"
+                type="time"
+                value={draft.startTime}
+                onChange={(e) => updateDraft('startTime', e.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Hora fin"
+                type="time"
+                value={draft.endTime}
+                onChange={(e) => updateDraft('endTime', e.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Tramo inicio"
+                type="number"
+                value={draft.stretchStart}
+                onChange={(e) => updateDraft('stretchStart', Number(e.target.value))}
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">kWh</InputAdornment> },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Tramo fin"
+                type="number"
+                value={draft.stretchEnd}
+                onChange={(e) => updateDraft('stretchEnd', Number(e.target.value))}
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">kWh</InputAdornment> },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Precio"
+                type="number"
+                value={draft.price}
+                onChange={(e) => updateDraft('price', Number(e.target.value))}
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">€/kWh</InputAdornment> },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Precio fijo (conexión)"
+                type="number"
+                value={draft.fixedPrice}
+                onChange={(e) => updateDraft('fixedPrice', Number(e.target.value))}
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">€</InputAdornment> },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Parking"
+                type="number"
+                value={draft.parkingPrice}
+                onChange={(e) => updateDraft('parkingPrice', Number(e.target.value))}
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">€/min</InputAdornment> },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                label="Inactividad"
+                type="number"
+                value={draft.inactivityFee}
+                onChange={(e) => updateDraft('inactivityFee', Number(e.target.value))}
+                slotProps={{
+                  input: { endAdornment: <InputAdornment position="end">€/min</InputAdornment> },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Días de la semana
+              </Typography>
+              <FormGroup row>
+                {DAYS.map((d) => (
+                  <FormControlLabel
+                    key={d.key}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={draft.daysOfWeek[d.key]}
+                        onChange={() => toggleDay(d.key)}
+                      />
+                    }
+                    label={d.label}
+                  />
+                ))}
+              </FormGroup>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    setShowForm(false);
+                    setDraft(DEFAULT_STRETCH);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button variant="contained" size="small" onClick={addStretch}>
+                  Guardar tramo
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
     </Box>
   );
 }
@@ -301,14 +515,28 @@ function PriceStep({
 // Step 3 (Manual, non-Hubject) – Station selection
 // ----------------------------------------------------------------------
 
+type StationAssignmentType = 'power' | 'chargers' | null;
+
 function StationsStep({
   clientId,
   selectedIds,
   setSelectedIds,
+  assignmentType,
+  setAssignmentType,
+  minPower,
+  setMinPower,
+  maxPower,
+  setMaxPower,
 }: {
   clientId: number | null;
   selectedIds: number[];
   setSelectedIds: (ids: number[]) => void;
+  assignmentType: StationAssignmentType;
+  setAssignmentType: (t: StationAssignmentType) => void;
+  minPower: number | '';
+  setMinPower: (v: number | '') => void;
+  maxPower: number | '';
+  setMaxPower: (v: number | '') => void;
 }) {
   const [stations, setStations] = useState<ChargePoint[]>([]);
   const [total, setTotal] = useState(0);
@@ -318,6 +546,7 @@ function StationsStep({
   const [loading, setLoading] = useState(false);
 
   const fetchStations = useCallback(async () => {
+    if (assignmentType !== 'chargers') return;
     setLoading(true);
     try {
       const res: { data: ChargePoint[]; total: number } = await fetcher([
@@ -331,7 +560,7 @@ function StationsStep({
     } finally {
       setLoading(false);
     }
-  }, [page, search, clientId]);
+  }, [page, search, clientId, assignmentType]);
 
   useEffect(() => {
     fetchStations();
@@ -348,90 +577,153 @@ function StationsStep({
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 1 }}>
-        Estaciones de carga
+        Asignación de cargadores
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Selecciona las estaciones a las que aplicará esta tarifa.
-        {selectedIds.length > 0 && (
-          <Chip
-            label={`${selectedIds.length} seleccionadas`}
-            color="primary"
-            size="small"
-            sx={{ ml: 1 }}
-          />
-        )}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        Elige cómo asignar los cargadores a esta tarifa.
       </Typography>
 
-      <TextField
-        fullWidth
-        size="small"
-        placeholder="Buscar estación..."
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(0);
+      <ToggleButtonGroup
+        value={assignmentType}
+        exclusive
+        onChange={(_, val) => {
+          if (val) setAssignmentType(val);
         }}
-        sx={{ mb: 2 }}
-      />
+        sx={{ mb: 3 }}
+      >
+        <ToggleButton value="power">Por potencia (mín / máx)</ToggleButton>
+        <ToggleButton value="chargers">Selección manual</ToggleButton>
+      </ToggleButtonGroup>
 
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Paper variant="outlined">
-          <FormGroup>
-            {stations.map((s) => (
-              <Box key={s.id}>
-                <FormControlLabel
-                  sx={{ px: 2, py: 0.5, width: '100%', m: 0 }}
-                  control={
-                    <Checkbox
-                      checked={selectedIds.includes(s.id)}
-                      onChange={() => toggle(s.id)}
-                      size="small"
-                    />
-                  }
-                  label={
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium">
-                        {s.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {s.address}, {s.city}
-                      </Typography>
-                    </Box>
-                  }
-                />
-                <Divider />
-              </Box>
-            ))}
-          </FormGroup>
-          {stations.length === 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
-              No se han encontrado estaciones.
-            </Typography>
-          )}
-        </Paper>
+      {assignmentType === 'power' && (
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label="Potencia mínima"
+              type="number"
+              value={minPower}
+              onChange={(e) => setMinPower(e.target.value === '' ? '' : Number(e.target.value))}
+              slotProps={{
+                input: {
+                  endAdornment: <InputAdornment position="end">kW</InputAdornment>,
+                },
+              }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              label="Potencia máxima"
+              type="number"
+              value={maxPower}
+              onChange={(e) => setMaxPower(e.target.value === '' ? '' : Number(e.target.value))}
+              slotProps={{
+                input: {
+                  endAdornment: <InputAdornment position="end">kW</InputAdornment>,
+                },
+              }}
+            />
+          </Grid>
+        </Grid>
       )}
 
-      {totalPages > 1 && (
-        <Box
-          sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, mt: 1 }}
-        >
-          <Button size="small" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
-            Anterior
-          </Button>
-          <Typography variant="caption">
-            {page + 1} / {totalPages}
+      {assignmentType === 'chargers' && (
+        <Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Selecciona las estaciones a las que aplicará esta tarifa.
+            {selectedIds.length > 0 && (
+              <Chip
+                label={`${selectedIds.length} seleccionadas`}
+                color="primary"
+                size="small"
+                sx={{ ml: 1 }}
+              />
+            )}
           </Typography>
-          <Button
+
+          <TextField
+            fullWidth
             size="small"
-            disabled={page + 1 >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Siguiente
-          </Button>
+            placeholder="Buscar estación..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
+            sx={{ mb: 2 }}
+          />
+
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Paper variant="outlined">
+              <FormGroup>
+                {stations.map((s) => (
+                  <Box key={s.id}>
+                    <FormControlLabel
+                      sx={{ px: 2, py: 0.5, width: '100%', m: 0 }}
+                      control={
+                        <Checkbox
+                          checked={selectedIds.includes(s.id)}
+                          onChange={() => toggle(s.id)}
+                          size="small"
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {s.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {s.address}, {s.city}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                    <Divider />
+                  </Box>
+                ))}
+              </FormGroup>
+              {stations.length === 0 && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ p: 2, textAlign: 'center' }}
+                >
+                  No se han encontrado estaciones.
+                </Typography>
+              )}
+            </Paper>
+          )}
+
+          {totalPages > 1 && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: 1,
+                mt: 1,
+              }}
+            >
+              <Button size="small" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                Anterior
+              </Button>
+              <Typography variant="caption">
+                {page + 1} / {totalPages}
+              </Typography>
+              <Button
+                size="small"
+                disabled={page + 1 >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Siguiente
+              </Button>
+            </Box>
+          )}
         </Box>
       )}
     </Box>
@@ -662,11 +954,13 @@ function SummaryStep({
   drafts,
   clientName,
   commission,
+  stretches,
 }: {
   method: Method;
   drafts: RateDraft[];
   clientName: string;
-  commission: number;
+  commission?: number;
+  stretches?: StretchDraft[];
 }) {
   return (
     <Box>
@@ -700,15 +994,72 @@ function SummaryStep({
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
-            <Typography variant="caption" color="text.secondary" display="block">
-              Comisión aplicada
-            </Typography>
-            <Typography variant="body1" fontWeight="bold">
-              {commission}%
-            </Typography>
+            {method === 'manual' ? (
+              <>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Tramos configurados
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
+                  {stretches?.length ?? 0}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Comisión aplicada
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
+                  {commission ?? 0}%
+                </Typography>
+              </>
+            )}
           </Box>
         </Grid>
       </Grid>
+
+      {method === 'manual' && stretches && stretches.length > 0 && (
+        <>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Tramos
+          </Typography>
+          <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Horario</TableCell>
+                  <TableCell>Tramo kWh</TableCell>
+                  <TableCell align="right">Precio</TableCell>
+                  <TableCell align="right">Conexión</TableCell>
+                  <TableCell align="right">Parking</TableCell>
+                  <TableCell align="right">Inactividad</TableCell>
+                  <TableCell>Días</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {stretches.map((s, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      {s.startTime || '—'} → {s.endTime || '—'}
+                    </TableCell>
+                    <TableCell>
+                      {s.stretchStart} – {s.stretchEnd}
+                    </TableCell>
+                    <TableCell align="right">{formatPrice(s.price)} €/kWh</TableCell>
+                    <TableCell align="right">{formatPrice(s.fixedPrice)} €</TableCell>
+                    <TableCell align="right">{formatPrice(s.parkingPrice)} €/min</TableCell>
+                    <TableCell align="right">{formatPrice(s.inactivityFee)} €/min</TableCell>
+                    <TableCell>
+                      {DAYS.filter((d) => s.daysOfWeek[d.key])
+                        .map((d) => d.label)
+                        .join(' ')}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
 
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         {drafts.length === 1 ? 'Tarifa a crear' : `Tarifas a crear (${drafts.length})`}
@@ -772,9 +1123,12 @@ export default function CreateRateView() {
   const [isHubject, setIsHubject] = useState(false);
   const [operatorId, setOperatorId] = useState<number | null>(null);
   const [rateName, setRateName] = useState('');
-  const [commission, setCommission] = useState<number>(0);
-  const [price, setPrice] = useState<number>(0);
+  const [rateType, setRateType] = useState<number>(2);
+  const [stretches, setStretches] = useState<StretchDraft[]>([]);
   const [selectedStationIds, setSelectedStationIds] = useState<number[]>([]);
+  const [stationAssignmentType, setStationAssignmentType] = useState<StationAssignmentType>(null);
+  const [minPower, setMinPower] = useState<number | ''>('');
+  const [maxPower, setMaxPower] = useState<number | ''>('');
 
   // Excel
   const [excelClientId, setExcelClientId] = useState<number | null>(null);
@@ -833,9 +1187,9 @@ export default function CreateRateView() {
   // Build summary drafts (manual)
   const buildManualDraft = (): RateDraft => ({
     name: rateName,
-    price,
-    priceAfterCommission: applyCommission(price, commission),
-    commission,
+    price: stretches[0]?.price ?? 0,
+    priceAfterCommission: stretches[0]?.price ?? 0,
+    commission: 0,
     evseIds: selectedStationIds.map(String),
   });
 
@@ -847,7 +1201,12 @@ export default function CreateRateView() {
     if (stepIndex === 0) return method !== null;
     if (method === 'manual') {
       if (stepIndex === 1) return rateName.trim().length > 0;
-      if (stepIndex === 2) return price > 0;
+      if (stepIndex === 2) return stretches.length > 0;
+      if (!isHubject && stepIndex === 3) {
+        if (stationAssignmentType === null) return false;
+        if (stationAssignmentType === 'power') return minPower !== '' && maxPower !== '';
+        return true;
+      }
       return true;
     }
     if (method === 'excel') {
@@ -876,17 +1235,22 @@ export default function CreateRateView() {
     try {
       if (method === 'manual') {
         await post(endpoints.rates.create, {
+          rateName,
+          rateType,
           clientId,
           operatorId: isHubject ? operatorId : null,
-          rateName,
-          commission,
-          price,
-          stationIds: selectedStationIds,
+          stretches,
+          ...(stationAssignmentType === 'chargers'
+            ? { stationIds: selectedStationIds, minPower: null, maxPower: null }
+            : stationAssignmentType === 'power'
+              ? { stationIds: [], minPower, maxPower }
+              : { stationIds: [], minPower: null, maxPower: null }),
         });
       } else {
         const formData = new FormData();
         if (excelClientId) formData.append('clientId', String(excelClientId));
-        if (excelIsHubject && excelOperatorId) formData.append('operatorId', String(excelOperatorId));
+        if (excelIsHubject && excelOperatorId)
+          formData.append('operatorId', String(excelOperatorId));
         formData.append('commission', String(excelCommission));
         formData.append('assignmentMethod', assignmentMethod!);
         formData.append('file', excelFile!);
@@ -926,20 +1290,14 @@ export default function CreateRateView() {
             setOperatorId={setOperatorId}
             rateName={rateName}
             setRateName={setRateName}
+            rateType={rateType}
+            setRateType={setRateType}
             isHubject={isHubject}
           />
         );
       }
       if (offset === 2) {
-        return (
-          <PriceStep
-            commission={commission}
-            setCommission={setCommission}
-            price={price}
-            setPrice={setPrice}
-            typeName="kWh"
-          />
-        );
+        return <StretchesStep stretches={stretches} setStretches={setStretches} />;
       }
       // Step 3: stations (non-hubject) OR summary (hubject)
       if (!isHubject && offset === 3) {
@@ -948,6 +1306,12 @@ export default function CreateRateView() {
             clientId={clientId}
             selectedIds={selectedStationIds}
             setSelectedIds={setSelectedStationIds}
+            assignmentType={stationAssignmentType}
+            setAssignmentType={setStationAssignmentType}
+            minPower={minPower}
+            setMinPower={setMinPower}
+            maxPower={maxPower}
+            setMaxPower={setMaxPower}
           />
         );
       }
@@ -957,7 +1321,7 @@ export default function CreateRateView() {
           method="manual"
           drafts={summaryDrafts}
           clientName={activeClientName}
-          commission={commission}
+          stretches={stretches}
         />
       );
     }
