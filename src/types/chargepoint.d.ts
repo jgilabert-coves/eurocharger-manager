@@ -23,7 +23,7 @@ export type ChargePoint = {
   city: string;
   state_province_id?: number;
   country_id: number;
-  chargepoint_status: string;
+  status: string;
   deleted_at?: string;
   connectors: ConnectorDetails[];
 };

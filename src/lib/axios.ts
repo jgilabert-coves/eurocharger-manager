@@ -81,9 +81,6 @@ export const post = async (url: string, data: any) => {
 // ----------------------------------------------------------------------
 
 export const endpoints = {
-  chat: '/api/chat',
-  kanban: '/api/kanban',
-  calendar: '/api/calendar',
   dashboard: {
     activeUsers: '/dashboard/appusers',
     activeTransactions: '/dashboard/transactions/active',
@@ -92,7 +89,7 @@ export const endpoints = {
     chargepoints: '/dashboard/chargepoints',
   },
   transactions: {
-    current: '/transactions/datatable',
+    current: '/transactions',
   },
   rates: {
     list: '/rates',
@@ -108,7 +105,7 @@ export const endpoints = {
     list: '/operators',
   },
   chargepoints: {
-    list: '/chargingstations/datatable',
+    list: '/chargingstations',
     single: '/chargingstations/',
   },
   ocpp: {
@@ -118,21 +115,5 @@ export const endpoints = {
     me: '/auth/me',
     signIn: '/auth/login',
     signUp: '/auth/sign-up',
-  },
-  mail: {
-    list: '/api/mail/list',
-    details: '/api/mail/details',
-    labels: '/api/mail/labels',
-  },
-  post: {
-    list: '/api/post/list',
-    details: '/api/post/details',
-    latest: '/api/post/latest',
-    search: '/api/post/search',
-  },
-  product: {
-    list: '/api/product/list',
-    details: '/api/product/details',
-    search: '/api/product/search',
-  },
+  }
 };

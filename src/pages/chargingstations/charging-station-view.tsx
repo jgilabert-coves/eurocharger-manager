@@ -79,7 +79,7 @@ const columns: GridColDef<TransactionsDataTableItem>[] = [
     headerName: 'Power',
     flex: 0,
     editable: false,
-    renderCell: (params) => <span>{params.value ? round(params.value / 1000, 2) : 0.0} kWh</span>,
+    renderCell: (params) => <span>{params.value ? round(params.value, 2) : 0.0} kWh</span>,
   },
   {
     field: 'total',
@@ -242,7 +242,7 @@ export default function ChargingStationView() {
           <Typography variant="h3" sx={{ mb: 5 }}>
             {chargepoint?.name} ({chargepoint?.client_cp_id})
           </Typography>
-          {setChargepointStatusCell(chargepoint?.chargepoint_status ?? '')}
+          {setChargepointStatusCell(chargepoint?.status ?? '')}
         </Box>
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="Información" {...a11yProps(0)} />

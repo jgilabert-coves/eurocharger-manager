@@ -38,6 +38,7 @@ import {
   CircularProgress,
   FormControlLabel,
   ToggleButtonGroup,
+  Tooltip,
 } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
@@ -75,8 +76,8 @@ const DAYS: { key: keyof StretchDraft['daysOfWeek']; label: string }[] = [
 ];
 
 const DEFAULT_STRETCH: StretchDraft = {
-  startTime: '',
-  endTime: '',
+  startTime: '00:00',
+  endTime: '23:59',
   stretchStart: 0,
   stretchEnd: 0,
   inactivityFee: 0,
@@ -303,7 +304,7 @@ function StretchesStep({
         <Box>
           <Typography variant="h6">Tramos de precio</Typography>
           <Typography variant="body2" color="text.secondary">
-            Define uno o más tramos horarios con su precio y comisiones.
+            Define uno o más tramos horarios con su precio.
           </Typography>
         </Box>
         {!showForm && (
@@ -382,7 +383,9 @@ function StretchesStep({
                 type="time"
                 value={draft.startTime}
                 onChange={(e) => updateDraft('startTime', e.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }}
+                slotProps={{
+                  inputLabel: { shrink: true },
+                }}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -395,30 +398,7 @@ function StretchesStep({
                 slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField
-                fullWidth
-                label="Tramo inicio"
-                type="number"
-                value={draft.stretchStart}
-                onChange={(e) => updateDraft('stretchStart', Number(e.target.value))}
-                slotProps={{
-                  input: { endAdornment: <InputAdornment position="end">kWh</InputAdornment> },
-                }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField
-                fullWidth
-                label="Tramo fin"
-                type="number"
-                value={draft.stretchEnd}
-                onChange={(e) => updateDraft('stretchEnd', Number(e.target.value))}
-                slotProps={{
-                  input: { endAdornment: <InputAdornment position="end">kWh</InputAdornment> },
-                }}
-              />
-            </Grid>
+            
             <Grid size={{ xs: 12, sm: 3 }}>
               <TextField
                 fullWidth
@@ -427,7 +407,20 @@ function StretchesStep({
                 value={draft.price}
                 onChange={(e) => updateDraft('price', Number(e.target.value))}
                 slotProps={{
-                  input: { endAdornment: <InputAdornment position="end">€/kWh</InputAdornment> },
+                  input: {
+                    endAdornment: (
+                      <>
+                        <InputAdornment position="end">€/kWh (sin IVA)</InputAdornment>
+                        <InputAdornment position="end">
+                          <Tooltip title="Precio para la energía suministrada." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      </>
+                    ),
+                  },
                 }}
               />
             </Grid>
@@ -439,7 +432,20 @@ function StretchesStep({
                 value={draft.fixedPrice}
                 onChange={(e) => updateDraft('fixedPrice', Number(e.target.value))}
                 slotProps={{
-                  input: { endAdornment: <InputAdornment position="end">€</InputAdornment> },
+                  input: {
+                    endAdornment: 
+                    <>
+                    <InputAdornment position="end">€/recarga (sin IVA)</InputAdornment>
+                    <InputAdornment position="end">
+                          <Tooltip title="Importe fijo por iniciar la recarga." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                    </>
+                    ,
+                  },
                 }}
               />
             </Grid>
@@ -451,7 +457,16 @@ function StretchesStep({
                 value={draft.parkingPrice}
                 onChange={(e) => updateDraft('parkingPrice', Number(e.target.value))}
                 slotProps={{
-                  input: { endAdornment: <InputAdornment position="end">€/min</InputAdornment> },
+                  input: { endAdornment: <>
+                    <InputAdornment position="end">€/min (sin IVA)</InputAdornment>
+                    <InputAdornment position="end">
+                          <Tooltip title="Importe por el tiempo que permanece conectado el vehículo con recarga de energía." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                    </>},
                 }}
               />
             </Grid>
@@ -463,7 +478,16 @@ function StretchesStep({
                 value={draft.inactivityFee}
                 onChange={(e) => updateDraft('inactivityFee', Number(e.target.value))}
                 slotProps={{
-                  input: { endAdornment: <InputAdornment position="end">€/min</InputAdornment> },
+                  input: { endAdornment: <>
+                    <InputAdornment position="end">€/min (sin IVA)</InputAdornment>
+                    <InputAdornment position="end">
+                          <Tooltip title="Importe por el tiempo que permanece conectado el vehículo sin recarga de energía." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                    </>},
                 }}
               />
             </Grid>

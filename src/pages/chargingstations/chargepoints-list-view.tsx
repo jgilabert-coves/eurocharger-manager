@@ -87,7 +87,7 @@ export default function ChargingStationsView() {
             renderCell: (params: any) => {
                 const connector = params.row.connectors[index];
                 //console.log(params.row);
-                return connector ? <span>{connector.connector_status}</span> : <span>N/A</span>;
+                return connector ? <span>{connector.status}</span> : <span>N/A</span>;
             }
         })),
         { field: '', headerName: 'Acciones', flex: 0, editable: false, sortable: false, align: "center", minWidth: 120, renderCell: (params) => (
