@@ -9,24 +9,70 @@ import { ForbiddenIllustration } from 'src/assets/illustrations';
 
 import { varBounce, MotionContainer } from 'src/components/animate';
 
+import { useAbility } from '../hooks/use-ability';
+
+import type { Role, Permission } from '../types';
+
+// ----------------------------------------------------------------------
+// RoleGuard — equivalente al middleware 'role:admin,operator' de Laravel.
+//
+// Protege rutas o secciones completas basándose en roles Y/O permisos.
+// Se puede usar de 3 formas:
+//
+//   1) Solo por roles (como middleware('role:admin,operator') en Laravel):
+//      <RoleGuard roles={['admin', 'operator']}>
+//        <ProtectedPage />
+//      </RoleGuard>
+//
+//   2) Solo por permisos (como middleware('permission:rates.create') en Laravel):
+//      <RoleGuard permissions={['rates.create']}>
+//        <ProtectedPage />
+//      </RoleGuard>
+//
+//   3) Combinado — el usuario necesita el rol Y al menos uno de los permisos:
+//      <RoleGuard roles={['operator']} permissions={['rates.create']}>
+//        <ProtectedPage />
+//      </RoleGuard>
+//
+// Props:
+//   - roles: Lista de roles permitidos (OR — basta con tener uno)
+//   - permissions: Lista de permisos requeridos (OR — basta con tener uno)
+//   - hasContent: Si es true, muestra una página 403. Si es false, no renderiza nada.
+//   - children: Contenido protegido
 // ----------------------------------------------------------------------
 
-export type RoleBasedGuardProp = {
+export type RoleGuardProps = {
   sx?: SxProps<Theme>;
-  currentRole: string;
-  hasContent?: boolean;
-  acceptRoles: string[];
   children: React.ReactNode;
+  /** Roles permitidos (OR). Si no se pasa, no se comprueba el rol. */
+  roles?: Role[];
+  /** Permisos requeridos (OR). Si no se pasa, no se comprueban permisos. */
+  permissions?: Permission[];
+  /** Si true, muestra una página de error 403 en lugar de ocultar el contenido. */
+  hasContent?: boolean;
 };
 
-export function RoleBasedGuard({
+export function RoleGuard({
   sx,
   children,
-  hasContent,
-  currentRole,
-  acceptRoles,
-}: RoleBasedGuardProp) {
-  if (typeof acceptRoles !== 'undefined' && !acceptRoles.includes(currentRole)) {
+  roles,
+  permissions,
+  hasContent = true,
+}: RoleGuardProps) {
+  const { hasAnyRole, canAny } = useAbility();
+
+  // --- Evaluación de acceso ---
+  // Si se pasan roles, el usuario debe tener al menos uno
+  const roleAllowed = !roles || hasAnyRole(roles);
+
+  // Si se pasan permisos, el usuario debe tener al menos uno
+  const permissionAllowed = !permissions || canAny(permissions);
+
+  // Acceso concedido solo si AMBAS condiciones se cumplen
+  const hasAccess = roleAllowed && permissionAllowed;
+
+  if (!hasAccess) {
+    // Si hasContent es true, mostramos página de error 403
     return hasContent ? (
       <Container
         component={MotionContainer}
@@ -34,13 +80,13 @@ export function RoleBasedGuard({
       >
         <m.div variants={varBounce('in')}>
           <Typography variant="h3" sx={{ mb: 2 }}>
-            Permission denied
+            Acceso denegado
           </Typography>
         </m.div>
 
         <m.div variants={varBounce('in')}>
           <Typography sx={{ color: 'text.secondary' }}>
-            You do not have permission to access this page.
+            No tienes permisos para acceder a esta página.
           </Typography>
         </m.div>
 
@@ -51,5 +97,10 @@ export function RoleBasedGuard({
     ) : null;
   }
 
-  return <> {children} </>;
+  return <>{children}</>;
 }
+
+// Mantener el export antiguo para compatibilidad con código existente
+/** @deprecated Usa RoleGuard con las nuevas props tipadas */
+export type RoleBasedGuardProp = RoleGuardProps;
+export const RoleBasedGuard = RoleGuard;

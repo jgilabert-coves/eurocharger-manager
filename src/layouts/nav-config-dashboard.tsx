@@ -44,65 +44,69 @@ const ICONS = {
 
 // ----------------------------------------------------------------------
 
+// ----------------------------------------------------------------------
+// Configuración de navegación del dashboard.
+//
+// Para controlar la visibilidad de un item según el rol del usuario,
+// añade la prop `roles` con los roles que pueden verlo.
+// Si NO se pone `roles`, el item es visible para TODOS los roles.
+//
+// Ejemplo:
+//   { title: 'Usuarios', path: '/users', roles: ['Eurocharger'] }
+//   → Solo visible para el rol 'Eurocharger'
+//
+//   { title: 'Dashboard', path: '/dashboard' }
+//   → Visible para todos los roles
+//
+// Roles disponibles: ver src/auth/types.ts (Role type)
+// ----------------------------------------------------------------------
+
 export const navData: NavSectionProps['data'] = [
   /**
-   * Overview
+   * Overview — visible para todos los roles
    */
   {
-    subheader: 'Overview',
-    items: [
-      {
-        title: 'Dashboard',
-        path: paths.dashboard.root,
-        icon: ICONS.dashboard
-        /*
-        info: <Label>v{CONFIG.appVersion}</Label>,
-        */
-      }
-      /*
-      { title: 'Two', path: paths.dashboard.two, icon: ICONS.ecommerce },
-      { title: 'Three', path: paths.dashboard.three, icon: ICONS.analytics },
-      */
-    ],
+    title: 'Dashboard',
+    path: paths.dashboard.root,
+    icon: ICONS.dashboard,
   },
   /**
-   * Transactions
+   * Transactions — visible para todos los roles
    */
   {
     subheader: 'Recargas',
     items: [
       {
         title: 'Activas',
-        path: paths.transactions.actives
+        path: paths.transactions.actives,
       },
       {
         title: 'Finalizadas',
-        path: paths.transactions.completed
-      }
+        path: paths.transactions.completed,
+      },
     ],
   },
   /**
-   * Puntos de carga
+   * Estaciones — visible para todos los roles
    */
   {
-    subheader: 'Estaciones',
-    items: [
-      {
-        title: 'Estaciones',
-        path: paths.chargingstations.list
-      }
-    ],
+    title: 'Estaciones',
+    path: paths.chargingstations.list,
   },
   /**
-   * Puntos de carga
+   * Tarifas — visible solo para roles específicos.
+   *
+   * Para tener un item con subitems (desplegable), usa `children`.
+   * Si no quieres subheader, simplemente no lo pongas.
    */
   {
-    subheader: 'Tarifas',
-    items: [
-      {
-        title: 'Tarifas',
-        path: paths.rates.list
-      }
+    title: 'Tarifas',
+    path: paths.rates.list,
+    icon: ICONS.invoice,
+    roles: ['Eurocharger', 'Advanced_Profile'],
+    children: [
+      { title: 'Listado', path: paths.rates.list },
+      { title: 'Crear tarifa', path: paths.rates.create },
     ],
-  }
+  },
 ];

@@ -1,5 +1,7 @@
 import type { NavSectionProps } from 'src/components/nav-section';
 
+import { isNavGroup } from 'src/components/nav-section/types';
+
 // ----------------------------------------------------------------------
 
 type NavItem = {
@@ -35,8 +37,10 @@ const flattenNavItems = (navItems: NavItem[], parentGroup?: string): OutputItem[
 };
 
 export function flattenNavSections(navSections: NavSectionProps['data']): OutputItem[] {
-  return navSections.flatMap((navSection) =>
-    flattenNavItems(navSection.items, navSection.subheader)
+  return navSections.flatMap((entry) =>
+    isNavGroup(entry)
+      ? flattenNavItems(entry.items, entry.subheader)
+      : flattenNavItems([entry])
   );
 }
 

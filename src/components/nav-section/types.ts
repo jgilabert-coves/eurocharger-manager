@@ -81,12 +81,22 @@ export type NavGroupProps = Omit<NavListProps, 'data' | 'depth'> & {
 
 /**
  * Main
+ *
+ * Cada entrada en `data` puede ser:
+ *   1) Un grupo con subheader e items:  { subheader: 'Tarifas', items: [...] }
+ *   2) Un grupo sin subheader:          { items: [...] }
+ *   3) Un item directo (enlace suelto): { title: 'Dashboard', path: '/dashboard', icon: ... }
  */
+export type NavGroupEntry = { subheader?: string; items: NavItemDataProps[] };
+export type NavDataEntry = NavGroupEntry | NavItemDataProps;
+
+/** Helper para distinguir un grupo de un item directo */
+export function isNavGroup(entry: NavDataEntry): entry is NavGroupEntry {
+  return 'items' in entry;
+}
+
 export type NavSectionProps = React.ComponentProps<'nav'> &
   Omit<NavListProps, 'data' | 'depth'> & {
     sx?: SxProps<Theme>;
-    data: {
-      subheader?: string;
-      items: NavItemDataProps[];
-    }[];
+    data: NavDataEntry[];
   };

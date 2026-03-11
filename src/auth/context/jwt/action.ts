@@ -17,10 +17,16 @@ export type SignUpParams = {
   lastName: string;
 };
 
+import type { Role, Permission } from '../../types';
+
 export type SignInUserResponse = {
   id: number;
   email: string;
   name: string | null;
+  /** Rol del usuario asignado desde el backend */
+  role: Role;
+  /** Permisos granulares del usuario */
+  permissions: Permission[];
 }
 
 export type SignInResponse = {

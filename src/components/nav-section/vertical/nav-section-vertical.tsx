@@ -5,6 +5,7 @@ import Collapse from '@mui/material/Collapse';
 import { useTheme } from '@mui/material/styles';
 
 import { NavList } from './nav-list';
+import { isNavGroup } from '../types';
 import { Nav, NavUl, NavLi, NavSubheader } from '../components';
 import { navSectionClasses, navSectionCssVars } from '../styles';
 
@@ -34,17 +35,31 @@ export function NavSectionVertical({
       {...other}
     >
       <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-        {data.map((group) => (
-          <Group
-            key={group.subheader ?? group.items[0].title}
-            subheader={group.subheader}
-            items={group.items}
-            render={render}
-            slotProps={slotProps}
-            currentRole={currentRole}
-            enabledRootRedirect={enabledRootRedirect}
-          />
-        ))}
+        {data.map((entry) =>
+          isNavGroup(entry) ? (
+            // Grupo con subheader e items
+            <Group
+              key={entry.subheader ?? entry.items[0].title}
+              subheader={entry.subheader}
+              items={entry.items}
+              render={render}
+              slotProps={slotProps}
+              currentRole={currentRole}
+              enabledRootRedirect={enabledRootRedirect}
+            />
+          ) : (
+            // Item directo (enlace suelto sin subheader ni grupo)
+            <NavList
+              key={entry.title}
+              data={entry}
+              depth={1}
+              render={render}
+              slotProps={slotProps}
+              currentRole={currentRole}
+              enabledRootRedirect={enabledRootRedirect}
+            />
+          )
+        )}
       </NavUl>
     </Nav>
   );

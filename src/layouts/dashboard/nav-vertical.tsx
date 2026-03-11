@@ -23,6 +23,8 @@ export type NavVerticalProps = React.ComponentProps<'div'> & {
   layoutQuery?: Breakpoint;
   onToggleNav: () => void;
   data: NavSectionProps['data'];
+  /** Rol del usuario actual — se usa para filtrar items del menú */
+  currentRole?: string;
   slots?: {
     topArea?: React.ReactNode;
     bottomArea?: React.ReactNode;
@@ -36,6 +38,7 @@ export function NavVertical({
   cssVars,
   className,
   isNavMini,
+  currentRole,
   onToggleNav,
   layoutQuery = 'md',
   ...other
@@ -49,7 +52,7 @@ export function NavVertical({
       )}
 
       <Scrollbar fillContent>
-        <NavSectionVertical data={data} cssVars={cssVars} sx={{ px: 2, flex: '1 1 auto' }} />
+        <NavSectionVertical data={data} cssVars={cssVars} currentRole={currentRole} sx={{ px: 2, flex: '1 1 auto' }} />
 
         {slots?.bottomArea}
       </Scrollbar>
@@ -67,6 +70,7 @@ export function NavVertical({
       <NavSectionMini
         data={data}
         cssVars={cssVars}
+        currentRole={currentRole}
         sx={[
           (theme) => ({
             ...theme.mixins.hideScrollY,

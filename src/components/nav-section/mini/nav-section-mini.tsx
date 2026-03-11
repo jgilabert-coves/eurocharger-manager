@@ -3,6 +3,7 @@ import { mergeClasses } from 'minimal-shared/utils';
 import { useTheme } from '@mui/material/styles';
 
 import { NavList } from './nav-list';
+import { isNavGroup } from '../types';
 import { Nav, NavUl, NavLi } from '../components';
 import { navSectionClasses, navSectionCssVars } from '../styles';
 
@@ -32,17 +33,30 @@ export function NavSectionMini({
       {...other}
     >
       <NavUl sx={{ flex: '1 1 auto', gap: 'var(--nav-item-gap)' }}>
-        {data.map((group) => (
-          <Group
-            key={group.subheader ?? group.items[0].title}
-            render={render}
-            cssVars={cssVars}
-            items={group.items}
-            slotProps={slotProps}
-            currentRole={currentRole}
-            enabledRootRedirect={enabledRootRedirect}
-          />
-        ))}
+        {data.map((entry) =>
+          isNavGroup(entry) ? (
+            <Group
+              key={entry.subheader ?? entry.items[0].title}
+              render={render}
+              cssVars={cssVars}
+              items={entry.items}
+              slotProps={slotProps}
+              currentRole={currentRole}
+              enabledRootRedirect={enabledRootRedirect}
+            />
+          ) : (
+            <NavList
+              key={entry.title}
+              depth={1}
+              data={entry}
+              render={render}
+              cssVars={cssVars}
+              slotProps={slotProps}
+              currentRole={currentRole}
+              enabledRootRedirect={enabledRootRedirect}
+            />
+          )
+        )}
       </NavUl>
     </Nav>
   );

@@ -14,6 +14,9 @@ import { _contacts, _notifications } from 'src/_mock';
 import { Logo } from 'src/components/logo';
 import { useSettingsContext } from 'src/components/settings';
 
+// Hook de auth para obtener el rol del usuario y filtrar el menú de navegación
+import { useAuthContext } from 'src/auth/hooks';
+
 import { NavMobile } from './nav-mobile';
 import { VerticalDivider } from './content';
 import { NavVertical } from './nav-vertical';
@@ -65,6 +68,11 @@ export function DashboardLayout({
 
   const settings = useSettingsContext();
 
+  // Rol del usuario actual — se usa para filtrar items del menú de navegación.
+  // Los items con la prop `roles` solo se muestran si el rol del usuario está incluido.
+  const { user } = useAuthContext();
+  const currentRole = user?.role;
+
   const navVars = dashboardNavColorVars(theme, settings.state.navColor, settings.state.navLayout);
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
@@ -97,7 +105,7 @@ export function DashboardLayout({
         </Alert>
       ),
       bottomArea: isNavHorizontal ? (
-        <NavHorizontal data={navData} layoutQuery={layoutQuery} cssVars={navVars.section} />
+        <NavHorizontal data={navData} layoutQuery={layoutQuery} cssVars={navVars.section} currentRole={currentRole} />
       ) : null,
       leftArea: (
         <>
@@ -106,7 +114,7 @@ export function DashboardLayout({
             onClick={onOpen}
             sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
-          <NavMobile data={navData} open={open} onClose={onClose} cssVars={navVars.section} />
+          <NavMobile data={navData} open={open} onClose={onClose} cssVars={navVars.section} currentRole={currentRole} />
 
           {/** @slot Logo */}
           {isNavHorizontal && (
@@ -183,6 +191,7 @@ export function DashboardLayout({
       isNavMini={isNavMini}
       layoutQuery={layoutQuery}
       cssVars={navVars.section}
+      currentRole={currentRole}
       onToggleNav={() =>
         settings.setField(
           'navLayout',

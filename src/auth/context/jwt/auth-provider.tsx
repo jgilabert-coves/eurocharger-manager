@@ -41,11 +41,21 @@ export function AuthProvider({ children }: Props) {
         const res = await axios.get(endpoints.auth.me);
         const { user }: SignInResponse = res.data
         if (user) {
-          setState({ user: { ...user, accessToken }, loading: false });
+          // El backend debe devolver role y permissions en la respuesta de /api/auth/me.
+          // Si no los envía, se asignan valores por defecto seguros (rol sin permisos).
+          console.log('Usuario autenticado:', user);
+          setState({
+            user: {
+              ...user,
+              accessToken,
+              role: user.role ?? 'client',
+              permissions: user.permissions ?? [],
+            },
+            loading: false,
+          });
         } else {
           setState({ user: null, loading: false });
         }
-        console.log(user)
       } else {
         setState({ user: null, loading: false });
       }
@@ -68,7 +78,7 @@ export function AuthProvider({ children }: Props) {
 
   const memoizedValue = useMemo(
     () => ({
-      user: state.user ? { ...state.user, role: state.user?.role ?? 'admin' } : null,
+      user: state.user,
       checkUserSession,
       loading: status === 'loading',
       authenticated: status === 'authenticated',
