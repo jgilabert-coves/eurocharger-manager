@@ -17,23 +17,29 @@ export type SignUpParams = {
   lastName: string;
 };
 
-import type { Role, Permission } from '../../types';
+// ----------------------------------------------------------------------
+// Tipos de respuesta de la API.
+// La API devuelve `roles` (array) y `user` (id numérico),
+// no `role` (string) ni `id`.
+// ----------------------------------------------------------------------
 
-export type SignInUserResponse = {
-  id: number;
+/** Estructura REAL que devuelve /api/auth/me (payload del JWT) */
+export type ApiUserResponse = {
+  user: number;               // ID del usuario (el backend lo llama "user", no "id")
   email: string;
-  name: string | null;
-  /** Rol del usuario asignado desde el backend */
-  role: Role;
-  /** Permisos granulares del usuario */
-  permissions: Permission[];
+  roles: string[];             // Array de roles (ej: ["Eurocharger"])
+  permissions: string[];       // Array de permisos (ej: ["read-rates", "write-rates"])
+  client_id: number | null;
+  exp: number;
+  iat: number;
 }
 
+/** Estructura de la respuesta de /api/auth/sign-in */
 export type SignInResponse = {
   status_code: number;
   data: string | null;
-  user: SignInUserResponse | null
-  error: string | null
+  user: ApiUserResponse | null;
+  error: string | null;
 }
 
 

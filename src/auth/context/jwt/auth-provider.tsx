@@ -10,17 +10,10 @@ import { AuthContext } from '../auth-context';
 import { useRouter } from '../../../routes/hooks';
 import { setSession, isValidToken } from './utils';
 
-import type { AuthState } from '../../types';
-import type { SignInResponse } from './action';
-
+import type { ApiUserResponse } from './action';
+import type { AuthState, Role } from '../../types';
 
 // ----------------------------------------------------------------------
-
-/**
- * NOTE:
- * We only build demo at basic level.
- * Customer will need to do some extra handling yourself if you want to extend the logic and other features...
- */
 
 type Props = {
   children: React.ReactNode;
@@ -39,17 +32,25 @@ export function AuthProvider({ children }: Props) {
         setSession(accessToken);
 
         const res = await axios.get(endpoints.auth.me);
-        const { user }: SignInResponse = res.data
-        if (user) {
-          // El backend debe devolver role y permissions en la respuesta de /api/auth/me.
-          // Si no los envía, se asignan valores por defecto seguros (rol sin permisos).
-          console.log('Usuario autenticado:', user);
+
+        // La API devuelve los datos del JWT directamente, NO envueltos en { user: ... }.
+        // Estructura real: { user: 9, email: "...", roles: ["Eurocharger"], permissions: [...], ... }
+        const apiUser: ApiUserResponse = res.data;
+        console.log('Usuario autenticado:', apiUser);
+        if (apiUser) {
+          // Normalizamos la respuesta de la API a nuestro formato interno (UserType):
+          //   - API: `user` (id numérico) → interno: `id`
+          //   - API: `roles` (array)      → interno: `roles` (array completo)
+          //   - API: `permissions` (array) → se pasa directamente
           setState({
             user: {
-              ...user,
+              id: apiUser.user,
+              email: apiUser.email,
+              name: null,
+              roles: (apiUser.roles ?? []) as Role[],
+              permissions: (apiUser.permissions ?? []) as any,
+              client_id: apiUser.client_id,
               accessToken,
-              role: user.role ?? 'client',
-              permissions: user.permissions ?? [],
             },
             loading: false,
           });

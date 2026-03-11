@@ -7,39 +7,90 @@ export type Role = 'Eurocharger' | 'Basic_Profile' | 'Medium_Profile' | 'Advance
 
 // ----------------------------------------------------------------------
 // Permisos granulares de la aplicación.
-// Formato: "recurso.acción" (similar a Gates en Laravel).
-// El backend debe devolver estos mismos strings en el JWT o en /api/auth/me.
+// Estos strings deben coincidir EXACTAMENTE con los que devuelve el backend
+// en el array `permissions` del JWT / /api/auth/me.
 // ----------------------------------------------------------------------
 export type Permission =
+  // Dashboard
+  | 'view-dashboard'
   // Chargepoints
-  | 'chargepoints.view'
-  | 'chargepoints.create'
-  | 'chargepoints.edit'
-  | 'chargepoints.delete'
+  | 'read-chargepoints'
+  | 'write-chargepoints'
   // Rates (tarifas)
-  | 'rates.view'
-  | 'rates.create'
-  | 'rates.edit'
-  | 'rates.delete'
+  | 'read-rates'
+  | 'write-rates'
   // Transactions
-  | 'transactions.view'
-  | 'transactions.export'
-  // Users
-  | 'users.view'
-  | 'users.create'
-  | 'users.edit'
-  | 'users.delete';
+  | 'view-transactions'
+  | 'transaction-report'
+  // Users / App users
+  | 'read-app-users'
+  | 'write-app-users'
+  // Clients
+  | 'read-clients'
+  | 'write-clients'
+  | 'read-subclients'
+  | 'write-subclients'
+  // Roles & Permissions
+  | 'read-roles'
+  | 'write-roles'
+  | 'read-permissions'
+  | 'write-permissions'
+  // OCPP actions
+  | 'start'
+  | 'stop'
+  | 'unlock'
+  | 'change-availability'
+  | 'reset'
+  | 'get-configuration'
+  | 'change-configuration'
+  | 'trigger-message'
+  // Incidences & Alarms
+  | 'view-incidences'
+  | 'alarms'
+  // Reports
+  | 'costs-report'
+  | 'invoicing-report'
+  | 'view-invoicing'
+  // Maintenance
+  | 'read-maintenance'
+  | 'write-maintenance'
+  // SIMs & RFIDs
+  | 'read-sims'
+  | 'write-sims'
+  | 'read-rfids'
+  | 'write-rfids'
+  // Logs
+  | 'log-api'
+  | 'log-ocpp'
+  // Map & Calendar
+  | 'view-map'
+  | 'calendar'
+  // Profile & Auth
+  | 'edit-profile'
+  | 'logout'
+  // Expenses & Commissions
+  | 'read-expenses'
+  | 'write-expenses'
+  | 'read-commissions'
+  | 'write-commissions'
+  // Other
+  | 'reservas'
+  | 'can-authorize'
+  | 'dashboard-app-users'
+  | 'dashboard-alarms';
 
 // ----------------------------------------------------------------------
-// Tipo del usuario autenticado.
-// El backend debe devolver esta estructura desde /api/auth/me o dentro del JWT.
+// Tipo del usuario autenticado (normalizado desde la respuesta de la API).
+// La API devuelve `roles: string[]` y `user: number` (id), pero internamente
+// usamos `role: string` (primer rol) e `id: number` para simplificar.
 // ----------------------------------------------------------------------
 export type UserType = {
   id: number;
   email: string;
   name: string | null;
-  role: Role;
+  roles: Role[];
   permissions: Permission[];
+  client_id: number | null;
   [key: string]: any; // Permite campos adicionales del backend
 } | null;
 

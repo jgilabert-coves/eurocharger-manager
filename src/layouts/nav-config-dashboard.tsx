@@ -74,8 +74,9 @@ export const navData: NavSectionProps['data'] = [
    * Transactions — visible para todos los roles
    */
   {
-    subheader: 'Recargas',
-    items: [
+    title: 'Recargas',
+    path: paths.transactions.actives,
+    children: [
       {
         title: 'Activas',
         path: paths.transactions.actives,
@@ -102,7 +103,6 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Tarifas',
     path: paths.rates.list,
-    icon: ICONS.invoice,
     roles: ['Eurocharger', 'Advanced_Profile'],
     children: [
       { title: 'Listado', path: paths.rates.list },
