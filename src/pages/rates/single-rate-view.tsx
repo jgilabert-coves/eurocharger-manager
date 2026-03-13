@@ -1,4 +1,4 @@
-import type { RateDetail, RateStretch, RateDetailResponse } from 'src/types/rates';
+import type { Rate, RateStretch, RateDetailResponse } from 'src/types/rates';
 
 import { useParams } from 'react-router';
 import { Helmet } from 'react-helmet-async';
@@ -25,7 +25,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 const HUBJECT_CLIENT_ID = 18;
 
-const DAYS: { key: keyof RateStretch; label: string }[] = [
+const DAYS: { key: keyof RateStretch['daysOfWeek']; label: string }[] = [
   { key: 'monday', label: 'L' },
   { key: 'tuesday', label: 'M' },
   { key: 'wednesday', label: 'X' },
@@ -39,9 +39,12 @@ const DAYS: { key: keyof RateStretch; label: string }[] = [
 
 function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: string }) {
   const isTimeBased = stretch.start_time !== null && stretch.end_time !== null;
-  const isKwhBased = stretch.stretch_start !== null || stretch.stretch_end !== null;
 
-  const formatTime = (t: string) => t.slice(0, 5);
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
 
   return (
     <Card variant="outlined">
@@ -53,8 +56,8 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               key={key}
               label={label}
               size="small"
-              color={stretch[key] ? 'primary' : 'default'}
-              variant={stretch[key] ? 'filled' : 'outlined'}
+              color={stretch.daysOfWeek[key] ? 'primary' : 'default'}
+              variant={stretch.daysOfWeek[key] ? 'filled' : 'outlined'}
               sx={{ minWidth: 32, fontWeight: 700 }}
             />
           ))}
@@ -71,17 +74,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
                   Horario
                 </Typography>
                 <Typography variant="body1" fontWeight="bold">
-                  {formatTime(stretch.start_time!)} – {formatTime(stretch.end_time!)}
-                </Typography>
-              </Box>
-            )}
-            {isKwhBased && (
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Rango kWh
-                </Typography>
-                <Typography variant="body1" fontWeight="bold">
-                  {stretch.stretch_start ?? 0} – {stretch.stretch_end ?? '∞'} kWh
+                  {formatTime(stretch.start_time ?? 0)} – {formatTime(stretch.end_time ?? 0)}
                 </Typography>
               </Box>
             )}
@@ -101,7 +94,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
                 Precio
               </Typography>
               <Typography variant="h6" color="primary.darkest" fontWeight="bold">
-                {stretch.price.toFixed(3)} {typeName}
+                {stretch.price?.toFixed(3)} {typeName}
               </Typography>
             </Box>
           </Grid>
@@ -112,7 +105,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               sx={{
                 p: 1.5,
                 borderRadius: 1,
-                bgcolor: stretch.inactivity_fee > 0 ? 'warning.lighter' : 'action.hover',
+                bgcolor: stretch.inactivity_fee && stretch.inactivity_fee > 0 ? 'warning.lighter' : 'action.hover',
                 textAlign: 'center',
               }}
             >
@@ -122,9 +115,9 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                color={stretch.inactivity_fee > 0 ? 'warning.dark' : 'text.disabled'}
+                color={stretch.inactivity_fee && stretch.inactivity_fee > 0 ? 'warning.dark' : 'text.disabled'}
               >
-                {stretch.inactivity_fee > 0 ? `${stretch.inactivity_fee.toFixed(3)} €/min` : '—'}
+                {stretch.inactivity_fee && stretch.inactivity_fee > 0 ? `${stretch.inactivity_fee.toFixed(3)} €/min` : '—'}
               </Typography>
             </Box>
           </Grid>
@@ -135,7 +128,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               sx={{
                 p: 1.5,
                 borderRadius: 1,
-                bgcolor: stretch.fixed_price > 0 ? 'info.lighter' : 'action.hover',
+                bgcolor: stretch.fixed_price && stretch.fixed_price > 0 ? 'info.lighter' : 'action.hover',
                 textAlign: 'center',
               }}
             >
@@ -145,9 +138,9 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                color={stretch.fixed_price > 0 ? 'info.dark' : 'text.disabled'}
+                color={stretch.fixed_price && stretch.fixed_price > 0 ? 'info.dark' : 'text.disabled'}
               >
-                {stretch.fixed_price > 0 ? `${stretch.fixed_price.toFixed(3)} €` : '—'}
+                {stretch.fixed_price && stretch.fixed_price > 0 ? `${stretch.fixed_price.toFixed(3)} €` : '—'}
               </Typography>
             </Box>
           </Grid>
@@ -157,7 +150,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               sx={{
                 p: 1.5,
                 borderRadius: 1,
-                bgcolor: stretch.parking_price > 0 ? 'info.lighter' : 'action.hover',
+                bgcolor: stretch.parking_price && stretch.parking_price > 0 ? 'info.lighter' : 'action.hover',
                 textAlign: 'center',
               }}
             >
@@ -167,9 +160,9 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                color={stretch.parking_price > 0 ? 'info.dark' : 'text.disabled'}
+                color={stretch.parking_price && stretch.parking_price > 0 ? 'info.dark' : 'text.disabled'}
               >
-                {stretch.parking_price > 0 ? `${stretch.parking_price.toFixed(3)} €/min` : '—'}
+                {stretch.parking_price && stretch.parking_price > 0 ? `${stretch.parking_price.toFixed(3)} €/min` : '—'}
               </Typography>
             </Box>
           </Grid>
@@ -183,7 +176,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
 
 export default function SingleRateView() {
   const { id } = useParams();
-  const [rate, setRate] = useState<RateDetail | null>(null);
+  const [rate, setRate] = useState<Rate | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -195,7 +188,7 @@ export default function SingleRateView() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const isHubject = rate?.client_id === HUBJECT_CLIENT_ID;
+  const isHubject = rate?.clientId === HUBJECT_CLIENT_ID;
 
   return (
     <>
@@ -214,18 +207,18 @@ export default function SingleRateView() {
               <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
                 <Typography variant="h3">{rate?.name}</Typography>
                 <Chip
-                  label={rate?.type_name ?? '—'}
+                  label={rate?.typeName ?? '—'}
                   color="primary"
                   variant="outlined"
                   size="small"
                 />
-                {rate?.client_name && <Chip label={rate.client_name} color="warning" size="small" />}
-                {rate?.operator_name && <Chip label={`${rate.operator_name}`} color="primary" size="small" />}
+                {rate?.clientName && <Chip label={rate.clientName} color="warning" size="small" />}
+                {rate?.operatorName && <Chip label={`${rate.operatorName}`} color="primary" size="small" />}
                 
               </Stack>
               <Typography variant="body2" color="text.secondary">
                 Tarifa #{rate?.id} · Creada el{' '}
-                {rate?.created_at ? new Date(rate.created_at).toLocaleDateString('es-ES') : '—'}
+                {rate?.createdAt ? new Date(rate.createdAt).toLocaleDateString('es-ES') : '—'}
               </Typography>
             </Box>
 
@@ -241,7 +234,7 @@ export default function SingleRateView() {
                       <StretchCard
                         key={stretch.id}
                         stretch={stretch}
-                        typeName={rate.type_name ?? 'kWh'}
+                        typeName={rate.typeName ?? 'kWh'}
                       />
                     ))}
                   </Stack>
