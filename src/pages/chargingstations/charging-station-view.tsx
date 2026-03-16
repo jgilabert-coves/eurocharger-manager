@@ -1,16 +1,9 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import type { ReactNode } from 'react';
-import type { AxiosRequestConfig } from 'axios';
-import type { GridColDef, GridSortModel } from '@mui/x-data-grid';
 import type { Chargepoint, ChargingStationResponse } from 'src/types/chargepoint';
 import type { OCPPConfigurationItem, OCPPConfigurationResponse } from 'src/types/ocpp';
-import type {
-  Transaction,
-  TransactionsDataTableResponse
-} from 'src/types/transactions';
 
-import { round } from 'es-toolkit';
 import { useParams } from 'react-router';
 import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
@@ -35,7 +28,7 @@ import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { chargepointService } from 'src/services/chargepoints-service';
 
-import { DataTable } from 'src/components/data-table';
+import { TransactionsTable } from 'src/components/transactions-table';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -43,53 +36,6 @@ interface TabPanelProps {
   value: number;
 }
 
-const columns: GridColDef<Transaction>[] = [
-  { field: 'id', headerName: 'ID', flex: 0, editable: false },
-  //{ field: 'client', headerName: 'Client', flex: 1, editable: false },
-  { field: 'chargepointName', headerName: 'Chargepoint Name', flex: 1, editable: false },
-  { field: 'connector', headerName: 'Connector', flex: 0, editable: false },
-  //{ field: 'code', headerName: 'Code', flex: 0, editable: false },
-  //{ field: 'city', headerName: 'City', flex: 1, editable: false },
-  {
-    field: 'date',
-    headerName: 'Date',
-    flex: 1,
-    editable: false,
-    renderCell: (params) => (
-      <span style={{ color: 'blue' }}>
-        {
-          params.value
-          //Temporal.Instant.from(params.value).toZonedDateTime({
-          //    timeZone: "Europe/Madrid",
-          //    calendar: "gregory",
-          //}).toString()
-        }
-      </span>
-    ),
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-    flex: 1,
-    editable: false,
-    renderCell: (params) => <span style={{ color: 'blue' }}>{params.value}</span>,
-  },
-  {
-    field: 'power',
-    headerName: 'Power',
-    flex: 0,
-    editable: false,
-    renderCell: (params) => <span>{params.value ? round(params.value, 2) : 0.0} kWh</span>,
-  },
-  {
-    field: 'total',
-    headerName: 'Total',
-    flex: 0,
-    editable: false,
-    renderCell: (params) => <span>{params.value ? round(params.value, 2) : 0} €</span>,
-  },
-  { field: 'appUser', headerName: 'App User', flex: 1, editable: false },
-];
 
 export default function ChargingStationView() {
   const { id } = useParams();
@@ -145,9 +91,11 @@ export default function ChargingStationView() {
         colorStyle = { backgroundColor: themeConfig.palette.primary.lighter };
         break;
       case 'charging':
+      case 'preparing':
         colorStyle = { backgroundColor: themeConfig.palette.info.lighter };
         break;
       case 'unavailable':
+      case 'faulted':
         colorStyle = { backgroundColor: themeConfig.palette.error.lighter };
         break;
       case 'reserved':
@@ -169,32 +117,6 @@ export default function ChargingStationView() {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-  };
-
-  const fetchTransactions = async (
-    page: number,
-    pageSize: number,
-    searchQuery: string,
-    sortQuery: GridSortModel
-  ) => {
-    try {
-      const queryArgs: AxiosRequestConfig = {
-        params: {
-          page,
-          pageSize,
-          sortQuery: sortQuery.map(({ field, sort }) => `${field}=${sort}`).join('&'),
-          searchQuery,
-        },
-      };
-      const result: TransactionsDataTableResponse = await fetcher([
-        `/chargingstations/${id}/transactions`,
-        queryArgs,
-      ]);
-      return { data: result.data, total: result.total };
-    } catch (err) {
-      console.error('Error fetching transactions:', err);
-      return { data: [], total: 0 };
-    }
   };
 
   useEffect(() => {
@@ -358,17 +280,7 @@ export default function ChargingStationView() {
           )}
         </CustomTabPanel>
         <CustomTabPanel value={tabValue} index={2}>
-          <DataTable
-            columns={columns}
-            fetchData={(
-              page: number,
-              pageSize: number,
-              searchQuery: string,
-              sortQuery?: GridSortModel
-            ) => fetchTransactions(page, pageSize, searchQuery, sortQuery || [])}
-            initialPageSize={10}
-            pageSizeOptions={[10, 20, 40]}
-          />
+          <TransactionsTable endpoint={`/chargingstations/${id}/transactions`} />
         </CustomTabPanel>
       </DashboardContent>
     </>

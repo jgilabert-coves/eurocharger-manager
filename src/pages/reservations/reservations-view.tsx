@@ -54,7 +54,7 @@ type ReservationsResponse = {
 export default function ReservationsView() {
   const [rows, setRows] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,11 +77,10 @@ export default function ReservationsView() {
         queryArgs,
       ]);
       setRows(result.data);
-      setTotal(result.total);
+
     } catch (err) {
       console.error('Error fetching reservations:', err);
       setRows([]);
-      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -303,7 +302,7 @@ export default function ReservationsView() {
 
           <TablePagination
             component="div"
-            count={total}
+            count={-1}
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={pageSize}
@@ -313,6 +312,11 @@ export default function ReservationsView() {
             }}
             rowsPerPageOptions={[10, 20, 40]}
             labelRowsPerPage="Filas por página"
+            slotProps={{
+              actions: {
+                nextButton: { disabled: rows.length < pageSize },
+              },
+            }}
           />
         </Card>
       </DashboardContent>
