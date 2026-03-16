@@ -1096,30 +1096,28 @@ function SummaryStep({
               <TableCell>Nombre</TableCell>
               <TableCell align="right">Precio base</TableCell>
               <TableCell align="right">Precio final (+comisión)</TableCell>
-              <TableCell align="right">EVSE IDs</TableCell>
+              <TableCell align="right">Inactividad</TableCell>
+              <TableCell align="right">Potencia mín.</TableCell>
+              <TableCell align="right">Potencia máx.</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {drafts.map((d, i) => (
               <TableRow key={i}>
                 <TableCell>{d.name}</TableCell>
-                <TableCell align="right">{formatPrice(d.price)} €</TableCell>
+                <TableCell align="right">{formatPrice(d.basePrice)} €</TableCell>
                 <TableCell align="right">
                   <Chip
-                    label={`${formatPrice(d.priceAfterCommission)} €`}
+                    label={`${formatPrice(d.finalPrice)} €`}
                     color="primary"
                     size="small"
                   />
                 </TableCell>
                 <TableCell align="right">
-                  {d.evseIds.length > 0 ? (
-                    <Chip label={d.evseIds.length} size="small" />
-                  ) : (
-                    <Typography variant="caption" color="text.secondary">
-                      —
-                    </Typography>
-                  )}
+                  {d.inactivity > 0 ? `${formatPrice(d.inactivity)} €/min` : '—'}
                 </TableCell>
+                <TableCell align="right">{d.minPower} kW</TableCell>
+                <TableCell align="right">{d.maxPower} kW</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -1198,8 +1196,8 @@ export default function CreateRateView() {
       formData.append('assignmentMethod', aMethod);
       if (excelClientId) formData.append('clientId', String(excelClientId));
       formData.append('commission', String(excelCommission));
-      const res: { data: RateDraft[] } = await post(endpoints.rates.previewExcel, formData);
-      setExcelPreview(res.data ?? []);
+      const res = await post(endpoints.rates.previewExcel, formData);
+      setExcelPreview(res.data?.rates ?? []);
     } catch {
       // If preview endpoint not available, mock a placeholder
       setExcelPreview([]);
@@ -1211,10 +1209,11 @@ export default function CreateRateView() {
   // Build summary drafts (manual)
   const buildManualDraft = (): RateDraft => ({
     name: rateName,
-    price: stretches[0]?.price ?? 0,
-    priceAfterCommission: stretches[0]?.price ?? 0,
-    commission: 0,
-    evseIds: selectedStationIds.map(String),
+    basePrice: stretches[0]?.price ?? 0,
+    finalPrice: stretches[0]?.price ?? 0,
+    inactivity: stretches[0]?.inactivityFee ?? 0,
+    minPower: typeof minPower === 'number' ? minPower : 0,
+    maxPower: typeof maxPower === 'number' ? maxPower : 999,
   });
 
   const summaryDrafts: RateDraft[] =

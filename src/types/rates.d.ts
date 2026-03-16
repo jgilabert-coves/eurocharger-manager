@@ -60,10 +60,11 @@ export type RateDetailResponse = {
 /** Represents one rate to be confirmed in the summary step (manual or parsed from Excel). */
 export type RateDraft = {
   name: string;
-  price: number;
-  priceAfterCommission: number;
-  commission: number;
-  evseIds: string[];
+  basePrice: number;
+  finalPrice: number;
+  inactivity: number;
+  minPower: number;
+  maxPower: number;
 };
 
 export type CreateStretchRequest = {

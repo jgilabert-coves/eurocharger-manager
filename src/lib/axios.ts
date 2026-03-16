@@ -69,8 +69,8 @@ export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
 
 export const post = async (url: string, data: any) => {
   try {
-    console.log('Posting request with headers: ' + JSON.stringify(axiosInstance.defaults.headers));
-    const res = await axiosInstance.post(url, data);
+    const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+    const res = await axiosInstance.post(url, data, config);
     return res.data;
   } catch (error) {
     console.error('Failed to post:', error);
