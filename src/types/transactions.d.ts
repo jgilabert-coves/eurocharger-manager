@@ -1,23 +1,34 @@
-export type TransactionsDataTableItem = {
+import type { Rate } from './rates';
+import type { AppUser } from './app-users';
+import type { Chargepoint } from './chargepoint';
+
+export type Transaction = {
     id: number;
-    client: string;
-    chargepointName: string;
-    connector: number;
-    code: string;
-    city: string;
+    client?: string;
+    chargepoint?: Chargepoint;
+    address: string;
     date: string;
     status: string;
     start_value: number;
-    stop_value: number | null;
-    last_mv_value: number | null;
+    power: number | null;
     total: number;
-    appUser: string;
-};
+    appUser?: AppUser;
+    rate?: Rate | null;
+    //charge?: AppUserChargeHistory | null;
+    meterValues?: MeterValue[];
+}
+
+export type MeterValue = {
+    timestamp: string;
+    value: number;
+    measurandUnit: string;
+    transaction_id: number;
+}
 
 export type TransactionsDataTableResponse = {
     status_code: number;
     error: string | null;
-    data: TransactionsDataTableItem[];
+    data: Transaction[];
     total: number;
 }
 

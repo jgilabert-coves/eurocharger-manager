@@ -6,8 +6,8 @@ import type { GridColDef, GridSortModel } from '@mui/x-data-grid';
 import type { Chargepoint, ChargingStationResponse } from 'src/types/chargepoint';
 import type { OCPPConfigurationItem, OCPPConfigurationResponse } from 'src/types/ocpp';
 import type {
-  TransactionsDataTableItem,
-  TransactionsDataTableResponse,
+  Transaction,
+  TransactionsDataTableResponse
 } from 'src/types/transactions';
 
 import { round } from 'es-toolkit';
@@ -43,7 +43,7 @@ interface TabPanelProps {
   value: number;
 }
 
-const columns: GridColDef<TransactionsDataTableItem>[] = [
+const columns: GridColDef<Transaction>[] = [
   { field: 'id', headerName: 'ID', flex: 0, editable: false },
   //{ field: 'client', headerName: 'Client', flex: 1, editable: false },
   { field: 'chargepointName', headerName: 'Chargepoint Name', flex: 1, editable: false },
