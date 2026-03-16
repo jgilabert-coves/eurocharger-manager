@@ -59,4 +59,7 @@ export const paths = {
     detail: (id: string) => `/rates/${id}`,
     create: `/rates/new`,
   },
+  reservations: {
+    list: `/reservations`,
+  },
 };

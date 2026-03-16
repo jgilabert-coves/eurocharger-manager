@@ -9,6 +9,7 @@ import { authRoutes } from './auth';
 import { ratesRoutes } from './rates';
 import { dashboardRoutes } from './dashboard';
 import { transactionsRoutes } from './transactions';
+import { reservationsRoutes } from './reservations';
 import { chargingStationsRoutes } from './chargingstations';
 
 // ----------------------------------------------------------------------
@@ -28,6 +29,8 @@ export const routesSection: RouteObject[] = [
   ...chargingStationsRoutes,
 
   ...ratesRoutes,
+
+  ...reservationsRoutes,
 
   {
     path: '/',

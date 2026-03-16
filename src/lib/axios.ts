@@ -111,6 +111,9 @@ export const endpoints = {
   ocpp: {
     configuration: '/ocpp/configuration',
   },
+  reservations: {
+    list: '/reservations',
+  },
   auth: {
     me: '/auth/me',
     signIn: '/auth/login',

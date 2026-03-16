@@ -101,6 +101,11 @@ export const navData: NavSectionProps['data'] = [
    * Si no quieres subheader, simplemente no lo pongas.
    */
   {
+    title: 'Reservas',
+    path: paths.reservations.list,
+    icon: ICONS.calendar,
+  },
+  {
     title: 'Tarifas',
     path: paths.rates.list,
     roles: ['Eurocharger', 'Advanced_Profile'],

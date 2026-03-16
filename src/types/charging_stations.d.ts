@@ -1,4 +1,4 @@
-
+import type { Chargepoint } from './chargepoint';
 
 
 export type ConnectorDatatableItem = {

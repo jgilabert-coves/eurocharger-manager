@@ -1,3 +1,5 @@
+import type { Connector } from './connectors';
+
 export type ChargingStationResponse = {
     status_code: number;
     error: string | null;
