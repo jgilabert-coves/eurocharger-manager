@@ -1,4 +1,4 @@
-import type { ChargePoint } from 'src/types/chargepoint';
+import type { Chargepoint } from 'src/types/chargepoint';
 import type { ConnectorResponse } from 'src/types/connector';
 
 import { endpoints, fetcher, post } from 'src/lib/axios';
@@ -13,25 +13,25 @@ export const CHANGE_AVAILABILITY_TYPES = {
 };
 
 export const chargepointService = {
-  getConfiguration: async (chargepoint: ChargePoint) => {
+  getConfiguration: async (chargepoint: Chargepoint) => {
     const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.configuration;
 
     const res: OCPPConfigurationResponse = await fetcher(url);
     return res;
   },
   changeAvailability: async (
-    chargepoint: ChargePoint,
+    chargepoint: Chargepoint,
     connector: ConnectorResponse,
     status: typeof CHANGE_AVAILABILITY_TYPES
   ) => {
-    const url =
-      'http://' + chargepoint.endpoint_address + ':' + chargepoint.port + '/changeAvailability';
-    const payload = {
-      id: chargepoint.ocpp_id,
-      status,
-      connectorID: connector.ocpp_id,
-    };
-    const res = await post(url, payload);
-    return res;
+    //const url =
+    //  'http://' + chargepoint.endpoint_address + ':' + chargepoint.port + '/changeAvailability';
+    //const payload = {
+    //  id: chargepoint.ocpp_id,
+    //  status,
+    //  connectorID: connector.ocpp_id,
+    //};
+    //const res = await post(url, payload);
+    //return res;
   },
 };

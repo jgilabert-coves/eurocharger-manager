@@ -3,7 +3,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import type { ReactNode } from 'react';
 import type { AxiosRequestConfig } from 'axios';
 import type { GridColDef, GridSortModel } from '@mui/x-data-grid';
-import type { ChargePoint, ChargingStationResponse } from 'src/types/chargepoint';
+import type { Chargepoint, ChargingStationResponse } from 'src/types/chargepoint';
 import type { OCPPConfigurationItem, OCPPConfigurationResponse } from 'src/types/ocpp';
 import type {
   TransactionsDataTableItem,
@@ -93,7 +93,7 @@ const columns: GridColDef<TransactionsDataTableItem>[] = [
 
 export default function ChargingStationView() {
   const { id } = useParams();
-  const [chargepoint, setChargepoint] = useState<ChargePoint>();
+  const [chargepoint, setChargepoint] = useState<Chargepoint>();
   const [tabValue, setTabValue] = useState(0);
   const [configuration, setConfiguration] = useState<OCPPConfigurationItem[]>([]);
   const [configLoading, setConfigLoading] = useState(false);
@@ -305,13 +305,13 @@ export default function ChargingStationView() {
                     mapStyle="mapbox://styles/mapbox/streets-v12"
                   >
                     <Marker
-                      longitude={chargepoint.longitude}
-                      latitude={chargepoint.latitude}
+                      longitude={chargepoint.longitude ?? 0}
+                      latitude={chargepoint.latitude ?? 0}
                       color="#FF0000"
                     />
                   </Map>
                   <Typography variant="subtitle2" gutterBottom>
-                    {chargepoint.address}, {chargepoint.postal_code}, {chargepoint.city}
+                    {chargepoint.address}
                   </Typography>
                 </Box>
               )}

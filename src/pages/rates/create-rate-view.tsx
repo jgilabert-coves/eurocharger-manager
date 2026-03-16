@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import type { Client } from 'src/types/clients';
 import type { Operator } from 'src/types/operators';
-import type { ChargePoint } from 'src/types/chargepoint';
+import type { Chargepoint } from 'src/types/chargepoint';
 import type { RateDraft, CreateStretchRequest } from 'src/types/rates';
 
 import { useNavigate } from 'react-router';
@@ -562,7 +562,7 @@ function StationsStep({
   maxPower: number | '';
   setMaxPower: (v: number | '') => void;
 }) {
-  const [stations, setStations] = useState<ChargePoint[]>([]);
+  const [stations, setStations] = useState<Chargepoint[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
@@ -573,7 +573,7 @@ function StationsStep({
     if (assignmentType !== 'chargers') return;
     setLoading(true);
     try {
-      const res: { data: ChargePoint[]; total: number } = await fetcher([
+      const res: { data: Chargepoint[]; total: number } = await fetcher([
         endpoints.chargepoints.list,
         { params: { page, pageSize: PAGE_SIZE, searchQuery: search, clientId } },
       ]);
@@ -702,7 +702,7 @@ function StationsStep({
                             {s.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {s.address}, {s.city}
+                            {s.address}
                           </Typography>
                         </Box>
                       }

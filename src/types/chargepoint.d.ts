@@ -1,42 +1,20 @@
 export type ChargingStationResponse = {
     status_code: number;
     error: string | null;
-    data: ChargePoint;
+    data: Chargepoint;
     total: number;
 }
 
-
-
-export type ChargePoint = {
-  id: number;
-  charging_station_id: number;
-  ocpp_id?: string;
-  name: string;
-  client_cp_id?: string;
-  endpoint_address: string;
-  port: string;
-  longitude: number;
-  latitude: number;
-  client_id?: number;
-  address: string;
-  postal_code?: string;
-  city: string;
-  state_province_id?: number;
-  country_id: number;
-  status: string;
-  deleted_at?: string;
-  connectors: ConnectorDetails[];
-};
-
-export type ConnectorDetails = {
+export type Chargepoint = {
     id: number;
-    chargepoint_id: number;
-    name: string;
-    ocpp_id: string;
-    connector_type_id: number;
-    status: string;
-    wire: boolean;
-    power: number;
-    voltage: number;
-    current: number;
+    ocpp_id?: string | null;
+    name?: string | null;
+    client_cp_id?: string | null;
+    latitude?: number;
+    longitude?: number;
+    client_id?: number | null;
+    address?: string;
+    status?: string | null;
+    is_private?: boolean;
+    connectors: Connector[];
 }
