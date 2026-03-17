@@ -1,11 +1,16 @@
 import type { Chargepoint } from 'src/types/chargepoint';
-import type { ConnectorResponse } from 'src/types/connector';
+import type {
+  OCPPReserveNowRequest,
+  OCPPConfigurationResponse,
+  OCPPAuthorizationResponse,
+  OCPPTriggerMessageRequest,
+  OCPPStartTrasactionRequest,
+  OCPPStopTransactionRequest,
+  OCPPCancelReservationRequest,
+  OCPPChangeAvailabilityRequest,
+} from 'src/types/ocpp';
 
 import { endpoints, fetcher, post } from 'src/lib/axios';
-
-import { OCPPConfigurationResponse } from 'src/types/ocpp';
-
-
 
 export const CHANGE_AVAILABILITY_TYPES = {
   Available: 'Available',
@@ -19,19 +24,96 @@ export const chargepointService = {
     const res: OCPPConfigurationResponse = await fetcher(url);
     return res;
   },
+
   changeAvailability: async (
     chargepoint: Chargepoint,
-    connector: ConnectorResponse,
-    status: typeof CHANGE_AVAILABILITY_TYPES
+    changeData: OCPPChangeAvailabilityRequest
   ) => {
-    //const url =
-    //  'http://' + chargepoint.endpoint_address + ':' + chargepoint.port + '/changeAvailability';
-    //const payload = {
-    //  id: chargepoint.ocpp_id,
-    //  status,
-    //  connectorID: connector.ocpp_id,
-    //};
-    //const res = await post(url, payload);
-    //return res;
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.changeAvailability;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      ...changeData,
+    };
+    const res: OCPPChangeAvailabilityRequest = await post(url, payload);
+    return res;
+  },
+
+  startTransaction: async (
+    chargepoint: Chargepoint,
+    transactionData: OCPPStartTrasactionRequest
+  ) => {
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.startTransaction;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      ...transactionData,
+    };
+    const res: OCPPAuthorizationResponse = await post(url, payload);
+    return res;
+  },
+
+  stopTransaction: async (
+    chargepoint: Chargepoint,
+    transactionData: OCPPStopTransactionRequest
+  ) => {
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.stopTransaction;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      ...transactionData,
+    };
+    const res: OCPPAuthorizationResponse = await post(url, payload);
+    return res;
+  },
+
+  reserveNow: async (chargepoint: Chargepoint, reservationData: OCPPReserveNowRequest) => {
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.reserveNow;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      ...reservationData,
+    };
+    const res: OCPPAuthorizationResponse = await post(url, payload);
+    return res;
+  },
+
+  cancelReservation: async (
+    chargepoint: Chargepoint,
+    reservationData: OCPPCancelReservationRequest
+  ) => {
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.cancelReservation;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      ...reservationData,
+    };
+    const res: OCPPAuthorizationResponse = await post(url, payload);
+    return res;
+  },
+
+  triggerMessage: async (chargepoint: Chargepoint, messageData: OCPPTriggerMessageRequest) => {
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.triggerMessage;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      ...messageData,
+    };
+    const res: OCPPAuthorizationResponse = await post(url, payload);
+    return res;
+  },
+
+  unlock: async (chargepoint: Chargepoint, connectorId: number) => {
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.unlockConnector;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      connectorId,
+    };
+    const res: OCPPAuthorizationResponse = await post(url, payload);
+    return res;
+  },
+
+  reset: async (chargepoint: Chargepoint, type: 'Soft' | 'Hard') => {
+    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.reset;
+    const payload = {
+      id: chargepoint.ocpp_id,
+      type,
+    };
+    const res: OCPPAuthorizationResponse = await post(url, payload);
+    return res;
   },
 };

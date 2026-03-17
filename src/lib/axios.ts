@@ -110,6 +110,14 @@ export const endpoints = {
   },
   ocpp: {
     configuration: '/ocpp/configuration',
+    startTransaction: '/ocpp/start-transaction',
+    stopTransaction: '/ocpp/stop-transaction',
+    reserveNow: '/ocpp/reserve-now',
+    cancelReservation: '/ocpp/cancel-reservation',
+    changeAvailability: '/ocpp/change-availability',
+    triggerMessage: '/ocpp/trigger-message',  
+    unlockConnector: '/ocpp/unlock-connector',
+    reset: '/ocpp/reset',
   },
   reservations: {
     list: '/reservations',
