@@ -229,7 +229,7 @@ export default function ReservationsView() {
                             <Iconify
                               icon="mdi:ev-station"
                               width={18}
-                              sx={{ color: 'primary.main' }}
+                              sx={{ color: 'primary.dark' }}
                             />
                             <Typography variant="subtitle2">
                               {reservation.chargingStation?.name ?? '-'}

@@ -2,11 +2,11 @@ import type { NavSectionProps } from 'src/components/nav-section';
 
 import { paths } from 'src/routes/paths';
 
+import { IcBolt } from 'src/assets/icons';
 import { CONFIG } from 'src/global-config';
 
 import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
-
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => (
@@ -62,14 +62,7 @@ const ICONS = {
 // ----------------------------------------------------------------------
 
 export const navData: NavSectionProps['data'] = [
-  /**
-   * Overview — visible para todos los roles
-   */
-  {
-    title: 'Dashboard',
-    path: paths.dashboard.root,
-    icon: ICONS.dashboard,
-  },
+
   /**
    * Transactions — visible para todos los roles
    */
@@ -103,7 +96,6 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Reservas',
     path: paths.reservations.list,
-    icon: ICONS.calendar,
   },
   {
     title: 'Tarifas',

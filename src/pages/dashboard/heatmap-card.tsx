@@ -7,11 +7,11 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
 import { themeConfig } from 'src/theme';
+import { IcClock } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type HeatmapResponse } from 'src/types/dashboard';
 
-import { IcClock } from './icons';
 import { CardHeader } from './primitives';
 
 // ----------------------------------------------------------------------

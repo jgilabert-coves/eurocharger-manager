@@ -7,12 +7,12 @@ import Avatar from '@mui/material/Avatar';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
+import { IcUsers, IcPlug } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type TopUser, type TopChargepoint } from 'src/types/dashboard';
 
 import { tk } from './tokens';
-import { IcUsers, IcPlug } from './icons';
 import { CardHeader } from './primitives';
 
 // ----------------------------------------------------------------------

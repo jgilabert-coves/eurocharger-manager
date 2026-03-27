@@ -10,12 +10,12 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 
+import { IcCoin } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type ActiveCharge } from 'src/types/dashboard';
 
 import { tk } from './tokens';
-import { IcCoin } from './icons';
 import { CardHeader } from './primitives';
 
 // ----------------------------------------------------------------------

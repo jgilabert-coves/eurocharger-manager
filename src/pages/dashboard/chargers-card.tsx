@@ -9,11 +9,11 @@ import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import { themeConfig } from 'src/theme';
+import { IcPlug } from 'src/assets/icons';
 import { endpoints, fetcher } from 'src/lib/axios';
 
 import { type ConnectorStatusTotals } from 'src/types/dashboard';
 
-import { IcPlug } from './icons';
 import { CardHeader } from './primitives';
 
 // ----------------------------------------------------------------------

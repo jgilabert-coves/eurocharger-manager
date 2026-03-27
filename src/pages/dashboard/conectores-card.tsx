@@ -6,12 +6,12 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
 import { fetcher, endpoints } from 'src/lib/axios';
+import { IcSignal, IcTotal, IcMenunekes, IcCCS, IcChademo, IcSchuko } from 'src/assets/icons';
 
 import { type ConnectorTypeBreakdown, type ConnectorTypesMetricsResponse } from 'src/types/dashboard';
 
 import { tk } from './tokens';
 import { CardHeader } from './primitives';
-import { IcSignal, IcTotal, IcMenunekes, IcCCS, IcChademo, IcSchuko } from './icons';
 
 // ----------------------------------------------------------------------
 
@@ -106,7 +106,7 @@ export function ConectoresCard() {
             key={key}
             sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, pb: 1 }}
           >
-            <Icon size={20} color={tk.inkDark} />
+            <Icon sx={{ fontSize: 20, color: tk.inkDark }} />
             <Typography variant="caption" sx={{ color: tk.inkLighter, textAlign: 'center', lineHeight: 1.2 }}>
               {loading ? <Skeleton width={40} /> : (metrics[key] ? label : '...')}
             </Typography>
