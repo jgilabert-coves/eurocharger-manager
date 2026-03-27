@@ -51,7 +51,7 @@ export function ConectoresCard() {
       try {
         const response: {
           status_code: number;
-          data: ConnectorTypesMetricsResponse | null;
+          data: ConnectorTypeBreakdown[];
           error: string | null;
         } = await fetcher(endpoints.dashboard.connectors.typesMetrics);
 
@@ -67,7 +67,7 @@ export function ConectoresCard() {
           disconnected: 0,
         };
 
-        for (const connector of response.data.data) {
+        for (const connector of response.data) {
           const key = connector.connectorType.toLowerCase();
           byKey[key] = connector;
 

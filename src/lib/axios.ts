@@ -91,9 +91,13 @@ export const endpoints = {
     stats: '/dashboard/stats',
     connectors: {
       metrics: 'dashboard/connectors/metrics',
-      typesMetrics: 'dashboard/connectors/types/metrics'
-    }
-
+      typesMetrics: 'dashboard/connectors/types/metrics',
+    },
+    topUsers: '/dashboard/top-users',
+    topChargepoints: '/dashboard/top-chargepoints',
+    activeCharges: '/dashboard/active-charges',
+    heatmap: '/dashboard/heatmap',
+    connectorCurrentTypes: '/dashboard/connectors/usage',
   },
   transactions: {
     current: '/transactions',

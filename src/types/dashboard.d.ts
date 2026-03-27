@@ -95,3 +95,42 @@ export type ConnectorsMetricsResponse = {
 export type ConnectorTypesMetricsResponse = {
   data: ConnectorTypeBreakdown[];
 };
+
+// ── Dashboard Top / Active types ──────────────────────────────────
+
+export type TopUser = {
+  id: number;
+  name: string;
+  email: string;
+  totalCharges: number;
+  totalSpent: number;
+};
+
+export type TopChargepoint = {
+  id: number;
+  name: string;
+  city: string;
+  totalCharges: number;
+  totalRevenue: number;
+};
+
+export type ActiveCharge = {
+  transactionId: number;
+  chargepointName: string;
+  city: string;
+  userName: string;
+  rateName: string | null;
+};
+
+export type HeatmapResponse = {
+  days: string[];
+  hours: string[];
+  data: number[][];
+};
+
+export type ConnectorCurrentTypeUsage = {
+  currentType: string;
+  total: number;
+  inUse: number;
+  usagePercentage: number;
+};

@@ -12,8 +12,8 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
-import { DeltaBadge } from 'src/pages/dashboard/v6/primitives';
-import { tk, badgeColors } from 'src/pages/dashboard/v6/tokens';
+import { DeltaBadge } from 'src/pages/dashboard/primitives';
+import { tk, badgeColors } from 'src/pages/dashboard/tokens';
 
 import { Iconify } from 'src/components/iconify';
 

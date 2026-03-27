@@ -1,198 +1,185 @@
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useMemo, useState } from 'react';
 
-import { Card } from '@mui/material';
+import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
-import { BarChart } from '@mui/x-charts/BarChart';
-import { PieChart } from '@mui/x-charts/PieChart';
+
+import { formatNumber } from 'src/utils/format-number';
 
 import { CONFIG } from 'src/global-config';
-import axios, { endpoints, fetcher } from 'src/lib/axios';
+import { endpoints, fetcher } from 'src/lib/axios';
 
+import { StatsChart } from 'src/components/cards/stats-chart';
+
+import {
+  type DashboardGrowthStats,
+  type DashboardRevenueStats,
+  type DashboardChargingStats,
+} from 'src/types/dashboard';
+
+import { TopList } from './top-list';
+import { TransTable } from './tables';
+import { HeatmapCard } from './heatmap-card';
+import { ChargersCard } from './chargers-card';
+import { ConnTypeCard } from './conn-type-card';
+import { ConectoresCard } from './conectores-card';
+import { MantenimientoCard } from './mantenimiento-card';
+import { KpiCard } from '../../components/cards/kpi-card';
 import { DashboardContent } from '../../layouts/dashboard';
 
-// ----------------------------------------------------------------------
+const metadata = { title: `Dashboard | ${CONFIG.appName}` };
 
-export type DashboardIntResponse = {
-  value: number;
-};
-
-const metadata = { title: `${CONFIG.appName}` };
-
-export const getActiveAppUsers = async (): Promise<DashboardIntResponse> => {
-  try {
-    return await fetcher(endpoints.dashboard.activeUsers);
-  } catch (error) {
-    console.error('Error during activeUsers:', error);
-    throw error;
-  }
-};
-export const getActiveTransactions = async (): Promise<DashboardIntResponse> => {
-  try {
-    return await fetcher(endpoints.dashboard.activeTransactions);
-  } catch (error) {
-    console.error('Error during activeTransactions:', error);
-    throw error;
-  }
-};
-export const getAlarms = async (): Promise<DashboardIntResponse> => {
-  try {
-    return await fetcher(endpoints.dashboard.alarms);
-  } catch (error) {
-    console.error('Error during alarms:', error);
-    throw error;
-  }
-};
-export const getChargepoints = async (): Promise<DashboardIntResponse> => {
-  try {
-    return await fetcher(endpoints.dashboard.chargepoints);
-  } catch (error) {
-    console.error('Error during chargepoints:', error);
-    throw error;
-  }
-};
-
-export default function Page() {
-  const [activeUsers, setActiveUsers] = useState(0);
-  const [transactions, setTransactions] = useState(0);
-  const [chargepoints, setChargepoints] = useState(0);
-  const [alarms, setAlarms] = useState(0);
-
-  const fetchUsers = async () => {
-    const data = await getActiveAppUsers();
-    setActiveUsers(data.value);
-  };
-
-  const fetchTransactions = async () => {
-    const data = await getActiveTransactions();
-    setTransactions(data.value);
-  };
-
-  const fetchAlarms = async () => {
-    const data = await getAlarms();
-    setAlarms(data.value);
-  };
-
-  const fetchChargepoints = async () => {
-    const data = await getChargepoints();
-    setChargepoints(data.value);
-  };
-
+export default function DashboardV6Page() {
+  const [activeCharges, setActiveCharges] = useState<DashboardChargingStats | null>(null);
+  const [revenueStats, setRevenueStats] = useState<DashboardRevenueStats | null>(null);
+  const [appUserGrowth, setAppUserGrowth] = useState<DashboardGrowthStats | null>(null);
+  const [alarmsGrowth, setAlarmsGrowth] = useState<DashboardGrowthStats | null>(null);
   useEffect(() => {
-    fetchUsers();
-    fetchTransactions();
-    fetchAlarms();
-    fetchChargepoints();
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      Promise.all([
+        fetcher(endpoints.dashboard.activeTransactions),
+        fetcher(endpoints.dashboard.revenue),
+        fetcher(endpoints.dashboard.activeUsers),
+        fetcher(endpoints.dashboard.alarms),
+      ]).then(([chargesData, revenueData, appUserGrowthData, alarmsGrowthData]) => {
+        console.log('Dashboard data fetched:', {
+          chargesData,
+          revenueData,
+          appUserGrowthData,
+          alarmsGrowthData,
+        });
+        setActiveCharges(chargesData.data);
+        setRevenueStats(revenueData.data);
+        setAppUserGrowth(appUserGrowthData.data);
+        setAlarmsGrowth(alarmsGrowthData.data);
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    }
+  };
 
   return (
     <>
       <Helmet>
-        <title> {metadata.title}</title>
+        <title>{metadata.title}</title>
       </Helmet>
       <DashboardContent>
-        <Typography variant="h2" sx={{ mb: 5 }}>
-          Dashboard
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          Resumen general
         </Typography>
+
+        {/* KPI Cards — 4 columns */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="active-charges">
+            <KpiCard
+              title="Recargas activas"
+              value={activeCharges ? formatNumber(activeCharges.activeCharges) : '...'}
+              subtitle={
+                activeCharges
+                  ? `Promedio por cargador: ${formatNumber(activeCharges.avgChargesPerChargepoint, { decimals: 2 })}`
+                  : '...'
+              }
+              icon="solar:battery-charge-bold"
+              palette="primary"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="revenue-stats">
+            <KpiCard
+              title="Ingresos"
+              value={
+                revenueStats
+                  ? formatNumber(revenueStats.totalRevenue, { decimals: 2, suffix: '€' })
+                  : '...'
+              }
+              subtitle={
+                revenueStats
+                  ? `Promedio por recarga: ${formatNumber(revenueStats.avgRevenuePerCharge, { decimals: 2, suffix: '€' })}`
+                  : '...'
+              }
+              icon="solar:wallet-money-bold"
+              palette="error"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="active-users">
+            <KpiCard
+              title="Usuarios activos"
+              value={appUserGrowth ? formatNumber(appUserGrowth.total) : '...'}
+              subtitle={
+                appUserGrowth
+                  ? `+${formatNumber(appUserGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
+                  : '...'
+              }
+              icon="solar:users-group-rounded-bold"
+              palette="warning"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="active-alarms">
+            <KpiCard
+              title="Alarmas activas"
+              value={alarmsGrowth ? formatNumber(alarmsGrowth.total) : '...'}
+              subtitle={
+                alarmsGrowth
+                  ? `+${formatNumber(alarmsGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
+                  : '...'
+              }
+              icon="solar:bell-bing-bold"
+              palette="primary"
+            />
+          </Grid>
+        </Grid>
+
+        {/* Stats — full width */}
+        <Box sx={{ mb: 3 }}>
+          <StatsChart
+            icon="solar:chart-bold"
+            label="Estadísticas"
+            endpoint={endpoints.dashboard.stats}
+          />
+        </Box>
+
+        {/* Chargers + Connectors */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ChargersCard />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <ConectoresCard />
+            <ConnTypeCard />
+          </Grid>
+        </Grid>
+
+        {/* Top lists */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TopList title="Top clientes" isClient />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TopList title="Top cargadores" />
+          </Grid>
+        </Grid>
+
+        {/* Tables */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 12 }}>
+            <TransTable />
+          </Grid>
+        </Grid>
+
+        {/* Heatmap + Maintenance */}
         <Grid container spacing={2}>
-          <Grid size={3}>
-            <Card className="p-5">
-              <Typography variant="body1"> Cargadores </Typography>
-              <Typography variant="h3"> {chargepoints} </Typography>
-            </Card>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <HeatmapCard />
           </Grid>
-          <Grid size={3}>
-            <Card className="p-5">
-              <Typography variant="body1"> Usuarios </Typography>
-              <Typography variant="h3"> {activeUsers} </Typography>
-            </Card>
-          </Grid>
-          <Grid size={3}>
-            <Card className="p-5">
-              <Typography variant="body1"> Recargas </Typography>
-              <Typography variant="h3"> {transactions} </Typography>
-            </Card>
-          </Grid>
-          <Grid size={3}>
-            <Card className="p-5">
-              <Typography variant="body1"> Alarmas </Typography>
-              <Typography variant="h3"> {alarms} </Typography>
-            </Card>
-          </Grid>
-          <Grid size={4}>
-            <Card className="p-5">
-              Tabla
-            </Card>
-          </Grid>
-          <Grid size={4}>
-            <Card>
-              <PieChart
-                height={300}
-                series={[
-                  {
-                    data: [
-                      { id: 0, value: 10 },
-                      { id: 1, value: 15 },
-                      { id: 2, value: 20 },
-                    ],
-                    paddingAngle: 0,
-                    cornerRadius: 5,
-                    startAngle: 0,
-                    endAngle: 360,
-                  },
-                ]}
-              />
-            </Card>
-          </Grid>
-          <Grid size={4}>
-            <Card className="p-5">Chart</Card>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <MantenimientoCard />
           </Grid>
         </Grid>
       </DashboardContent>
     </>
   );
 }
-
-export type DashboardTransactionChart = {
-  date: string;
-  kwh: number;
-  num: number;
-};
-/*
-export const ChartBar = () => {
-  const API_URL = CONFIG.serverUrl;
-
-  const [chartData, setChartData] = useState<DashboardTransactionChart[]>([]);
-
-  const getData = async (): Promise<DashboardTransactionChart[]> => {
-    const response = await fetch(API_URL.concat('dashboard/transactions'), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `${localStorage.getItem('token')}`,
-      },
-    });
-    console.log(response);
-    return await response.json();
-  };
-
-  useEffect(() => {
-    getData().then((data) => {
-      console.log(data);
-      setChartData(data);
-      console.log(chartData);
-    });
-  }, []);
-
-  return (
-    <BarChart
-      series={[{ data: chartData.map((item) => item.num) }]}
-      height={300}
-      xAxis={[{ data: chartData.map((item) => item.date), scaleType: 'band' }]}
-      margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
-      borderRadius={5}
-    />
-  );
-};
-*/

@@ -1,12 +1,12 @@
-import Card from '@mui/material/Card';
 import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
 import { tk } from './tokens';
+import { MANT } from './data';
 import { IcWrench } from './icons';
 import { CardHeader } from './primitives';
-import { MANT } from './data';
 
 export function MantenimientoCard() {
   return (
