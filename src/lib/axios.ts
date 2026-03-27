@@ -82,11 +82,18 @@ export const post = async (url: string, data: any) => {
 
 export const endpoints = {
   dashboard: {
-    activeUsers: '/dashboard/appusers',
-    activeTransactions: '/dashboard/transactions/active',
+    activeUsers: '/dashboard/appusers/growth',
+    activeTransactions: '/dashboard/charging-stats',
     transactionsData: '/dashboard/transactions',
-    alarms: '/dashboard/alarms',
+    alarms: '/dashboard/alarms/growth',
     chargepoints: '/dashboard/chargepoints',
+    revenue: '/dashboard/revenue-stats',
+    stats: '/dashboard/stats',
+    connectors: {
+      metrics: 'dashboard/connectors/metrics',
+      typesMetrics: 'dashboard/connectors/types/metrics'
+    }
+
   },
   transactions: {
     current: '/transactions',
