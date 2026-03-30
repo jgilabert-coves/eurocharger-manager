@@ -33,8 +33,8 @@ export function AuthSplitSection({
   methods,
   layoutQuery = 'md',
   title = 'Manage the job',
-  imgUrl = `${CONFIG.assetsDir}/assets/illustrations/illustration-dashboard.webp`,
-  subtitle = 'More effectively with optimized workflows.',
+  imgUrl = `${CONFIG.assetsDir}/assets/images/coche.svg`,
+  subtitle = 'Automatiza, controla y optimiza tus ingresos con nuestro software. La mejor solución para gestionar tus estaciones de carga eléctrica.',
   ...other
 }: AuthSplitSectionProps) {
   return (
@@ -82,7 +82,7 @@ export function AuthSplitSection({
         component="img"
         alt="Dashboard illustration"
         src={imgUrl}
-        sx={{ width: 1, aspectRatio: '4/3', objectFit: 'cover' }}
+        sx={{ width: 1, aspectRatio: '4/3', objectFit: 'contain' }}
       />
 
       {!!methods?.length && method && (

@@ -28,7 +28,7 @@ const authJwt = {
         <GuestGuard>
           <AuthSplitLayout
             slotProps={{
-              section: { title: 'Hi, Welcome back' },
+              section: { title: 'Bienvenido a Eurocharger' },
             }}
           >
             <Jwt.SignInPage />
