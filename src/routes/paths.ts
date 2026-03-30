@@ -62,4 +62,7 @@ export const paths = {
   reservations: {
     list: `/reservations`,
   },
+  privileges: {
+    list: `/privileges`,
+  },
 };

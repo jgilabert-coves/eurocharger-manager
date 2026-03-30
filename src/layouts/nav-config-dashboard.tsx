@@ -98,6 +98,10 @@ export const navData: NavSectionProps['data'] = [
     path: paths.reservations.list,
   },
   {
+    title: 'Autorizaciones',
+    path: paths.privileges.list,
+  },
+  {
     title: 'Tarifas',
     path: paths.rates.list,
     roles: ['Eurocharger', 'Advanced_Profile'],

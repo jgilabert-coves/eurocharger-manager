@@ -8,6 +8,7 @@ import { CONFIG } from 'src/global-config';
 import { authRoutes } from './auth';
 import { ratesRoutes } from './rates';
 import { dashboardRoutes } from './dashboard';
+import { privilegesRoutes } from './privileges';
 import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
 import { chargingStationsRoutes } from './chargingstations';
@@ -31,6 +32,8 @@ export const routesSection: RouteObject[] = [
   ...ratesRoutes,
 
   ...reservationsRoutes,
+
+  ...privilegesRoutes,
 
   {
     path: '/',

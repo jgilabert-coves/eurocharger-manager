@@ -133,6 +133,11 @@ export const endpoints = {
   reservations: {
     list: '/reservations',
   },
+  privileges: {
+    list: '/privileges',
+    create: '/privileges',
+    delete: (id: number) => `/privileges/${id}`,
+  },
   auth: {
     me: '/auth/me',
     signIn: '/auth/login',
