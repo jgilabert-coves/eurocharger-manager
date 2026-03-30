@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 
 import { themeConfig } from 'src/theme';
 import { IcPlug } from 'src/assets/icons';
-import { fetcher, endpoints } from 'src/lib/axios';
+import { endpoints, fetcher } from 'src/lib/axios';
 
 import { type ConnectorCurrentTypeUsage } from 'src/types/dashboard';
 
@@ -28,32 +28,17 @@ const DEFAULT_STYLE = { color: p.grey[600], bg: p.grey[100], desc: '' };
 // ----------------------------------------------------------------------
 
 export function ConnTypeCard() {
-  const [types, setTypes] = useState<ConnectorCurrentTypeUsage[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      setLoading(true);
-      try {
-        const response = await fetcher(endpoints.dashboard.connectorCurrentTypes);
-        if (!cancelled) setTypes(response.data as ConnectorCurrentTypeUsage[]);
-      } catch (error) {
-        console.error('Error fetching connector current types:', error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
+  const { data: res, isLoading } = useQuery({
+    queryKey: ['dashboard', 'connectorCurrentTypes'],
+    queryFn: () => fetcher(endpoints.dashboard.connectorCurrentTypes),
+  });
+  const types = (res?.data as ConnectorCurrentTypeUsage[]) ?? [];
 
   return (
     <Card sx={{ p: 3 }}>
       <CardHeader icon={IcPlug} label="Tipo de conectores" />
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-        {loading
+        {isLoading
           ? Array.from({ length: 2 }).map((_, i) => (
               <Box key={i} sx={{ bgcolor: p.grey[100], borderRadius: 2, p: 2 }}>
                 <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -67,7 +52,7 @@ export function ConnTypeCard() {
             ))
           : types.map(({ currentType, total, inUse, usagePercentage }) => {
               const style = TYPE_STYLES[currentType] ?? DEFAULT_STYLE;
-              const pct = Math.round(usagePercentage);
+              const pctVal = Math.round(usagePercentage);
 
               return (
                 <Box key={currentType} sx={{ bgcolor: style.bg, borderRadius: 2, p: 2 }}>
@@ -80,9 +65,9 @@ export function ConnTypeCard() {
                   </Stack>
                   <Typography variant="caption" sx={{ color: p.grey[500], display: 'block', mb: 1 }}>{style.desc}</Typography>
                   <Box sx={{ height: 5, bgcolor: p.common.white, borderRadius: '10px', overflow: 'hidden' }}>
-                    <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: style.color, borderRadius: '10px' }} />
+                    <Box sx={{ width: `${pctVal}%`, height: '100%', bgcolor: style.color, borderRadius: '10px' }} />
                   </Box>
-                  <Typography variant="caption" sx={{ color: style.color, fontWeight: 600, mt: 0.5, display: 'block' }}>{pct}% en uso</Typography>
+                  <Typography variant="caption" sx={{ color: style.color, fontWeight: 600, mt: 0.5, display: 'block' }}>{pctVal}% en uso</Typography>
                 </Box>
               );
             })}

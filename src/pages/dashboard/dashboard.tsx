@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
@@ -31,37 +31,27 @@ import { DashboardContent } from '../../layouts/dashboard';
 const metadata = { title: `Dashboard | ${CONFIG.appName}` };
 
 export default function DashboardV6Page() {
-  const [activeCharges, setActiveCharges] = useState<DashboardChargingStats | null>(null);
-  const [revenueStats, setRevenueStats] = useState<DashboardRevenueStats | null>(null);
-  const [appUserGrowth, setAppUserGrowth] = useState<DashboardGrowthStats | null>(null);
-  const [alarmsGrowth, setAlarmsGrowth] = useState<DashboardGrowthStats | null>(null);
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const { data: chargesRes } = useQuery({
+    queryKey: ['dashboard', 'activeTransactions'],
+    queryFn: () => fetcher(endpoints.dashboard.activeTransactions),
+  });
+  const { data: revenueRes } = useQuery({
+    queryKey: ['dashboard', 'revenue'],
+    queryFn: () => fetcher(endpoints.dashboard.revenue),
+  });
+  const { data: usersRes } = useQuery({
+    queryKey: ['dashboard', 'activeUsers'],
+    queryFn: () => fetcher(endpoints.dashboard.activeUsers),
+  });
+  const { data: alarmsRes } = useQuery({
+    queryKey: ['dashboard', 'alarms'],
+    queryFn: () => fetcher(endpoints.dashboard.alarms),
+  });
 
-  const fetchDashboardData = async () => {
-    try {
-      Promise.all([
-        fetcher(endpoints.dashboard.activeTransactions),
-        fetcher(endpoints.dashboard.revenue),
-        fetcher(endpoints.dashboard.activeUsers),
-        fetcher(endpoints.dashboard.alarms),
-      ]).then(([chargesData, revenueData, appUserGrowthData, alarmsGrowthData]) => {
-        console.log('Dashboard data fetched:', {
-          chargesData,
-          revenueData,
-          appUserGrowthData,
-          alarmsGrowthData,
-        });
-        setActiveCharges(chargesData.data);
-        setRevenueStats(revenueData.data);
-        setAppUserGrowth(appUserGrowthData.data);
-        setAlarmsGrowth(alarmsGrowthData.data);
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    }
-  };
+  const activeCharges = chargesRes?.data as DashboardChargingStats | undefined;
+  const revenueStats = revenueRes?.data as DashboardRevenueStats | undefined;
+  const appUserGrowth = usersRes?.data as DashboardGrowthStats | undefined;
+  const alarmsGrowth = alarmsRes?.data as DashboardGrowthStats | undefined;
 
   return (
     <>
@@ -75,7 +65,7 @@ export default function DashboardV6Page() {
 
         {/* KPI Cards — 4 columns */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="active-charges">
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <KpiCard
               title="Recargas activas"
               value={activeCharges ? formatNumber(activeCharges.activeCharges) : '...'}
@@ -88,7 +78,7 @@ export default function DashboardV6Page() {
               palette="primary"
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="revenue-stats">
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <KpiCard
               title="Ingresos"
               value={
@@ -105,7 +95,7 @@ export default function DashboardV6Page() {
               palette="error"
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="active-users">
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <KpiCard
               title="Usuarios activos"
               value={appUserGrowth ? formatNumber(appUserGrowth.total) : '...'}
@@ -118,7 +108,7 @@ export default function DashboardV6Page() {
               palette="warning"
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key="active-alarms">
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <KpiCard
               title="Alarmas activas"
               value={alarmsGrowth ? formatNumber(alarmsGrowth.total) : '...'}

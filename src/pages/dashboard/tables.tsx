@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
@@ -11,7 +11,7 @@ import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 
 import { IcCoin } from 'src/assets/icons';
-import { fetcher, endpoints } from 'src/lib/axios';
+import { endpoints, fetcher } from 'src/lib/axios';
 
 import { type ActiveCharge } from 'src/types/dashboard';
 
@@ -21,26 +21,11 @@ import { CardHeader } from './primitives';
 // ----------------------------------------------------------------------
 
 export function TransTable() {
-  const [charges, setCharges] = useState<ActiveCharge[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      setLoading(true);
-      try {
-        const response = await fetcher(endpoints.dashboard.activeCharges);
-        if (!cancelled) setCharges(response.data as ActiveCharge[]);
-      } catch (error) {
-        console.error('Error fetching active charges:', error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
+  const { data: res, isLoading } = useQuery({
+    queryKey: ['dashboard', 'activeCharges'],
+    queryFn: () => fetcher(endpoints.dashboard.activeCharges),
+  });
+  const charges = (res?.data as ActiveCharge[]) ?? [];
 
   const HEADERS = ['ID', 'Cargador', 'Ciudad', 'Usuario', 'Tarifa'];
 
@@ -57,7 +42,7 @@ export function TransTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading
+            {isLoading
               ? Array.from({ length: 4 }).map((_, i) => (
                   <TableRow key={i}>
                     {HEADERS.map((h) => (

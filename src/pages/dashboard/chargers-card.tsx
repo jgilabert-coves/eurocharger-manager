@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -39,33 +39,11 @@ function pctValue(value: number, total: number): number {
 // ----------------------------------------------------------------------
 
 export function ChargersCard() {
-  const [metrics, setMetrics] = useState<ConnectorStatusTotals | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      setLoading(true);
-      try {
-        const response: {
-          status_code: number;
-          data: ConnectorStatusTotals | null;
-          error: string | null;
-        } = await fetcher(endpoints.dashboard.connectors.metrics);
-
-        if (cancelled || !response.data) return;
-        setMetrics(response.data);
-      } catch (error) {
-        console.error('Error fetching connectors metrics:', error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
-
+  const { data: res, isLoading } = useQuery({
+    queryKey: ['dashboard', 'connectors', 'metrics'],
+    queryFn: () => fetcher(endpoints.dashboard.connectors.metrics),
+  });
+  const metrics = res?.data as ConnectorStatusTotals | undefined;
   const total = metrics?.total ?? 0;
 
   return (
@@ -81,7 +59,7 @@ export function ChargersCard() {
             <Box key={key}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
                 <Typography variant="body2" sx={{ color: inkDarkest }}>{label}</Typography>
-                {loading ? (
+                {isLoading ? (
                   <Skeleton width={40} height={20} />
                 ) : (
                   <Typography variant="subtitle2" sx={{ color: inkDarkest }}>
@@ -92,7 +70,7 @@ export function ChargersCard() {
                   </Typography>
                 )}
               </Stack>
-              {loading ? (
+              {isLoading ? (
                 <Skeleton variant="rounded" height={6} sx={{ borderRadius: '10px' }} />
               ) : (
                 <Box sx={{ height: 6, bgcolor: bgBar, borderRadius: '10px', overflow: 'hidden' }}>
@@ -109,17 +87,17 @@ export function ChargersCard() {
       <Stack spacing={1} sx={{ pt: 1.5 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="body2" sx={{ color: inkDarkest, fontWeight: 600 }}>Total conectores</Typography>
-          {loading ? <Skeleton width={30} /> : (
+          {isLoading ? <Skeleton width={30} /> : (
             <Typography variant="h6" sx={{ color: inkDarkest }}>{total}</Typography>
           )}
         </Stack>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="body2" sx={{ color: inkLighter }}>Disponibilidad</Typography>
-          {loading ? <Skeleton width={40} /> : (
+          {isLoading ? <Skeleton width={40} /> : (
             <Typography variant="h6" sx={{ color: p.primary.dark }}>{pctValue(metrics?.available ?? 0, total)}%</Typography>
           )}
         </Stack>
-        {loading ? (
+        {isLoading ? (
           <Skeleton variant="rounded" height={5} sx={{ borderRadius: '10px' }} />
         ) : (
           <LinearProgress

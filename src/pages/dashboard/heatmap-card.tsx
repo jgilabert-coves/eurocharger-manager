@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 
 import { themeConfig } from 'src/theme';
 import { IcClock } from 'src/assets/icons';
-import { fetcher, endpoints } from 'src/lib/axios';
+import { endpoints, fetcher } from 'src/lib/axios';
 
 import { type HeatmapResponse } from 'src/types/dashboard';
 
@@ -30,26 +30,11 @@ function getColor(v: number, maxV: number) {
 // ----------------------------------------------------------------------
 
 export function HeatmapCard() {
-  const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      setLoading(true);
-      try {
-        const response = await fetcher(endpoints.dashboard.heatmap);
-        if (!cancelled) setHeatmap(response.data as HeatmapResponse);
-      } catch (error) {
-        console.error('Error fetching heatmap:', error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
+  const { data: res, isLoading } = useQuery({
+    queryKey: ['dashboard', 'heatmap'],
+    queryFn: () => fetcher(endpoints.dashboard.heatmap),
+  });
+  const heatmap = res?.data as HeatmapResponse | undefined;
 
   const days = heatmap?.days ?? [];
   const hours = heatmap?.hours ?? [];
@@ -59,7 +44,7 @@ export function HeatmapCard() {
   return (
     <Card sx={{ p: 3 }}>
       <CardHeader icon={IcClock} label="Horarios de afluencia" />
-      {loading ? (
+      {isLoading ? (
         <Box sx={{ display: 'grid', gridTemplateColumns: '40px repeat(7,1fr)', gap: '4px' }}>
           <Box />
           {Array.from({ length: 7 }).map((_, i) => (

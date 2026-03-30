@@ -1,6 +1,7 @@
 import 'src/global.css';
 
 import { useEffect } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { usePathname } from 'src/routes/hooks';
 
@@ -14,6 +15,15 @@ import { AuthProvider } from 'src/auth/context/jwt';
 
 // ----------------------------------------------------------------------
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 type AppProps = {
   children: React.ReactNode;
 };
@@ -22,20 +32,22 @@ export default function App({ children }: AppProps) {
   useScrollToTop();
 
   return (
-    <AuthProvider>
-      <SettingsProvider defaultSettings={defaultSettings}>
-        <ThemeProvider
-          noSsr
-          defaultMode={themeConfig.defaultMode}
-          modeStorageKey={themeConfig.modeStorageKey}
-        >
-          <MotionLazy>
-            <ProgressBar />
-            {children}
-          </MotionLazy>
-        </ThemeProvider>
-      </SettingsProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <SettingsProvider defaultSettings={defaultSettings}>
+          <ThemeProvider
+            noSsr
+            defaultMode={themeConfig.defaultMode}
+            modeStorageKey={themeConfig.modeStorageKey}
+          >
+            <MotionLazy>
+              <ProgressBar />
+              {children}
+            </MotionLazy>
+          </ThemeProvider>
+        </SettingsProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

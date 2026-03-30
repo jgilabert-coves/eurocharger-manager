@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
-      "Bash(wc -l /Users/jonaygilabertlopez/Projects/eurocharger-manager/src/pages/**/*.tsx)"
+      "Bash(wc -l /Users/jonaygilabertlopez/Projects/eurocharger-manager/src/pages/**/*.tsx)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
