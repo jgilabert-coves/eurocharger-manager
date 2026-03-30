@@ -18,8 +18,10 @@ import { AuthProvider } from 'src/auth/context/jwt';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      staleTime: 2 * 60 * 1000, // 2 minutos — evita refetches al navegar de vuelta
+      gcTime: 5 * 60 * 1000, // 5 minutos en caché tras desmontar
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   },
 });
