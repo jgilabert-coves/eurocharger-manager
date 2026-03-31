@@ -65,4 +65,10 @@ export const paths = {
   privileges: {
     list: `/privileges`,
   },
+  alarms: {
+    list: `/alarms`,
+  },
+  incidents: {
+    list: `/incidents`,
+  },
 };

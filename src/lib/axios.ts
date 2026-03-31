@@ -69,7 +69,8 @@ export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
 
 export const post = async (url: string, data: any) => {
   try {
-    const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+    const config =
+      data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
     const res = await axiosInstance.post(url, data, config);
     return res.data;
   } catch (error) {
@@ -119,6 +120,12 @@ export const endpoints = {
     list: '/chargingstations',
     single: '/chargingstations/',
   },
+  alarms: {
+    list: '/alarms',
+  },
+  incidents: {
+    list: '/incidences',
+  },
   ocpp: {
     configuration: '/ocpp/configuration',
     startTransaction: '/ocpp/start-transaction',
@@ -126,7 +133,7 @@ export const endpoints = {
     reserveNow: '/ocpp/reserve-now',
     cancelReservation: '/ocpp/cancel-reservation',
     changeAvailability: '/ocpp/change-availability',
-    triggerMessage: '/ocpp/trigger-message',  
+    triggerMessage: '/ocpp/trigger-message',
     unlockConnector: '/ocpp/unlock-connector',
     reset: '/ocpp/reset',
   },
@@ -142,5 +149,5 @@ export const endpoints = {
     me: '/auth/me',
     signIn: '/auth/login',
     signUp: '/auth/sign-up',
-  }
+  },
 };

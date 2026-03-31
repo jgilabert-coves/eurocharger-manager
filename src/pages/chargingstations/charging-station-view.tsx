@@ -188,7 +188,7 @@ export default function ChargingStationView() {
                       }}
                     >
                       <Typography variant="h6" gutterBottom>
-                        {connector.name || connector.ocpp_id}
+                        {connector.name || connector.ocppId}
                       </Typography>
                       {setChargepointStatusCell(connector.status ?? '')}
                     </Box>

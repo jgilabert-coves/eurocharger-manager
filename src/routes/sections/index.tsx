@@ -7,18 +7,18 @@ import { CONFIG } from 'src/global-config';
 
 import { authRoutes } from './auth';
 import { ratesRoutes } from './rates';
+import { alarmsRoutes } from './alarms';
+import { incidentsRoutes } from './incidents';
 import { dashboardRoutes } from './dashboard';
 import { privilegesRoutes } from './privileges';
 import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
 import { chargingStationsRoutes } from './chargingstations';
-
 // ----------------------------------------------------------------------
 
 const Page404 = lazy(() => import('src/pages/error/404'));
 
 export const routesSection: RouteObject[] = [
-
   // Auth
   ...authRoutes,
 
@@ -34,6 +34,10 @@ export const routesSection: RouteObject[] = [
   ...reservationsRoutes,
 
   ...privilegesRoutes,
+
+  ...alarmsRoutes,
+
+  ...incidentsRoutes,
 
   {
     path: '/',

@@ -62,7 +62,6 @@ const ICONS = {
 // ----------------------------------------------------------------------
 
 export const navData: NavSectionProps['data'] = [
-
   /**
    * Transactions — visible para todos los roles
    */
@@ -109,5 +108,19 @@ export const navData: NavSectionProps['data'] = [
       { title: 'Listado', path: paths.rates.list },
       { title: 'Crear tarifa', path: paths.rates.create },
     ],
+  },
+  /**
+   * Alarmas — visible para todos los roles
+   */
+  {
+    title: 'Alarmas',
+    path: paths.alarms.list,
+  },
+  /**
+   * Incidencias — visible para todos los roles
+   */
+  {
+    title: 'Incidencias',
+    path: paths.incidents.list,
   },
 ];

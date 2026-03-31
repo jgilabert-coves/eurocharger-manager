@@ -1,4 +1,4 @@
-import type { Connector } from './connectors';
+import type { Connector } from './connector';
 
 export type ChargingStationResponse = {
     status_code: number;
