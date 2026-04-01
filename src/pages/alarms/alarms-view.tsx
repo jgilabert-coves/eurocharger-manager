@@ -47,11 +47,10 @@ export default function AlarmsView() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
-  const [orderBy, setOrderBy] = useState('date');
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+  const [sorts, setSorts] = useState<{ field: string; order: 'asc' | 'desc' }[]>([]);
 
   const { data: res, isLoading } = useQuery({
-    queryKey: ['alarms', 'list', { page, pageSize, searchQuery, orderBy, order }],
+    queryKey: ['alarms', 'list', { page, pageSize, searchQuery, sorts }],
     queryFn: () =>
       fetcher([
         endpoints.alarms.list,
@@ -61,7 +60,9 @@ export default function AlarmsView() {
             pageSize,
             searchQuery,
             fixed: false,
-            sortQuery: `${orderBy}=${order}`,
+            ...(sorts.length > 0 && {
+              sortQuery: sorts.map((s) => `${s.field}=${s.order}`).join(','),
+            }),
           },
         },
       ]),
@@ -70,10 +71,18 @@ export default function AlarmsView() {
   const rows = (res?.data as Alarm[]) ?? [];
 
   const handleSort = (field: string) => {
-    const isAsc = orderBy === field && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(field);
+    setSorts((prev) => {
+      const existing = prev.find((s) => s.field === field);
+      if (!existing) return [...prev, { field, order: 'asc' }];
+      if (existing.order === 'asc')
+        return prev.map((s) => (s.field === field ? { ...s, order: 'desc' } : s));
+      return prev.filter((s) => s.field !== field);
+    });
+    setPage(0);
   };
+
+  const getSortDirection = (field: string) => sorts.find((s) => s.field === field)?.order ?? 'asc';
+  const isSorted = (field: string) => sorts.some((s) => s.field === field);
 
   return (
     <>
@@ -117,8 +126,8 @@ export default function AlarmsView() {
                 <TableRow>
                   <TableCell>
                     <TableSortLabel
-                      active={orderBy === 'status'}
-                      direction={orderBy === 'status' ? order : 'asc'}
+                      active={isSorted('status')}
+                      direction={getSortDirection('status')}
                       onClick={() => handleSort('status')}
                     >
                       Estado
@@ -130,8 +139,8 @@ export default function AlarmsView() {
                   <TableCell>Error</TableCell>
                   <TableCell>
                     <TableSortLabel
-                      active={orderBy === 'date'}
-                      direction={orderBy === 'date' ? order : 'asc'}
+                      active={isSorted('date')}
+                      direction={getSortDirection('date')}
                       onClick={() => handleSort('date')}
                     >
                       Fecha
@@ -163,7 +172,7 @@ export default function AlarmsView() {
                           cpName: cp.name ?? cp.ocpp_id ?? `#${cp.id}`,
                         }))
                       ) ?? [];
-
+                    console.log(alarm);
                     return (
                       <TableRow
                         key={alarm.id}

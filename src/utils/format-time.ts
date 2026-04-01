@@ -3,6 +3,8 @@ import 'dayjs/locale/es';
 import type { Dayjs, OpUnitType } from 'dayjs';
 
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -30,15 +32,28 @@ import relativeTime from 'dayjs/plugin/relativeTime';
  *
  */
 
-dayjs.locale('es');
-
-
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
+
+dayjs.locale('es');
+dayjs.tz.setDefault('Europe/Madrid');
 
 // ----------------------------------------------------------------------
 
 export type DatePickerFormat = Dayjs | Date | string | number | null | undefined;
+
+// ----------------------------------------------------------------------
+
+/**
+ * @output 17 Apr 2022 12:00 am (in the given timezone)
+ */
+export function changeZone(date: Date, timeZone: string, template?: string): string {
+  return dayjs(date)
+    .tz(timeZone)
+    .format(template ?? formatPatterns.dateTime);
+}
 
 export const formatPatterns = {
   dateTime: 'DD MMM YYYY h:mm a', // 17 Apr 2022 12:00 am
@@ -68,12 +83,15 @@ export function today(template?: string): string {
 /**
  * @output 17 Apr 2022 12:00 am
  */
-export function fDateTime(date: DatePickerFormat, template?: string): string {
+export function fDateTime(date: DatePickerFormat, template?: string, timeZone?: string): string {
   if (!isValidDate(date)) {
     return 'Invalid date';
   }
 
-  return dayjs(date).format(template ?? formatPatterns.dateTime);
+  return dayjs
+    .utc(date as string)
+    .tz(timeZone ?? 'Europe/Madrid')
+    .format(template ?? formatPatterns.dateTime);
 }
 
 // ----------------------------------------------------------------------
