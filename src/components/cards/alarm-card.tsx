@@ -135,7 +135,11 @@ export function AlarmCard({ alarm, onResolve, onUnlock, onChangeAvailability, on
             )}
             {onChangeAvailability && (
               <Tooltip title="Cambiar disponibilidad">
-                <IconButton size="small" color="success" onClick={() => onChangeAvailability(alarm)}>
+                <IconButton
+                  size="small"
+                  color="success"
+                  onClick={() => onChangeAvailability(alarm)}
+                >
                   <Iconify icon="mdi:toggle-switch-outline" width={18} />
                 </IconButton>
               </Tooltip>

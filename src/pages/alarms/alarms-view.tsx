@@ -203,22 +203,19 @@ export default function AlarmsView() {
                 onUnlock={(a) =>
                   setUnlockTarget({
                     chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                    connectorId:
-                      a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                    connectorId: a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
                   })
                 }
                 onChangeAvailability={(a) =>
                   setChangeAvailabilityTarget({
                     chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                    connectorId:
-                      a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                    connectorId: a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
                   })
                 }
                 onReset={(a) =>
                   setResetTarget({
                     chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                    connectorId:
-                      a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                    connectorId: a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
                   })
                 }
               />
