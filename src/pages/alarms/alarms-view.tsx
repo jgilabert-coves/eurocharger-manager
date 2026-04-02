@@ -7,6 +7,9 @@ import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import Button from '@mui/material/Button';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -26,6 +29,7 @@ import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
+import { AlarmCard } from 'src/components/cards/alarm-card';
 
 import { type Alarm } from 'src/types/alarms';
 
@@ -118,8 +122,63 @@ export default function AlarmsView() {
           />
         </Box>
 
-        {/* Table */}
-        <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        {/* Mobile: cards */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2, mb: 2 }}>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress />
+            </Box>
+          ) : rows.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" textAlign="center" py={8}>
+              No se encontraron alarmas
+            </Typography>
+          ) : (
+            rows.map((alarm) => <AlarmCard key={alarm.id} alarm={alarm} />)
+          )}
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pt: 1 }}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="caption" color="text.secondary">
+                Filas:
+              </Typography>
+              <Select
+                size="small"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(0);
+                }}
+                sx={{ fontSize: '0.8rem', height: 32 }}
+              >
+                {[10, 20, 40].map((n) => (
+                  <MenuItem key={n} value={n}>
+                    {n}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Stack>
+            <Stack direction="row" spacing={1}>
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Anterior
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={rows.length < pageSize}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Siguiente
+              </Button>
+            </Stack>
+          </Stack>
+        </Box>
+
+        {/* Desktop: table */}
+        <Card sx={{ borderRadius: 2, overflow: 'hidden', display: { xs: 'none', md: 'block' } }}>
           <TableContainer>
             <Table>
               <TableHead>
@@ -172,7 +231,7 @@ export default function AlarmsView() {
                           cpName: cp.name ?? cp.ocpp_id ?? `#${cp.id}`,
                         }))
                       ) ?? [];
-                    console.log(alarm);
+
                     return (
                       <TableRow
                         key={alarm.id}
