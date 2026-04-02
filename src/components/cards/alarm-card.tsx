@@ -2,9 +2,13 @@ import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { fDateTime, fToNow } from 'src/utils/format-time';
+
+import { Iconify } from 'src/components/iconify';
 
 import { type Alarm } from 'src/types/alarms';
 
@@ -17,9 +21,15 @@ const STATUS_COLORS: Record<string, 'default' | 'info' | 'success' | 'error' | '
   PENDING: 'warning',
 };
 
-type Props = { alarm: Alarm };
+type Props = {
+  alarm: Alarm;
+  onResolve?: (alarm: Alarm) => void;
+  onUnlock?: (alarm: Alarm) => void;
+  onChangeAvailability?: (alarm: Alarm) => void;
+  onReset?: (alarm: Alarm) => void;
+};
 
-export function AlarmCard({ alarm }: Props) {
+export function AlarmCard({ alarm, onResolve, onUnlock, onChangeAvailability, onReset }: Props) {
   const station = alarm.chargingStation;
   const allConnectors = station?.chargepoints?.flatMap((cp) => cp.connectors ?? []) ?? [];
 
@@ -104,6 +114,42 @@ export function AlarmCard({ alarm }: Props) {
           </Stack>
         </Stack>
       </Stack>
+
+      {(onResolve || onUnlock || onChangeAvailability || onReset) && (
+        <>
+          <Divider />
+          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+            {onResolve && (
+              <Tooltip title="Marcar como resuelta">
+                <IconButton size="small" color="success" onClick={() => onResolve(alarm)}>
+                  <Iconify icon="eva:checkmark-circle-2-outline" width={18} />
+                </IconButton>
+              </Tooltip>
+            )}
+            {onUnlock && (
+              <Tooltip title="Desbloquear conector">
+                <IconButton size="small" color="info" onClick={() => onUnlock(alarm)}>
+                  <Iconify icon="mdi:lock-open-outline" width={18} />
+                </IconButton>
+              </Tooltip>
+            )}
+            {onChangeAvailability && (
+              <Tooltip title="Cambiar disponibilidad">
+                <IconButton size="small" color="success" onClick={() => onChangeAvailability(alarm)}>
+                  <Iconify icon="mdi:toggle-switch-outline" width={18} />
+                </IconButton>
+              </Tooltip>
+            )}
+            {onReset && (
+              <Tooltip title="Reiniciar cargador">
+                <IconButton size="small" color="warning" onClick={() => onReset(alarm)}>
+                  <Iconify icon="mdi:sync" width={18} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Stack>
+        </>
+      )}
     </Card>
   );
 }

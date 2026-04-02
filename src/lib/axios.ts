@@ -119,9 +119,13 @@ export const endpoints = {
   chargepoints: {
     list: '/chargingstations',
     single: '/chargingstations/',
+    changeAvailability: (id: number) => `/chargingstations/${id}/ocpp/change-availability`,
+    unlock: (id: number) => `/chargingstations/${id}/ocpp/unlock-connector`,
+    reset: (id: number) => `/chargingstations/${id}/ocpp/reset`,
   },
   alarms: {
     list: '/alarms',
+    resolve: (id: number) => `/alarms/${id}/fix`,
   },
   incidents: {
     list: '/incidences',
@@ -132,10 +136,7 @@ export const endpoints = {
     stopTransaction: '/ocpp/stop-transaction',
     reserveNow: '/ocpp/reserve-now',
     cancelReservation: '/ocpp/cancel-reservation',
-    changeAvailability: '/ocpp/change-availability',
-    triggerMessage: '/ocpp/trigger-message',
-    unlockConnector: '/ocpp/unlock-connector',
-    reset: '/ocpp/reset',
+    triggerMessage: '/ocpp/trigger-message'
   },
   reservations: {
     list: '/reservations',

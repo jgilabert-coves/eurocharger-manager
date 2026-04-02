@@ -1,14 +1,19 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { Helmet } from 'react-helmet-async';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
+import { Alert } from '@mui/material';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
+import Dialog from '@mui/material/Dialog';
+import Tooltip from '@mui/material/Tooltip';
+import Collapse from '@mui/material/Collapse';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
@@ -17,19 +22,25 @@ import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
-import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { fDateTime } from 'src/utils/format-time';
+import { fToNow, fDateTime } from 'src/utils/format-time';
 
 import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { AlarmCard } from 'src/components/cards/alarm-card';
+import { ResetDialog } from 'src/components/ocpp/reset/dialog';
+import { UnlockDialog } from 'src/components/ocpp/unlock/dialog';
+import { AvailabilityDialog } from 'src/components/ocpp/availability/dialog';
 
 import { type Alarm } from 'src/types/alarms';
 
@@ -45,13 +56,26 @@ const STATUS_COLORS: Record<string, 'info' | 'success' | 'error' | 'warning'> = 
   PENDING: 'warning',
 };
 
+type SelectedConnector = {
+  chargepointId: number;
+  connectorId: number;
+};
+
 // ----------------------------------------------------------------------
 
 export default function AlarmsView() {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [sorts, setSorts] = useState<{ field: string; order: 'asc' | 'desc' }[]>([]);
+  const [resolveTarget, setResolveTarget] = useState<Alarm | null>(null);
+  const [unlockTarget, setUnlockTarget] = useState<SelectedConnector | null>(null);
+  const [changeAvailabilityTarget, setChangeAvailabilityTarget] =
+    useState<SelectedConnector | null>(null);
+  const [resetTarget, setResetTarget] = useState<SelectedConnector | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ['alarms', 'list', { page, pageSize, searchQuery, sorts }],
@@ -88,6 +112,26 @@ export default function AlarmsView() {
   const getSortDirection = (field: string) => sorts.find((s) => s.field === field)?.order ?? 'asc';
   const isSorted = (field: string) => sorts.some((s) => s.field === field);
 
+  const { mutate: resolveAlarm, isPending: isResolving } = useMutation({
+    mutationFn: (id: number) => fetcher([endpoints.alarms.resolve(id), { method: 'PATCH' }]),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
+      setResolveTarget(null);
+      setSuccessMessage('Alarma marcada como resuelta');
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    },
+    onError: (error) => {
+      console.error('Failed to resolve alarm:', error);
+      setErrorMessage('Error al resolver la alarma. Por favor, inténtalo de nuevo.');
+      setResolveTarget(null);
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 3000);
+    },
+  });
+
   return (
     <>
       <Helmet>
@@ -122,6 +166,24 @@ export default function AlarmsView() {
           />
         </Box>
 
+        {/* Info - Error messages */}
+        <Collapse in={!!errorMessage} unmountOnExit>
+          <Box sx={{ mb: 3 }}>
+            <Alert severity="error" closeText="X" onClose={() => setErrorMessage(null)}>
+              {errorMessage}
+            </Alert>
+          </Box>
+        </Collapse>
+
+        {/* Success message */}
+        <Collapse in={!!successMessage} unmountOnExit>
+          <Box sx={{ mb: 3 }}>
+            <Alert severity="success" closeText="X" onClose={() => setSuccessMessage(null)}>
+              {successMessage}
+            </Alert>
+          </Box>
+        </Collapse>
+
         {/* Mobile: cards */}
         <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2, mb: 2 }}>
           {isLoading ? (
@@ -133,7 +195,34 @@ export default function AlarmsView() {
               No se encontraron alarmas
             </Typography>
           ) : (
-            rows.map((alarm) => <AlarmCard key={alarm.id} alarm={alarm} />)
+            rows.map((alarm) => (
+              <AlarmCard
+                key={alarm.id}
+                alarm={alarm}
+                onResolve={setResolveTarget}
+                onUnlock={(a) =>
+                  setUnlockTarget({
+                    chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                    connectorId:
+                      a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                  })
+                }
+                onChangeAvailability={(a) =>
+                  setChangeAvailabilityTarget({
+                    chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                    connectorId:
+                      a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                  })
+                }
+                onReset={(a) =>
+                  setResetTarget({
+                    chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                    connectorId:
+                      a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                  })
+                }
+              />
+            ))
           )}
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pt: 1 }}>
             <Stack direction="row" alignItems="center" spacing={1}>
@@ -182,8 +271,8 @@ export default function AlarmsView() {
           <TableContainer>
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>
+                <TableRow sx={{ bgcolor: 'background.neutral' }}>
+                  <TableCell sx={{ width: 110 }}>
                     <TableSortLabel
                       active={isSorted('status')}
                       direction={getSortDirection('status')}
@@ -192,11 +281,10 @@ export default function AlarmsView() {
                       Estado
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell>Cargador</TableCell>
-                  <TableCell>Conector</TableCell>
-                  <TableCell>Dirección</TableCell>
+                  <TableCell>Estación</TableCell>
+                  <TableCell>Conectores</TableCell>
                   <TableCell>Error</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ width: 170 }}>
                     <TableSortLabel
                       active={isSorted('date')}
                       direction={getSortDirection('date')}
@@ -204,6 +292,9 @@ export default function AlarmsView() {
                     >
                       Fecha
                     </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right" sx={{ width: 80 }}>
+                    Acciones
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -236,7 +327,10 @@ export default function AlarmsView() {
                       <TableRow
                         key={alarm.id}
                         hover
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                          '& td': { verticalAlign: 'top', py: 1.5 },
+                        }}
                       >
                         {/* Estado */}
                         <TableCell>
@@ -244,41 +338,38 @@ export default function AlarmsView() {
                             label={alarm.status}
                             color={STATUS_COLORS[alarm.status?.toUpperCase()] ?? 'default'}
                             size="small"
-                            variant="outlined"
+                            variant="soft"
+                            sx={{ fontWeight: 600 }}
                           />
                         </TableCell>
 
-                        {/* Cargador */}
+                        {/* Estación */}
                         <TableCell>
-                          <Stack spacing={0.5}>
-                            <Stack direction="row" alignItems="center" spacing={0.75}>
-                              <Iconify
-                                icon="mdi:ev-station"
-                                width={16}
-                                sx={{ color: 'primary.main', flexShrink: 0 }}
-                              />
-                              <Typography variant="subtitle2">
-                                {alarm.chargingStation?.name ?? '-'}
+                          <Stack spacing={0.25}>
+                            <Typography variant="subtitle2" fontWeight={700}>
+                              {alarm.chargingStation?.name ?? '—'}
+                            </Typography>
+                            {alarm.chargingStation?.address && (
+                              <Typography variant="caption" color="text.secondary">
+                                {alarm.chargingStation.address}
                               </Typography>
+                            )}
+                            <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ pt: 0.5 }}>
+                              {alarm.chargingStation?.chargepoints?.map((cp) => (
+                                <Link
+                                  to={`/chargingstations/${cp.id}`}
+                                  key={cp.id}
+                                  style={{ textDecoration: 'none' }}
+                                >
+                                  <Chip
+                                    label={cp.name ?? cp.ocpp_id ?? `#${cp.id}`}
+                                    size="small"
+                                    icon={<Iconify icon="mdi:ev-plug-type2" width={12} />}
+                                    sx={{ fontSize: '0.7rem', cursor: 'pointer' }}
+                                  />
+                                </Link>
+                              ))}
                             </Stack>
-                            {alarm.chargingStation?.chargepoints?.map((cp) => (
-                              <Stack
-                                key={cp.id}
-                                direction="row"
-                                alignItems="center"
-                                spacing={0.75}
-                                sx={{ pl: 0.5 }}
-                              >
-                                <Iconify
-                                  icon="mdi:ev-plug-type2"
-                                  width={14}
-                                  sx={{ color: 'text.secondary', flexShrink: 0 }}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  {cp.name ?? cp.ocpp_id ?? `Cargador #${cp.id}`}
-                                </Typography>
-                              </Stack>
-                            ))}
                           </Stack>
                         </TableCell>
 
@@ -289,46 +380,24 @@ export default function AlarmsView() {
                               —
                             </Typography>
                           ) : (
-                            <Stack spacing={0.5}>
+                            <Stack direction="row" flexWrap="wrap" gap={0.5}>
                               {allConnectors.map((conn) => (
-                                <Stack
+                                <Chip
                                   key={conn.id}
-                                  direction="row"
-                                  alignItems="center"
-                                  spacing={0.75}
-                                >
-                                  <Iconify
-                                    icon="mdi:power-plug-outline"
-                                    width={14}
-                                    sx={{ color: 'text.disabled', flexShrink: 0 }}
-                                  />
-                                  <Typography variant="caption">
-                                    {conn.name ?? `#${conn.id}`}
-                                    {conn.power ? ` · ${conn.power} kW` : ''}
-                                  </Typography>
-                                  <Chip
-                                    label={conn.status}
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{ height: 18, fontSize: '0.6rem' }}
-                                  />
-                                </Stack>
+                                  label={`${conn.name ?? `C${conn.id}`}${conn.power ? ` · ${conn.power} kW` : ''}`}
+                                  size="small"
+                                  variant="soft"
+                                  sx={{ fontWeight: 600, fontSize: '0.7rem' }}
+                                />
                               ))}
                             </Stack>
                           )}
                         </TableCell>
 
-                        {/* Dirección */}
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {alarm.chargingStation?.address ?? '—'}
-                          </Typography>
-                        </TableCell>
-
                         {/* Error */}
                         <TableCell>
                           <Stack spacing={0.25}>
-                            <Typography variant="caption" fontWeight={600}>
+                            <Typography variant="caption" fontWeight={700}>
                               {alarm.errorCode ?? '—'}
                             </Typography>
                             {alarm.errorInfo && (
@@ -341,9 +410,82 @@ export default function AlarmsView() {
 
                         {/* Fecha */}
                         <TableCell>
-                          <Typography variant="body2">
-                            {alarm.date ? fDateTime(alarm.date) : '—'}
-                          </Typography>
+                          <Stack spacing={0.25}>
+                            <Typography variant="caption">
+                              {alarm.date ? fDateTime(alarm.date) : '—'}
+                            </Typography>
+                            {alarm.date && (
+                              <Typography variant="caption" color="text.secondary">
+                                {fToNow(alarm.date)}
+                              </Typography>
+                            )}
+                          </Stack>
+                        </TableCell>
+
+                        {/* Acciones */}
+                        <TableCell align="right">
+                          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                            <Tooltip title="Marcar como resuelta">
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => setResolveTarget(alarm)}
+                              >
+                                <Iconify icon="eva:checkmark-circle-2-outline" width={18} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Desbloquear conector">
+                              <IconButton
+                                size="small"
+                                color="info"
+                                onClick={() =>
+                                  setUnlockTarget({
+                                    chargepointId:
+                                      alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                                    connectorId:
+                                      alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
+                                        ?.ocppId ?? 0,
+                                  })
+                                }
+                              >
+                                <Iconify icon="mdi:lock-open-outline" width={18} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Cambiar disponibilidad">
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() =>
+                                  setChangeAvailabilityTarget({
+                                    chargepointId:
+                                      alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                                    connectorId:
+                                      alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
+                                        ?.ocppId ?? 0,
+                                  })
+                                }
+                              >
+                                <Iconify icon="mdi:toggle-switch-outline" width={18} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Reiniciar cargador">
+                              <IconButton
+                                size="small"
+                                color="warning"
+                                onClick={() =>
+                                  setResetTarget({
+                                    chargepointId:
+                                      alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                                    connectorId:
+                                      alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
+                                        ?.ocppId ?? 0,
+                                  })
+                                }
+                              >
+                                <Iconify icon="mdi:sync" width={18} />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
                         </TableCell>
                       </TableRow>
                     );
@@ -373,6 +515,107 @@ export default function AlarmsView() {
           />
         </Card>
       </DashboardContent>
+
+      {/* Confirm resolve dialog */}
+      <Dialog
+        open={resolveTarget !== null}
+        onClose={() => setResolveTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Marcar como resuelta</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            ¿Confirmas que quieres marcar la alarma de{' '}
+            <strong>{resolveTarget?.chargingStation?.name ?? `#${resolveTarget?.id}`}</strong> como
+            resuelta?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResolveTarget(null)} disabled={isResolving}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            disabled={isResolving}
+            onClick={() => resolveTarget && resolveAlarm(resolveTarget.id)}
+          >
+            {isResolving ? <CircularProgress size={16} color="inherit" /> : 'Confirmar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirm unlock dialog */}
+      <UnlockDialog
+        open={unlockTarget !== null}
+        chargepointId={unlockTarget?.chargepointId ?? 0}
+        connectorId={unlockTarget?.connectorId ?? 0}
+        onClose={() => setUnlockTarget(null)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
+          setUnlockTarget(null);
+          setSuccessMessage('Conector desbloqueado correctamente');
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 3000);
+        }}
+        onError={(error) => {
+          console.error('Failed to unlock connector:', error);
+          setErrorMessage('Error al desbloquear el conector. Por favor, inténtalo de nuevo.');
+          setUnlockTarget(null);
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
+        }}
+      />
+
+      {/* Confirm change availability dialog */}
+      <AvailabilityDialog
+        open={changeAvailabilityTarget !== null}
+        chargepointId={changeAvailabilityTarget?.chargepointId ?? 0}
+        connectorId={changeAvailabilityTarget?.connectorId ?? 0}
+        onClose={() => setChangeAvailabilityTarget(null)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
+          setChangeAvailabilityTarget(null);
+          setSuccessMessage('Disponibilidad cambiada correctamente');
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 3000);
+        }}
+        onError={(error) => {
+          console.error('Failed to change availability:', error);
+          setErrorMessage('Error al cambiar la disponibilidad. Por favor, inténtalo de nuevo.');
+          setChangeAvailabilityTarget(null);
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
+        }}
+      />
+
+      {/* Confirm reset dialog */}
+      <ResetDialog
+        open={resetTarget !== null}
+        chargepointId={resetTarget?.chargepointId ?? 0}
+        onClose={() => setResetTarget(null)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
+          setResetTarget(null);
+          setSuccessMessage('Cargador reiniciado correctamente');
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 3000);
+        }}
+        onError={(error) => {
+          console.error('Failed to reset charger:', error);
+          setErrorMessage('Error al reiniciar el cargador. Por favor, inténtalo de nuevo.');
+          setResetTarget(null);
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
+        }}
+      />
     </>
   );
 }

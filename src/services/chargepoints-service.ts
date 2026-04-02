@@ -25,19 +25,6 @@ export const chargepointService = {
     return res;
   },
 
-  changeAvailability: async (
-    chargepoint: Chargepoint,
-    changeData: OCPPChangeAvailabilityRequest
-  ) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.changeAvailability;
-    const payload = {
-      id: chargepoint.ocpp_id,
-      ...changeData,
-    };
-    const res: OCPPChangeAvailabilityRequest = await post(url, payload);
-    return res;
-  },
-
   startTransaction: async (
     chargepoint: Chargepoint,
     transactionData: OCPPStartTrasactionRequest
@@ -95,25 +82,5 @@ export const chargepointService = {
     };
     const res: OCPPAuthorizationResponse = await post(url, payload);
     return res;
-  },
-
-  unlock: async (chargepoint: Chargepoint, connectorId: number) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.unlockConnector;
-    const payload = {
-      id: chargepoint.ocpp_id,
-      connectorId,
-    };
-    const res: OCPPAuthorizationResponse = await post(url, payload);
-    return res;
-  },
-
-  reset: async (chargepoint: Chargepoint, type: 'Soft' | 'Hard') => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.reset;
-    const payload = {
-      id: chargepoint.ocpp_id,
-      type,
-    };
-    const res: OCPPAuthorizationResponse = await post(url, payload);
-    return res;
-  },
+  }
 };
