@@ -39,16 +39,23 @@ const STATUS_COLORS: Record<string, 'info' | 'success' | 'warning' | 'error' | '
 type TransactionsTableProps = {
   endpoint: string;
   extraParams?: Record<string, string | number>;
+  enableSearch?: boolean;
+  defaultPageSize?: number;
 };
 
 // ----------------------------------------------------------------------
 
-export function TransactionsTable({ endpoint, extraParams }: TransactionsTableProps) {
+export function TransactionsTable({ 
+  endpoint, 
+  enableSearch = true,
+  defaultPageSize = 10,
+  extraParams 
+}: TransactionsTableProps) {
   const [rows, setRows] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
   const [searchQuery, setSearchQuery] = useState('');
   const [orderBy, setOrderBy] = useState('date');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
@@ -88,11 +95,12 @@ export function TransactionsTable({ endpoint, extraParams }: TransactionsTablePr
   return (
     <>
       {/* Search */}
-      <Box sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          placeholder="Buscar por usuario, estación, cargador..."
-          value={searchQuery}
+      {enableSearch && (
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            fullWidth
+            placeholder="Buscar por usuario, estación, cargador..."
+              value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
             setPage(0);
@@ -110,6 +118,7 @@ export function TransactionsTable({ endpoint, extraParams }: TransactionsTablePr
           }}
         />
       </Box>
+      )}
 
       {/* Table */}
       <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>

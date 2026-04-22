@@ -19,7 +19,7 @@ export const CHANGE_AVAILABILITY_TYPES = {
 
 export const chargepointService = {
   getConfiguration: async (chargepoint: Chargepoint) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.configuration;
+    const url = endpoints.chargepoints.single(chargepoint.id) + endpoints.ocpp.configuration;
 
     const res: OCPPConfigurationResponse = await fetcher(url);
     return res;
@@ -29,7 +29,7 @@ export const chargepointService = {
     chargepoint: Chargepoint,
     transactionData: OCPPStartTrasactionRequest
   ) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.startTransaction;
+    const url = endpoints.chargepoints.single(chargepoint.id) + endpoints.ocpp.startTransaction;
     const payload = {
       id: chargepoint.ocpp_id,
       ...transactionData,
@@ -42,7 +42,7 @@ export const chargepointService = {
     chargepoint: Chargepoint,
     transactionData: OCPPStopTransactionRequest
   ) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.stopTransaction;
+    const url = endpoints.chargepoints.single(chargepoint.id) + endpoints.ocpp.stopTransaction;
     const payload = {
       id: chargepoint.ocpp_id,
       ...transactionData,
@@ -52,7 +52,7 @@ export const chargepointService = {
   },
 
   reserveNow: async (chargepoint: Chargepoint, reservationData: OCPPReserveNowRequest) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.reserveNow;
+    const url = endpoints.chargepoints.single(chargepoint.id) + endpoints.ocpp.reserveNow;
     const payload = {
       id: chargepoint.ocpp_id,
       ...reservationData,
@@ -65,7 +65,7 @@ export const chargepointService = {
     chargepoint: Chargepoint,
     reservationData: OCPPCancelReservationRequest
   ) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.cancelReservation;
+    const url = endpoints.chargepoints.single(chargepoint.id) + endpoints.ocpp.cancelReservation;
     const payload = {
       id: chargepoint.ocpp_id,
       ...reservationData,
@@ -75,7 +75,7 @@ export const chargepointService = {
   },
 
   triggerMessage: async (chargepoint: Chargepoint, messageData: OCPPTriggerMessageRequest) => {
-    const url = endpoints.chargepoints.single + chargepoint.id + endpoints.ocpp.triggerMessage;
+    const url = endpoints.chargepoints.single(chargepoint.id) + endpoints.ocpp.triggerMessage;
     const payload = {
       id: chargepoint.ocpp_id,
       ...messageData,

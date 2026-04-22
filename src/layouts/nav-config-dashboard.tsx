@@ -62,6 +62,10 @@ const ICONS = {
 // ----------------------------------------------------------------------
 
 export const navData: NavSectionProps['data'] = [
+  {
+    title: 'Inicio',
+    path: paths.dashboard.root,
+  },
   /**
    * Transactions — visible para todos los roles
    */

@@ -118,7 +118,7 @@ export const endpoints = {
   },
   chargepoints: {
     list: '/chargingstations',
-    single: '/chargingstations/',
+    single: (id: number) => `/chargingstations/${id}`,
     changeAvailability: (id: number) => `/chargingstations/${id}/ocpp/change-availability`,
     unlock: (id: number) => `/chargingstations/${id}/ocpp/unlock-connector`,
     reset: (id: number) => `/chargingstations/${id}/ocpp/reset`,

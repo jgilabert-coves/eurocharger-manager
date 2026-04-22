@@ -9,8 +9,8 @@ import {AuthGuard} from "../../auth/guard";
 import {DashboardLayout} from "../../layouts/dashboard";
 import {LoadingScreen} from "../../components/loading-screen";
 
-const ChargingStationsPage = lazy(() => import('src/pages/chargingstations/chargepoints-list-view'));
-const ChargingStationView = lazy(() => import('src/pages/chargingstations/charging-station-view'));
+const ChargingStationsPage = lazy(() => import('src/pages/chargingstations/chargepoints-list-v2'));
+const ChargingStationView = lazy(() => import('src/pages/chargingstations/charger-detail-v2'));
 
 function SuspenseOutlet() {
     const pathname = usePathname();

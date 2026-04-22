@@ -7,6 +7,7 @@ import { useBoolean } from 'minimal-shared/hooks';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import { iconButtonClasses } from '@mui/material/IconButton';
 
 import { _contacts, _notifications } from 'src/_mock';
@@ -139,38 +140,7 @@ export function DashboardLayout({
             */}
         </>
       ),
-      rightArea: (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
-          {/** @slot Searchbar
-          <Searchbar data={navData} />
-           */
-          }
-          {/** @slot Language popover
-          <LanguagePopover
-            data={[
-              { value: 'en', label: 'English', countryCode: 'GB' },
-              { value: 'fr', label: 'French', countryCode: 'FR' },
-              { value: 'vi', label: 'Vietnamese', countryCode: 'VN' },
-              { value: 'cn', label: 'Chinese', countryCode: 'CN' },
-              { value: 'ar', label: 'Arabic', countryCode: 'SA' },
-            ]}
-          />
-           */}
-
-
-          {/** @slot Notifications popover
-          <NotificationsDrawer data={_notifications} />
-           */}
-          {/** @slot Contacts popover
-          <ContactsPopover data={_contacts} />
-            */}
-          {/** @slot Settings button
-          <SettingsButton />
-            */}
-          {/** @slot Account drawer */}
-          <AccountDrawer data={_account} />
-        </Box>
-      ),
+      rightArea: null,
     };
 
     return (
@@ -185,21 +155,51 @@ export function DashboardLayout({
     );
   };
 
-  const renderSidebar = () => (
-    <NavVertical
-      data={navData}
-      isNavMini={isNavMini}
-      layoutQuery={layoutQuery}
-      cssVars={navVars.section}
-      currentRole={currentRole}
-      onToggleNav={() =>
-        settings.setField(
-          'navLayout',
-          settings.state.navLayout === 'vertical' ? 'mini' : 'vertical'
-        )
-      }
-    />
-  );
+  const renderSidebar = () => {
+    const sidebarAccount = (
+      <Box
+        sx={(t) => ({
+          px: isNavMini ? 0.5 : 2,
+          py: 1.5,
+          gap: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: isNavMini ? 'center' : 'flex-start',
+          borderTop: `1px solid ${t.vars.palette.divider}`,
+        })}
+      >
+        <AccountDrawer data={_account} />
+
+        {!isNavMini && (
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="subtitle2" noWrap>
+              {user?.displayName ?? user?.email}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {user?.email}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+
+    return (
+      <NavVertical
+        data={navData}
+        isNavMini={isNavMini}
+        layoutQuery={layoutQuery}
+        cssVars={navVars.section}
+        currentRole={currentRole}
+        onToggleNav={() =>
+          settings.setField(
+            'navLayout',
+            settings.state.navLayout === 'vertical' ? 'mini' : 'vertical'
+          )
+        }
+        slots={{ bottomArea: sidebarAccount }}
+      />
+    );
+  };
 
   const renderFooter = () => null;
 

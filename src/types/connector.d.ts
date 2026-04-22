@@ -22,4 +22,5 @@ export type Connector = {
     voltage?: number | null;
     current?: number | null;
     rateId?: number | null;
+    rateName?: string | null;
 }

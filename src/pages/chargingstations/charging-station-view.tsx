@@ -46,7 +46,7 @@ export default function ChargingStationView() {
   const [configError, setConfigError] = useState<string | null>(null);
 
   const fetchChargetpointData = async () => {
-    const response: ChargingStationResponse = await fetcher(endpoints.chargepoints.single + id);
+    const response: ChargingStationResponse = await fetcher(endpoints.chargepoints.single(Number(id)));
     console.log('Pidiendo cargador con id: ' + id);
     return response;
   };
