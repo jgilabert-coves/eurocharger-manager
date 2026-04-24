@@ -132,7 +132,7 @@ function ConnectorFormCard({
             ))}
           </TextField>
 
-          <Stack direction="row" spacing={1}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <TextField
               label="Nombre (opcional)"
               size="small"

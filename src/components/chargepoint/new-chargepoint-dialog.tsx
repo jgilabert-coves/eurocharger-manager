@@ -20,6 +20,7 @@ import Stepper from '@mui/material/Stepper';
 import MenuItem from '@mui/material/MenuItem';
 import StepLabel from '@mui/material/StepLabel';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -300,25 +301,42 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
             onChange={(e) => setNewStation((p) => ({ ...p, address: e.target.value }))}
             placeholder="Ej. C/ Mayor, 2"
           />
-          <TextField
-            label="Ciudad"
-            required
-            size="small"
-            fullWidth
-            value={newStation.city}
-            onChange={(e) => setNewStation((p) => ({ ...p, city: e.target.value }))}
-            placeholder="Ej. Madrid"
-          />
-          <Stack direction="row" spacing={1.5}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <TextField
+              label="Ciudad"
+              required
+              size="small"
+              fullWidth
+              value={newStation.city}
+              onChange={(e) => setNewStation((p) => ({ ...p, city: e.target.value }))}
+              placeholder="Ej. Madrid"
+            />
             <TextField
               label="Código postal"
               required
               size="small"
-              sx={{ width: 140 }}
+              sx={{ minWidth: 130 }}
               value={newStation.postalCode}
               onChange={(e) => setNewStation((p) => ({ ...p, postalCode: e.target.value }))}
               placeholder="29006"
             />
+          </Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <TextField
+              select
+              label="País"
+              required
+              size="small"
+              fullWidth
+              value={newStation.country}
+              onChange={(e) =>
+                setNewStation((p) => ({ ...p, country: e.target.value, province: '' }))
+              }
+            >
+              {COUNTRIES.map((c) => (
+                <MenuItem key={c} value={c}>{c}</MenuItem>
+              ))}
+            </TextField>
             <TextField
               select
               label="Provincia"
@@ -334,21 +352,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               ))}
             </TextField>
           </Stack>
-          <TextField
-            select
-            label="País"
-            required
-            size="small"
-            fullWidth
-            value={newStation.country}
-            onChange={(e) =>
-              setNewStation((p) => ({ ...p, country: e.target.value, province: '' }))
-            }
-          >
-            {COUNTRIES.map((c) => (
-              <MenuItem key={c} value={c}>{c}</MenuItem>
-            ))}
-          </TextField>
+          
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
               Ubicación en el mapa <span style={{ color: 'inherit' }}>*</span>
@@ -410,7 +414,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   );
 
   const renderStep2 = () => (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} pt={3}>
       <TextField
         label="Nombre del cargador"
         required
@@ -538,11 +542,20 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth="lg"
       fullWidth
       PaperProps={{ sx: { height: 600 } }}
     >
-      <DialogTitle>Nuevo cargador</DialogTitle>
+      <DialogTitle sx={{ pr: 6 }}>
+        Nuevo cargador
+        <IconButton
+          onClick={handleClose}
+          size="small"
+          sx={{ position: 'absolute', top: 12, right: 12, color: 'text.secondary' }}
+        >
+          <Iconify icon="mingcute:close-line" width={20} />
+        </IconButton>
+      </DialogTitle>
 
       <Box sx={{ px: 3, pb: 2 }}>
         <Stepper activeStep={step} alternativeLabel>
@@ -556,7 +569,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
 
       <Divider />
 
-      <DialogContent sx={{ overflow: 'hidden' }}>
+      <DialogContent sx={{ overflowY: 'auto' }}>
         <Box sx={{ pt: 1 }}>
           {step === 0 && renderStep0()}
           {step === 1 && renderStep1()}

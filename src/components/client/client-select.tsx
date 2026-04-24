@@ -267,23 +267,34 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
 
   return (
     <Stack spacing={2}>
-      <TextField
-        label="Buscar cliente"
-        size="small"
-        fullWidth
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Nombre del cliente..."
-        slotProps={{
-          input: {
-            startAdornment: (
-              <Box component="span" sx={{ mr: 1, color: 'text.disabled', display: 'flex' }}>
-                <Iconify icon="eva:search-fill" width={18} />
-              </Box>
-            ),
-          },
-        }}
-      />
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <TextField
+          label="Buscar cliente"
+          size="small"
+          fullWidth
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Nombre del cliente..."
+          slotProps={{
+            input: {
+              startAdornment: (
+                <Box component="span" sx={{ mr: 1, color: 'text.disabled', display: 'flex' }}>
+                  <Iconify icon="eva:search-fill" width={18} />
+                </Box>
+              ),
+            },
+          }}
+        />
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<Iconify icon="mdi:plus" width={16} />}
+          onClick={() => setMode('create')}
+          sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+        >
+          Nuevo cliente
+        </Button>
+      </Stack>
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
@@ -330,13 +341,6 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
         </Stack>
       )}
 
-      <Button
-        variant="outlined"
-        startIcon={<Iconify icon="mdi:plus" width={16} />}
-        onClick={() => setMode('create')}
-      >
-        Crear nuevo cliente
-      </Button>
     </Stack>
   );
 }

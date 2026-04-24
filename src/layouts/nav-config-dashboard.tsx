@@ -87,7 +87,7 @@ export const navData: NavSectionProps['data'] = [
    * Estaciones — visible para todos los roles
    */
   {
-    title: 'Estaciones',
+    title: 'Cargadores',
     path: paths.chargingstations.list,
   },
   /**
