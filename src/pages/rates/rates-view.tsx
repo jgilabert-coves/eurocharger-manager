@@ -2,6 +2,7 @@ import type { AxiosRequestConfig } from 'axios';
 import type { GridColDef, GridSortModel } from '@mui/x-data-grid';
 import type { RateItem, RatesDataTableResponse } from 'src/types/rates';
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 
@@ -12,6 +13,8 @@ import Typography from '@mui/material/Typography';
 import { paths } from 'src/routes/paths';
 
 import { fetcher, endpoints } from 'src/lib/axios';
+
+import { CreateRateDialog } from 'src/components/rate/create-rate-dialog';
 
 import { CONFIG } from '../../global-config';
 import { DataTable } from '../../components/data-table';
@@ -42,6 +45,8 @@ const columns: GridColDef<RateItem>[] = [
 
 export default function RatesView() {
   const navigate = useNavigate();
+
+  const [createRateOpen, setCreateRateOpen] = useState(false);
 
   const fetchRates = async (
     page: number,
@@ -81,7 +86,7 @@ export default function RatesView() {
           }}
         >
           <Typography variant="h2">Tarifas</Typography>
-          <Button variant="contained" onClick={() => navigate(paths.rates.create)}>
+          <Button variant="contained" onClick={() => setCreateRateOpen(true)}>
             + Nueva tarifa
           </Button>
         </Box>
@@ -96,6 +101,13 @@ export default function RatesView() {
           initialPageSize={10}
           pageSizeOptions={[10, 20, 40]}
           onRowClick={(params) => navigate(paths.rates.detail(String(params.row.id)))}
+        />
+        <CreateRateDialog
+          open={createRateOpen}
+          onClose={() => setCreateRateOpen(false)}
+          onSuccess={() => {
+            setCreateRateOpen(false);
+          }}
         />
       </DashboardContent>
     </>

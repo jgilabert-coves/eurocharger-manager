@@ -9,6 +9,7 @@ import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import Button from '@mui/material/Button';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -33,6 +34,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
 import { ChargerStatusLabel } from 'src/components/chargepoint/charger-status-label';
+import { ChargerSetupDialog } from 'src/components/chargepoint/charger-setup-dialog';
+import { NewChargepointDialog } from 'src/components/chargepoint/new-chargepoint-dialog';
 
 import { CONFIG } from '../../global-config';
 
@@ -69,6 +72,8 @@ export default function ChargepointsListV2() {
   const [orderBy, setOrderBy] = useState('name');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
+  const [setupChargepointId, setSetupChargepointId] = useState<number | null>(null);
 
   const fetchChargepoints = useCallback(async () => {
     try {
@@ -128,6 +133,13 @@ export default function ChargepointsListV2() {
               </Typography>
             )}
           </Box>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mingcute:add-line" width={18} />}
+            onClick={() => setNewDialogOpen(true)}
+          >
+            Nuevo cargador
+          </Button>
         </Stack>
 
         {/* Search + status filter */}
@@ -369,6 +381,24 @@ export default function ChargepointsListV2() {
           />
         </Card>
       </DashboardContent>
+
+      <NewChargepointDialog
+        open={newDialogOpen}
+        onClose={() => setNewDialogOpen(false)}
+        onSuccess={(newId) => {
+          fetchChargepoints();
+          if (newId != null) setSetupChargepointId(newId);
+        }}
+      />
+
+      <ChargerSetupDialog
+        open={setupChargepointId != null}
+        chargepointId={setupChargepointId}
+        onClose={() => {
+          setSetupChargepointId(null);
+          fetchChargepoints();
+        }}
+      />
     </>
   );
 }

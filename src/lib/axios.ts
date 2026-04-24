@@ -79,6 +79,26 @@ export const post = async (url: string, data: any) => {
   }
 };
 
+export const put = async (url: string, data: any) => {
+  try {
+    const res = await axiosInstance.put(url, data);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to put:', error);
+    throw error;
+  }
+};
+
+export const del = async (url: string) => {
+  try {
+    const res = await axiosInstance.delete(url);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to delete:', error);
+    throw error;
+  }
+};
+
 // ----------------------------------------------------------------------
 
 export const endpoints = {
@@ -112,16 +132,28 @@ export const endpoints = {
   },
   clients: {
     list: '/clients',
+    create: '/clients',
   },
   operators: {
     list: '/operators',
   },
+  locations: {
+    list: '/locations',
+    create: '/locations',
+  },
   chargepoints: {
     list: '/chargingstations',
+    create: '/chargingstations',
     single: (id: number) => `/chargingstations/${id}`,
     changeAvailability: (id: number) => `/chargingstations/${id}/ocpp/change-availability`,
     unlock: (id: number) => `/chargingstations/${id}/ocpp/unlock-connector`,
     reset: (id: number) => `/chargingstations/${id}/ocpp/reset`,
+  },
+  connectors: {
+    create: (chargepointId: number) => `/chargingstations/${chargepointId}/connectors`,
+    update: (chargepointId: number, connectorId: number) => `/chargingstations/${chargepointId}/connectors/${connectorId}`,
+    assign: (chargepointId: number, connectorId: number) => `/chargingstations/${chargepointId}/connectors/${connectorId}/rate`,
+    deassign: (chargepointId: number, connectorId: number, rateId: number) => `/chargingstations/${chargepointId}/connectors/${connectorId}/rate/${rateId}`,
   },
   alarms: {
     list: '/alarms',

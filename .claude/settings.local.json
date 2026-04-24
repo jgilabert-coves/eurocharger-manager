@@ -5,7 +5,8 @@
       "Bash(wc -l /Users/jonaygilabertlopez/Projects/eurocharger-manager/src/pages/**/*.tsx)",
       "Bash(npm uninstall:*)",
       "Bash(npm install:*)",
-      "Bash(grep -E \"\\(tsconfig|package\\\\.json|\\\\.ts$|\\\\.tsx$\\)\")"
+      "Bash(grep -E \"\\(tsconfig|package\\\\.json|\\\\.ts$|\\\\.tsx$\\)\")",
+      "Bash(xargs cat *)"
     ]
   }
 }

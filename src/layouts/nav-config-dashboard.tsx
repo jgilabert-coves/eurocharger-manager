@@ -107,11 +107,7 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Tarifas',
     path: paths.rates.list,
-    roles: ['Eurocharger', 'Advanced_Profile'],
-    children: [
-      { title: 'Listado', path: paths.rates.list },
-      { title: 'Crear tarifa', path: paths.rates.create },
-    ],
+    roles: ['Eurocharger', 'Advanced_Profile']
   },
   /**
    * Alarmas — visible para todos los roles
