@@ -123,4 +123,9 @@ export const navData: NavSectionProps['data'] = [
     title: 'Incidencias',
     path: paths.incidents.list,
   },
+  {
+    title: 'Usuarios',
+    path: paths.appUsers.list,
+    roles: ['Eurocharger', 'Advanced_Profile'],
+  },
 ];

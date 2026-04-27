@@ -35,13 +35,9 @@ export function AuthProvider({ children }: Props) {
 
         // La API devuelve los datos del JWT directamente, NO envueltos en { user: ... }.
         // Estructura real: { user: 9, email: "...", roles: ["Eurocharger"], permissions: [...], ... }
-        const apiUser: ApiUserResponse = res.data;
-        console.log('Usuario autenticado:', apiUser);
+        // La API devuelve { status_code, error, user: { ... } }
+        const apiUser: ApiUserResponse = res.data?.user ?? res.data;
         if (apiUser) {
-          // Normalizamos la respuesta de la API a nuestro formato interno (UserType):
-          //   - API: `user` (id numérico) → interno: `id`
-          //   - API: `roles` (array)      → interno: `roles` (array completo)
-          //   - API: `permissions` (array) → se pasa directamente
           setState({
             user: {
               id: apiUser.user,

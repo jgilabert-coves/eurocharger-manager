@@ -225,7 +225,6 @@ export default function AuthorizationsListView() {
                         <Stack spacing={0.25}>
                           <Typography variant="subtitle2">
                             {group.user.name}
-                            {group.user.surname ? ` ${group.user.surname}` : ''}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {group.user.email}
@@ -418,7 +417,7 @@ function AddPrivilegeDialog({
           </Typography>
           {selectedUser ? (
             <Chip
-              label={`${selectedUser.name} ${selectedUser.surname ?? ''} — ${selectedUser.email}`}
+              label={`${selectedUser.name} — ${selectedUser.email}`}
               onDelete={() => setSelectedUser(null)}
             />
           ) : (
@@ -445,7 +444,7 @@ function AddPrivilegeDialog({
                     <MenuItem key={u.id} onClick={() => handleSelectUser(u)}>
                       <Stack spacing={0}>
                         <Typography variant="body2">
-                          {u.name} {u.surname ?? ''}
+                          {u.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {u.email}

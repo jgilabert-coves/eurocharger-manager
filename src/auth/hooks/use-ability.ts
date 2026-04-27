@@ -33,7 +33,7 @@ export function useAbility() {
       if (!user) return false;
 
       // Los admins tienen acceso total (similar a Gate::before en Laravel)
-      if (user.role === 'Eurocharger') return true;
+      if (user.roles?.includes('Eurocharger')) return true;
 
       return user.permissions?.includes(permission) ?? false;
     },
@@ -66,8 +66,11 @@ export function useAbility() {
    */
   const hasRole = useCallback(
     (role: Role): boolean => {
+      console.log("Comprobando rol ", role)
       if (!user) return false;
-      return user.role === role;
+      console.log(user.roles);
+      console.log(user.roles?.includes(role))
+      return user.roles?.includes(role) ?? false;
     },
     [user]
   );
@@ -79,7 +82,7 @@ export function useAbility() {
   const hasAnyRole = useCallback(
     (roles: Role[]): boolean => {
       if (!user) return false;
-      return roles.includes(user.role);
+      return roles.some((r) => user.roles?.includes(r));
     },
     [user]
   );

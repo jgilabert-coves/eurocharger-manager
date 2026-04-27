@@ -130,6 +130,14 @@ export const endpoints = {
     createFromExcel: '/rates/excel',
     previewExcel: '/rates/excel/preview',
   },
+  appUsers: {
+    list: '/appusers',
+    single: (id: number) => `/appusers/${id}`,
+    billing: (id: number) => `/appusers/${id}/billing`,
+    update: (id: number) => `/appusers/${id}`,
+    transactions: (id: number) => `/appusers/${id}/transactions`,
+    topup: (id: number) => `/appusers/${id}/wallet/topup`,
+  },
   clients: {
     list: '/clients',
     create: '/clients',

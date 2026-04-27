@@ -21,6 +21,9 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
 import { del, put, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
@@ -496,6 +499,7 @@ export type ChargerSetupDialogProps = {
 };
 
 export function ChargerSetupDialog({ open, chargepointId, onClose }: ChargerSetupDialogProps) {
+  const router = useRouter();
   const [chargepoint, setChargepoint] = useState<Chargepoint | null>(null);
   const [loadingCp, setLoadingCp] = useState(false);
   const [editState, setEditState] = useState<
@@ -636,7 +640,15 @@ export function ChargerSetupDialog({ open, chargepointId, onClose }: ChargerSetu
       </DialogContent>
 
       <DialogActions>
-        <Button variant="contained" onClick={handleClose}>
+        <Button
+          variant="contained"
+          onClick={() => {
+            handleClose();
+            if (chargepointId != null) {
+              router.push(paths.chargingstations.detail(String(chargepointId)));
+            }
+          }}
+        >
           Finalizar
         </Button>
       </DialogActions>

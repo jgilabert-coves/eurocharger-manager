@@ -71,4 +71,8 @@ export const paths = {
   incidents: {
     list: `/incidents`,
   },
+  appUsers: {
+    list: `/appusers`,
+    detail: (id: string | number) => `/appusers/${id}`,
+  },
 };

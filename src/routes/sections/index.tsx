@@ -8,6 +8,7 @@ import { CONFIG } from 'src/global-config';
 import { authRoutes } from './auth';
 import { ratesRoutes } from './rates';
 import { alarmsRoutes } from './alarms';
+import { appUsersRoutes } from './appusers';
 import { incidentsRoutes } from './incidents';
 import { dashboardRoutes } from './dashboard';
 import { privilegesRoutes } from './privileges';
@@ -38,6 +39,8 @@ export const routesSection: RouteObject[] = [
   ...alarmsRoutes,
 
   ...incidentsRoutes,
+
+  ...appUsersRoutes,
 
   {
     path: '/',

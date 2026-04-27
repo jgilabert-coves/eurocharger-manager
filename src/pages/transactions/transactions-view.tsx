@@ -23,7 +23,7 @@ export default function TransactionsView() {
       </Helmet>
       <DashboardContent>
         <Typography variant="h2" sx={{ mb: 5 }}>
-          Recargas
+          Recargas activas
         </Typography>
         <TransactionsTable
           endpoint={endpoints.transactions.current}
