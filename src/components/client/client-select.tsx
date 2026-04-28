@@ -13,42 +13,22 @@ import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { COUNTRIES } from 'src/assets/data/countries';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
-
-const PROVINCES = [
-  'Álava', 'Albacete', 'Alicante', 'Almería', 'Asturias', 'Ávila', 'Badajoz',
-  'Barcelona', 'Burgos', 'Cáceres', 'Cádiz', 'Cantabria', 'Castellón', 'Ciudad Real',
-  'Córdoba', 'Cuenca', 'Gerona', 'Granada', 'Guadalajara', 'Guipúzcoa', 'Huelva',
-  'Huesca', 'Islas Baleares', 'Jaén', 'La Coruña', 'La Rioja', 'Las Palmas', 'León',
-  'Lérida', 'Lugo', 'Madrid', 'Málaga', 'Murcia', 'Navarra', 'Orense', 'Palencia',
-  'Pontevedra', 'Salamanca', 'Santa Cruz de Tenerife', 'Segovia', 'Sevilla', 'Soria',
-  'Tarragona', 'Teruel', 'Toledo', 'Valencia', 'Valladolid', 'Vizcaya', 'Zamora',
-  'Zaragoza', 'Ceuta', 'Melilla',
-];
-
-const COUNTRIES = [
-  'España', 'Portugal', 'Francia', 'Alemania', 'Italia', 'Reino Unido', 'Países Bajos',
-  'Bélgica', 'Suiza', 'Austria', 'Suecia', 'Noruega', 'Dinamarca', 'Finlandia',
-  'Polonia', 'República Checa', 'Hungría', 'Rumanía', 'Bulgaria', 'Grecia',
-];
-
-// ----------------------------------------------------------------------
 
 const DEFAULT_FORM: CreateClientPayload = {
-  nombre: '',
-  apellidos: '',
-  email: '',
-  cif: '',
-  direccion: '',
-  ciudad: '',
-  codigo_postal: '',
-  provincia: '',
-  pais: 'España',
-  telefono: '',
+  name: '',
+  email: null,
+  cif: null,
+  address: null,
+  city: null,
+  postalCode: null,
+  stateProvinceId: null,
+  countryId: null,
+  phone: null,
 };
 
 export type ClientSelectProps = {
@@ -94,9 +74,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
       setForm((p) => ({ ...p, [field]: e.target.value }));
 
   const canCreate =
-    form.nombre.trim() !== '' &&
-    form.email.trim() !== '' &&
-    form.cif.trim() !== '';
+    form.name.trim() !== ''
 
   const handleCreate = async () => {
     try {
@@ -138,26 +116,18 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Nombre"
+                label="Nombre completo o Razón social"
                 required
                 size="small"
                 fullWidth
-                value={form.nombre}
-                onChange={set('nombre')}
-              />
-              <TextField
-                label="Apellidos"
-                size="small"
-                fullWidth
-                value={form.apellidos}
-                onChange={set('apellidos')}
+                value={form.name}
+                onChange={set('name')}
               />
             </Stack>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label="Email"
-                required
                 size="small"
                 fullWidth
                 type="email"
@@ -166,7 +136,6 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
               />
               <TextField
                 label="CIF / NIF"
-                required
                 size="small"
                 fullWidth
                 value={form.cif}
@@ -178,8 +147,8 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
               label="Dirección"
               size="small"
               fullWidth
-              value={form.direccion}
-              onChange={set('direccion')}
+              value={form.address}
+              onChange={set('address')}
             />
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -187,15 +156,15 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
                 label="Ciudad"
                 size="small"
                 fullWidth
-                value={form.ciudad}
-                onChange={set('ciudad')}
+                value={form.city}
+                onChange={set('city')}
               />
               <TextField
                 label="Código postal"
                 size="small"
                 sx={{ width: { sm: 160 } }}
-                value={form.codigo_postal}
-                onChange={set('codigo_postal')}
+                value={form.postalCode}
+                onChange={set('postalCode')}
               />
             </Stack>
 
@@ -205,12 +174,12 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
                 label="País"
                 size="small"
                 fullWidth
-                value={form.pais}
-                onChange={set('pais')}
+                value={form.countryId}
+                onChange={set('countryId')}
               >
                 {COUNTRIES.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -219,13 +188,13 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
                 label="Provincia"
                 size="small"
                 fullWidth
-                value={form.provincia}
-                onChange={set('provincia')}
-                disabled={form.pais !== 'España'}
+                value={form.stateProvinceId}
+                onChange={set('stateProvinceId')}
+                disabled={form.countryId !== 64}
               >
-                {PROVINCES.map((p) => (
-                  <MenuItem key={p} value={p}>
-                    {p}
+                {COUNTRIES.find((c) => c.id === form.countryId)?.state_provinces.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -235,8 +204,8 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
               label="Teléfono"
               size="small"
               fullWidth
-              value={form.telefono}
-              onChange={set('telefono')}
+              value={form.phone}
+              onChange={set('phone')}
             />
 
             {createError && (

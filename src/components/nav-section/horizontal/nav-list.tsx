@@ -130,7 +130,7 @@ export function NavList({
     );
 
   // Hidden item by role
-  if (data.roles && currentRole && !data.roles.includes(currentRole)) {
+  if (data.roles && currentRole && !data.roles.some((r) => currentRole.includes(r))) {
     return null;
   }
 

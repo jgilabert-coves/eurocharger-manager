@@ -23,8 +23,8 @@ export type NavVerticalProps = React.ComponentProps<'div'> & {
   layoutQuery?: Breakpoint;
   onToggleNav: () => void;
   data: NavSectionProps['data'];
-  /** Rol del usuario actual — se usa para filtrar items del menú */
-  currentRole?: string;
+  /** Roles del usuario actual — se usan para filtrar items del menú */
+  currentRole?: string[];
   slots?: {
     topArea?: React.ReactNode;
     bottomArea?: React.ReactNode;

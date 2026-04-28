@@ -72,7 +72,7 @@ export function DashboardLayout({
   // Rol del usuario actual — se usa para filtrar items del menú de navegación.
   // Los items con la prop `roles` solo se muestran si el rol del usuario está incluido.
   const { user } = useAuthContext();
-  const currentRole = user?.role;
+  const currentRole = user?.roles;
 
   const navVars = dashboardNavColorVars(theme, settings.state.navColor, settings.state.navLayout);
 

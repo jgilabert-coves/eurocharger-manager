@@ -35,25 +35,82 @@ import { post, fetcher, endpoints } from 'src/lib/axios';
 import { Iconify } from 'src/components/iconify';
 import { ClientSelect } from 'src/components/client/client-select';
 
+import { useAbility } from 'src/auth/hooks/use-ability';
+import { useAuthContext } from 'src/auth/hooks/use-auth-context';
+
+
 // ----------------------------------------------------------------------
 
-const STEPS = ['Cliente', 'Estación', 'Cargador', 'Resumen'];
+const STEPS_EUROCHARGER = ['Cliente', 'Estación', 'Cargador', 'Resumen'];
+const STEPS_CLIENT = ['Estación', 'Cargador', 'Resumen'];
 
 type StationMode = 'existing' | 'new';
 
 const SPAIN_PROVINCES = [
-  'Álava', 'Albacete', 'Alicante', 'Almería', 'Asturias', 'Ávila', 'Badajoz', 'Barcelona',
-  'Burgos', 'Cáceres', 'Cádiz', 'Cantabria', 'Castellón', 'Ciudad Real', 'Córdoba', 'Cuenca',
-  'Girona', 'Granada', 'Guadalajara', 'Gipuzkoa', 'Huelva', 'Huesca', 'Illes Balears', 'Jaén',
-  'La Coruña', 'La Rioja', 'Las Palmas', 'León', 'Lleida', 'Lugo', 'Madrid', 'Málaga',
-  'Murcia', 'Navarra', 'Ourense', 'Palencia', 'Pontevedra', 'Salamanca',
-  'Santa Cruz de Tenerife', 'Segovia', 'Sevilla', 'Soria', 'Tarragona', 'Teruel', 'Toledo',
-  'Valencia', 'Valladolid', 'Bizkaia', 'Zamora', 'Zaragoza',
+  'Álava',
+  'Albacete',
+  'Alicante',
+  'Almería',
+  'Asturias',
+  'Ávila',
+  'Badajoz',
+  'Barcelona',
+  'Burgos',
+  'Cáceres',
+  'Cádiz',
+  'Cantabria',
+  'Castellón',
+  'Ciudad Real',
+  'Córdoba',
+  'Cuenca',
+  'Girona',
+  'Granada',
+  'Guadalajara',
+  'Gipuzkoa',
+  'Huelva',
+  'Huesca',
+  'Illes Balears',
+  'Jaén',
+  'La Coruña',
+  'La Rioja',
+  'Las Palmas',
+  'León',
+  'Lleida',
+  'Lugo',
+  'Madrid',
+  'Málaga',
+  'Murcia',
+  'Navarra',
+  'Ourense',
+  'Palencia',
+  'Pontevedra',
+  'Salamanca',
+  'Santa Cruz de Tenerife',
+  'Segovia',
+  'Sevilla',
+  'Soria',
+  'Tarragona',
+  'Teruel',
+  'Toledo',
+  'Valencia',
+  'Valladolid',
+  'Bizkaia',
+  'Zamora',
+  'Zaragoza',
 ];
 
 const COUNTRIES = [
-  'España', 'Portugal', 'Francia', 'Alemania', 'Italia',
-  'Reino Unido', 'Países Bajos', 'Bélgica', 'Suiza', 'Austria', 'Luxemburgo',
+  'España',
+  'Portugal',
+  'Francia',
+  'Alemania',
+  'Italia',
+  'Reino Unido',
+  'Países Bajos',
+  'Bélgica',
+  'Suiza',
+  'Austria',
+  'Luxemburgo',
 ];
 
 type NewStationForm = {
@@ -87,9 +144,14 @@ export type NewChargepointDialogProps = {
 };
 
 export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepointDialogProps) {
+  const { hasRole } = useAbility();
+  const { user } = useAuthContext();
+  const isEurocharger = hasRole('Eurocharger');
+  const STEPS = isEurocharger ? STEPS_EUROCHARGER : STEPS_CLIENT;
+
   const [step, setStep] = useState(0);
 
-  // Step 0 – Client
+  // Step 0 (Eurocharger only) – Client
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   // Step 1 – Station
@@ -131,9 +193,12 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     onClose();
   };
 
+  const stationStepIndex = isEurocharger ? 1 : 0;
+  const chargerStepIndex = isEurocharger ? 2 : 1;
+
   const canNext = (() => {
-    if (step === 0) return selectedClient !== null;
-    if (step === 1) {
+    if (isEurocharger && step === 0) return selectedClient !== null;
+    if (step === stationStepIndex) {
       if (stationMode === 'existing') return selectedStation !== null;
       const provinceOk = newStation.country !== 'España' || newStation.province !== '';
       return (
@@ -146,7 +211,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         newStation.longitude !== ''
       );
     }
-    if (step === 2) return chargerName.trim() !== '';
+    if (step === chargerStepIndex) return chargerName.trim() !== '';
     return true;
   })();
 
@@ -175,7 +240,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         name: chargerName.trim(),
         is_private: chargerIsPrivate,
         location_id: locationId,
-        client_id: selectedClient!.id,
+        client_id: isEurocharger ? selectedClient!.id : user?.client_id,
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;
@@ -334,7 +399,9 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               }
             >
               {COUNTRIES.map((c) => (
-                <MenuItem key={c} value={c}>{c}</MenuItem>
+                <MenuItem key={c} value={c}>
+                  {c}
+                </MenuItem>
               ))}
             </TextField>
             <TextField
@@ -348,13 +415,19 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               onChange={(e) => setNewStation((p) => ({ ...p, province: e.target.value }))}
             >
               {SPAIN_PROVINCES.map((prov) => (
-                <MenuItem key={prov} value={prov}>{prov}</MenuItem>
+                <MenuItem key={prov} value={prov}>
+                  {prov}
+                </MenuItem>
               ))}
             </TextField>
           </Stack>
-          
+
           <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 0.75, display: 'block' }}
+            >
               Ubicación en el mapa <span style={{ color: 'inherit' }}>*</span>
             </Typography>
             <Box
@@ -399,11 +472,19 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               </Map>
             </Box>
             {newStation.latitude && newStation.longitude ? (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 0.5, display: 'block' }}
+              >
                 {newStation.latitude}, {newStation.longitude}
               </Typography>
             ) : (
-              <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }}>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                sx={{ mt: 0.5, display: 'block' }}
+              >
                 Haz clic en el mapa para colocar la chincheta
               </Typography>
             )}
@@ -463,20 +544,22 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
       <Stack spacing={2}>
         {error && <Alert severity="error">{error}</Alert>}
 
-        <Box
-          sx={(t) => ({ p: 2, borderRadius: 1.5, border: `1px solid ${t.vars.palette.divider}` })}
-        >
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            fontWeight={600}
-            display="block"
-            sx={{ mb: 1, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.65rem' }}
+        {isEurocharger && (
+          <Box
+            sx={(t) => ({ p: 2, borderRadius: 1.5, border: `1px solid ${t.vars.palette.divider}` })}
           >
-            Cliente
-          </Typography>
-          <Typography variant="subtitle2">{selectedClient?.business_name}</Typography>
-        </Box>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={600}
+              display="block"
+              sx={{ mb: 1, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.65rem' }}
+            >
+              Cliente
+            </Typography>
+            <Typography variant="subtitle2">{selectedClient?.business_name}</Typography>
+          </Box>
+        )}
 
         <Box
           sx={(t) => ({ p: 2, borderRadius: 1.5, border: `1px solid ${t.vars.palette.divider}` })}
@@ -571,10 +654,10 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
 
       <DialogContent sx={{ overflowY: 'auto' }}>
         <Box sx={{ pt: 1 }}>
-          {step === 0 && renderStep0()}
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
+          {isEurocharger && step === 0 && renderStep0()}
+          {step === stationStepIndex && renderStep1()}
+          {step === chargerStepIndex && renderStep2()}
+          {step === STEPS.length - 1 && renderStep3()}
         </Box>
       </DialogContent>
 

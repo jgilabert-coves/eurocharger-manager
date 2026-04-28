@@ -66,6 +66,7 @@ export function useAbility() {
    */
   const hasRole = useCallback(
     (role: Role): boolean => {
+
       console.log("Comprobando rol ", role)
       if (!user) return false;
       console.log(user.roles);

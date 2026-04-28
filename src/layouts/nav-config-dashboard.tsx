@@ -67,6 +67,13 @@ export const navData: NavSectionProps['data'] = [
     path: paths.dashboard.root,
   },
   /**
+   * Estaciones — visible para todos los roles
+   */
+  {
+    title: 'Cargadores',
+    path: paths.chargingstations.list,
+  },
+  /**
    * Transactions — visible para todos los roles
    */
   {
@@ -84,32 +91,6 @@ export const navData: NavSectionProps['data'] = [
     ],
   },
   /**
-   * Estaciones — visible para todos los roles
-   */
-  {
-    title: 'Cargadores',
-    path: paths.chargingstations.list,
-  },
-  /**
-   * Tarifas — visible solo para roles específicos.
-   *
-   * Para tener un item con subitems (desplegable), usa `children`.
-   * Si no quieres subheader, simplemente no lo pongas.
-   */
-  {
-    title: 'Reservas',
-    path: paths.reservations.list,
-  },
-  {
-    title: 'Autorizaciones',
-    path: paths.privileges.list,
-  },
-  {
-    title: 'Tarifas',
-    path: paths.rates.list,
-    roles: ['Eurocharger', 'Advanced_Profile']
-  },
-  /**
    * Alarmas — visible para todos los roles
    */
   {
@@ -122,6 +103,31 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Incidencias',
     path: paths.incidents.list,
+  },
+  {
+    title: 'Autorizaciones',
+    path: paths.privileges.list,
+  },
+  {
+    title: 'Pagos',
+    path: paths.invoices.list,
+  },
+  
+  /**
+   * Tarifas — visible solo para roles específicos.
+   *
+   * Para tener un item con subitems (desplegable), usa `children`.
+   * Si no quieres subheader, simplemente no lo pongas.
+   */
+  {
+    title: 'Reservas',
+    path: paths.reservations.list,
+    roles: ["Eurocharger"]
+  },
+  {
+    title: 'Tarifas',
+    path: paths.rates.list,
+    roles: ['Eurocharger', 'Advanced_Profile']
   },
   {
     title: 'Usuarios',

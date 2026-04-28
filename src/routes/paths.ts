@@ -75,4 +75,7 @@ export const paths = {
     list: `/appusers`,
     detail: (id: string | number) => `/appusers/${id}`,
   },
+  invoices: {
+    list: `/invoices`,
+  },
 };

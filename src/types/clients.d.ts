@@ -5,14 +5,13 @@ export type Client = {
 };
 
 export type CreateClientPayload = {
-  nombre: string;
-  apellidos: string;
-  email: string;
-  cif: string;
-  direccion: string;
-  ciudad: string;
-  codigo_postal: string;
-  provincia: string;
-  pais: string;
-  telefono: string;
+  name: string;
+  email: string | null;
+  cif: string | null;
+  address: string | null;
+  city: string | null;
+  postalCode: string | null;
+  stateProvinceId: number | null;
+  countryId: number | null;
+  phone: string | null;
 };

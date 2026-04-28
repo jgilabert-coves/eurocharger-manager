@@ -67,7 +67,7 @@ export type NavListProps = Pick<NavItemProps, 'render' | 'depth' | 'enabledRootR
   cssVars?: CSSObject;
   data: NavItemDataProps;
   slotProps?: NavSlotProps;
-  currentRole?: string;
+  currentRole?: string[];
 };
 
 export type NavSubListProps = Omit<NavListProps, 'data'> & {
