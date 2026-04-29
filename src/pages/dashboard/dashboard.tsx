@@ -162,12 +162,14 @@ export default function DashboardV6Page() {
 
         {/* Heatmap + Maintenance */}
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 12 }}>
             <HeatmapCard />
           </Grid>
+          {/*
           <Grid size={{ xs: 12, md: 6 }}>
             <MantenimientoCard />
           </Grid>
+*/}
         </Grid>
       </DashboardContent>
     </>
