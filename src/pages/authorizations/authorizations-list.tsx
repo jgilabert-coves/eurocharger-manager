@@ -155,7 +155,7 @@ export default function AuthorizationsListView() {
       </Helmet>
       <DashboardContent>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 5 }}>
-          <Typography variant="h2">Autorizaciones</Typography>
+          <Typography variant="h4">Autorizaciones</Typography>
           <Button
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}

@@ -22,7 +22,7 @@ export default function TransactionsFinishedView() {
         <title>{metadata.title}</title>
       </Helmet>
       <DashboardContent>
-        <Typography variant="h2" sx={{ mb: 5 }}>
+        <Typography variant="h4" sx={{ mb: 5 }}>
           Recargas Finalizadas
         </Typography>
         <TransactionsTable

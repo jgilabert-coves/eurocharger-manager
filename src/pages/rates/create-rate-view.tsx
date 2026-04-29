@@ -25,7 +25,7 @@ export default function CreateRateView() {
       </Helmet>
       <DashboardContent>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h3">Nueva tarifa</Typography>
+          <Typography variant="h4">Nueva tarifa</Typography>
           <Typography variant="body2" color="text.secondary">
             Sigue los pasos para crear una o varias tarifas.
           </Typography>

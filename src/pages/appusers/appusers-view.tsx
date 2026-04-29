@@ -95,7 +95,7 @@ export default function AppUsersView() {
           sx={{ mb: 4 }}
         >
           <Box>
-            <Typography variant="h3">Usuarios</Typography>
+            <Typography variant="h4">Usuarios</Typography>
           </Box>
         </Stack>
 

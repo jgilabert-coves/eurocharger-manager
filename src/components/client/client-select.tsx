@@ -255,7 +255,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
           }}
         />
         <Button
-          variant="outlined"
+          variant="contained"
           size="small"
           startIcon={<Iconify icon="mdi:plus" width={16} />}
           onClick={() => setMode('create')}

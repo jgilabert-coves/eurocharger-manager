@@ -207,7 +207,7 @@ export default function InvoicesView() {
       <DashboardContent>
         <Stack spacing={3}>
           <Box>
-            <Typography variant="h3">Autofacturas</Typography>
+            <Typography variant="h4">Autofacturas</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Facturas emitidas a clientes
             </Typography>

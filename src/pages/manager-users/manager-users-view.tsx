@@ -98,7 +98,7 @@ export default function ManagerUsersView() {
           sx={{ mb: 4 }}
         >
           <Box>
-            <Typography variant="h3">Usuarios del gestor</Typography>
+            <Typography variant="h4">Usuarios del gestor</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Gestiona los usuarios con acceso al panel de administración
             </Typography>

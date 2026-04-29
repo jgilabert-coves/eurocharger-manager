@@ -85,7 +85,7 @@ export default function RatesView() {
             alignItems: 'center',
           }}
         >
-          <Typography variant="h2">Tarifas</Typography>
+          <Typography variant="h4">Tarifas</Typography>
           <Button variant="contained" onClick={() => setCreateRateOpen(true)}>
             + Nueva tarifa
           </Button>

@@ -103,7 +103,7 @@ export default function ChargingStationsView() {
         <title>{metadata.title}</title>
       </Helmet>
       <DashboardContent>
-        <Typography variant="h2" sx={{ mb: 5 }}>
+        <Typography variant="h4" sx={{ mb: 5 }}>
           Estaciones de carga
         </Typography>
 
