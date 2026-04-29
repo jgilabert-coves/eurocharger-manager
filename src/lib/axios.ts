@@ -142,6 +142,10 @@ export const endpoints = {
     list: '/clients',
     create: '/clients',
   },
+  managerUsers: {
+    list: '/manager-users',
+    create: '/manager-users',
+  },
   operators: {
     list: '/operators',
   },

@@ -1,23 +1,20 @@
 import type { ClientInvoiceModel } from 'src/types/invoice';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
-import Table from '@mui/material/Table';
-import Divider from '@mui/material/Divider';
-import TableRow from '@mui/material/TableRow';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import TableContainer from '@mui/material/TableContainer';
 
 import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
+
+import { Iconify } from 'src/components/iconify';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
 import { useAuthContext } from 'src/auth/hooks/use-auth-context';
@@ -128,44 +125,52 @@ const MOCK_INVOICES: ClientInvoiceModel[] = [
   },
 ];
 
+// Current month accumulation — no invoice generated yet for this period
+const CURRENT_MONTH_SUMMARY = {
+  transactions: 3,
+  ingresos: 1659.14,
+  pagado: 1607.02,
+};
+
 // ----------------------------------------------------------------------
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString('es-ES', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+type DateFilter = '3m' | '6m' | 'year';
 
-function formatPeriodHeader(start: Date, end: Date): string {
-  const s = new Date(start);
-  const e = new Date(end);
-  const sameMonth = s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear();
-  if (sameMonth) {
-    return `${s.getDate()}–${e.getDate()} ${s.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}`;
-  }
-  return `${formatDate(s)} – ${formatDate(e)}`;
-}
+const DATE_FILTER_OPTIONS: { value: DateFilter; label: string }[] = [
+  { value: '3m', label: 'Últimos 3 meses' },
+  { value: '6m', label: 'Últimos 6 meses' },
+  { value: 'year', label: 'Este año' },
+];
+
+// ----------------------------------------------------------------------
 
 function formatEur(amount: number): string {
   return amount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
 }
 
-function periodKey(invoice: ClientInvoiceModel): string {
-  const s = new Date(invoice.start_date);
-  const e = new Date(invoice.end_date);
-  return `${s.getFullYear()}-${String(s.getMonth()).padStart(2, '0')}-${String(e.getFullYear())}-${String(e.getMonth()).padStart(2, '0')}`;
+function formatPeriodLabel(start: Date, end: Date): string {
+  const s = new Date(start);
+  const e = new Date(end);
+  const sameYear = s.getFullYear() === e.getFullYear();
+  const dayS = s.getDate();
+  const dayE = e.getDate();
+  const monthS = s.toLocaleDateString('es-ES', { month: 'short' });
+  const monthE = e.toLocaleDateString('es-ES', { month: 'short' });
+
+  if (sameYear) {
+    return `${dayS} ${monthS} – ${dayE} ${monthE} ${e.getFullYear()}`;
+  }
+  return `${dayS} ${monthS} ${s.getFullYear()} – ${dayE} ${monthE} ${e.getFullYear()}`;
 }
 
-// ----------------------------------------------------------------------
-
-type InvoiceGroup = {
-  key: string;
-  label: string;
-  invoices: ClientInvoiceModel[];
-  periodTotal: number;
-};
+function getPeriodType(start: Date, end: Date): { label: string; color: 'success' | 'info' | 'warning' } {
+  const s = new Date(start);
+  const e = new Date(end);
+  const months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+  if (months <= 1) return { label: 'Mensual', color: 'success' };
+  if (months <= 3) return { label: 'Trimestral', color: 'info' };
+  return { label: 'Anual', color: 'warning' };
+}
 
 // ----------------------------------------------------------------------
 
@@ -173,28 +178,25 @@ export default function InvoicesView() {
   const { hasRole } = useAbility();
   const { user } = useAuthContext();
   const isEurocharger = hasRole('Eurocharger');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('3m');
 
-  const visibleInvoices = useMemo(() => {
-    if (isEurocharger) return MOCK_INVOICES;
-    return MOCK_INVOICES.filter((inv) => inv.client_id === user?.client_id);
-  }, [isEurocharger, user?.client_id]);
-
-  const groups = useMemo<InvoiceGroup[]>(() => {
-    const map = new Map<string, ClientInvoiceModel[]>();
-    for (const inv of visibleInvoices) {
-      const k = periodKey(inv);
-      if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push(inv);
+  const filteredInvoices = useMemo(() => {
+    const now = new Date();
+    let cutoff: Date;
+    if (dateFilter === '3m') {
+      cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    } else if (dateFilter === '6m') {
+      cutoff = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+    } else {
+      cutoff = new Date(now.getFullYear(), 0, 1);
     }
-    return Array.from(map.entries())
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([key, invoices]) => ({
-        key,
-        label: formatPeriodHeader(invoices[0].start_date, invoices[0].end_date),
-        invoices,
-        periodTotal: invoices.reduce((sum, i) => sum + i.total, 0),
-      }));
-  }, [visibleInvoices]);
+
+    let invoices = MOCK_INVOICES;
+    if (!isEurocharger) {
+      invoices = invoices.filter((inv) => inv.client_id === user?.client_id);
+    }
+    return invoices.filter((inv) => new Date(inv.issue_date) >= cutoff);
+  }, [isEurocharger, user?.client_id, dateFilter]);
 
   return (
     <>
@@ -211,137 +213,188 @@ export default function InvoicesView() {
             </Typography>
           </Box>
 
-          {groups.length === 0 ? (
+          {/* Summary cards — current month accumulation (no invoice yet) */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 1.5,
+                    bgcolor: 'background.neutral',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Iconify icon="solar:document-bold" width={22} sx={{ color: 'text.secondary' }} />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.07em', fontSize: '0.65rem', display: 'block' }}
+                  >
+                    Total Facturas
+                  </Typography>
+                  <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
+                    {CURRENT_MONTH_SUMMARY.transactions}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Card>
+
+            <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 1.5,
+                    bgcolor: 'background.neutral',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Iconify icon="solar:chart-2-bold" width={22} sx={{ color: 'text.secondary' }} />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.07em', fontSize: '0.65rem', display: 'block' }}
+                  >
+                    Total Ingresos
+                  </Typography>
+                  <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
+                    {formatEur(CURRENT_MONTH_SUMMARY.ingresos)}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Card>
+
+            <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 1.5,
+                    bgcolor: 'background.neutral',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Iconify icon="solar:card-bold" width={22} sx={{ color: 'text.secondary' }} />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.07em', fontSize: '0.65rem', display: 'block' }}
+                  >
+                    Total Pagado
+                  </Typography>
+                  <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
+                    {formatEur(CURRENT_MONTH_SUMMARY.pagado)}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Card>
+          </Stack>
+
+          {/* Date range filters */}
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Iconify icon="solar:calendar-bold" width={18} sx={{ color: 'text.disabled', mr: 0.5 }} />
+            {DATE_FILTER_OPTIONS.map(({ value, label }) => (
+              <Button
+                key={value}
+                size="small"
+                variant={dateFilter === value ? 'outlined' : 'text'}
+                color={dateFilter === value ? 'primary' : 'inherit'}
+                onClick={() => setDateFilter(value)}
+                sx={{
+                  borderRadius: 5,
+                  fontWeight: dateFilter === value ? 700 : 400,
+                  color: dateFilter === value ? 'primary.main' : 'text.secondary',
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </Stack>
+
+          {/* Invoice list */}
+          {filteredInvoices.length === 0 ? (
             <Card sx={{ p: 5, textAlign: 'center' }}>
-              <Typography color="text.secondary">No hay facturas disponibles.</Typography>
+              <Typography color="text.secondary">No hay facturas en este período.</Typography>
             </Card>
           ) : (
-            groups.map((group) => (
-              <Card key={group.key} variant="outlined">
-                {/* Period header */}
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{ px: 3, py: 2, bgcolor: 'background.neutral' }}
-                >
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    {group.label}
-                  </Typography>
-                  <Stack direction="row" alignItems="center" spacing={1.5}>
-                    <Typography variant="caption" color="text.secondary">
-                      Total período:
-                    </Typography>
-                    <Typography variant="subtitle1" fontWeight={700} color="primary.darkest">
-                      {formatEur(group.periodTotal)}
-                    </Typography>
-                  </Stack>
-                </Stack>
+            <Stack spacing={1}>
+              {filteredInvoices.map((inv) => {
+                const period = getPeriodType(inv.start_date, inv.end_date);
+                return (
+                  <Card key={inv.id} variant="outlined">
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      sx={{ px: 3, py: 2 }}
+                    >
+                      <Stack spacing={0.5}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            {formatPeriodLabel(inv.start_date, inv.end_date)}
+                          </Typography>
+                          <Chip
+                            label={period.label}
+                            size="small"
+                            color={period.color}
+                            variant="soft"
+                            sx={{ height: 20, fontSize: '0.7rem', fontWeight: 600 }}
+                          />
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          {inv.invoice_number} · {inv.business_name}
+                        </Typography>
+                      </Stack>
 
-                <Divider />
-
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ pl: 3 }}>Nº Factura</TableCell>
-                        {isEurocharger && <TableCell>Empresa</TableCell>}
-                        <TableCell>Período cubierto</TableCell>
-                        <TableCell align="right">Base imp.</TableCell>
-                        <TableCell align="right">IVA</TableCell>
-                        <TableCell align="right">Total</TableCell>
-                        <TableCell align="right" sx={{ pr: 3 }}>Vencimiento</TableCell>
-                      </TableRow>
-                    </TableHead>
-
-                    <TableBody>
-                      {group.invoices.map((inv) => (
-                        <TableRow
-                          key={inv.id}
-                          sx={{ '&:last-child td': { border: 0 } }}
+                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Stack alignItems="flex-end" spacing={0.25}>
+                          <Typography variant="caption" color="text.secondary">
+                            Saldo final
+                          </Typography>
+                          <Typography variant="subtitle1" fontWeight={700}>
+                            {formatEur(inv.total)}
+                          </Typography>
+                        </Stack>
+                        <IconButton
+                          size="small"
+                          sx={{
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: '50%',
+                            width: 32,
+                            height: 32,
+                          }}
                         >
-                          <TableCell sx={{ pl: 3 }}>
-                            <Stack spacing={0.25}>
-                              <Typography variant="caption" fontWeight={700} fontFamily="monospace">
-                                {inv.invoice_number}
-                              </Typography>
-                              <Typography variant="caption" color="text.disabled">
-                                Emitida: {formatDate(inv.issue_date)}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
-
-                          {isEurocharger && (
-                            <TableCell>
-                              <Stack spacing={0.25}>
-                                <Typography variant="caption" fontWeight={600}>
-                                  {inv.business_name}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" fontFamily="monospace">
-                                  {inv.client_code}
-                                </Typography>
-                              </Stack>
-                            </TableCell>
-                          )}
-
-                          <TableCell>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatDate(inv.start_date)} – {formatDate(inv.end_date)}
-                            </Typography>
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <Typography variant="caption">{formatEur(inv.tax_base)}</Typography>
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <Chip
-                              label={`${inv.tax_percentage}% · ${formatEur(inv.tax_amount)}`}
-                              size="small"
-                              variant="soft"
-                              sx={{ fontSize: '0.7rem' }}
-                            />
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <Typography variant="caption" fontWeight={700} color="primary.darkest">
-                              {formatEur(inv.total)}
-                            </Typography>
-                          </TableCell>
-
-                          <TableCell align="right" sx={{ pr: 3 }}>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatDate(inv.expiration_date)}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-
-                {/* Period summary */}
-                <Divider />
-                <Stack
-                  direction="row"
-                  justifyContent="flex-end"
-                  spacing={3}
-                  sx={{ px: 3, py: 1.5, bgcolor: 'background.neutral' }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    Base imponible:{' '}
-                    <strong>{formatEur(group.invoices.reduce((s, i) => s + i.tax_base, 0))}</strong>
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    IVA:{' '}
-                    <strong>{formatEur(group.invoices.reduce((s, i) => s + i.tax_amount, 0))}</strong>
-                  </Typography>
-                  <Typography variant="caption" fontWeight={700}>
-                    Total período: <strong>{formatEur(group.periodTotal)}</strong>
-                  </Typography>
-                </Stack>
-              </Card>
-            ))
+                          <Iconify icon="solar:download-minimalistic-bold" width={15} />
+                        </IconButton>
+                        <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                          <Iconify icon="eva:more-vertical-fill" width={16} />
+                        </IconButton>
+                      </Stack>
+                    </Stack>
+                  </Card>
+                );
+              })}
+            </Stack>
           )}
         </Stack>
       </DashboardContent>

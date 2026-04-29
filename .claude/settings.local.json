@@ -6,7 +6,8 @@
       "Bash(npm uninstall:*)",
       "Bash(npm install:*)",
       "Bash(grep -E \"\\(tsconfig|package\\\\.json|\\\\.ts$|\\\\.tsx$\\)\")",
-      "Bash(xargs cat *)"
+      "Bash(xargs cat *)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
     ]
   }
 }

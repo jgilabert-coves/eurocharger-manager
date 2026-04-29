@@ -244,12 +244,12 @@ function ConnectorCard({
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Box sx={{ color: 'text.primary', display: 'flex' }}>
                     <ConnectorTypeIcon
-                      name={CONNECTOR_TYPE_MAP[connector.connectorTypeId || 1]}
+                      name={connector.connectorTypeId ? CONNECTOR_TYPE_MAP[connector.connectorTypeId] : null}
                       size={30}
                     />
                   </Box>
                   <Typography variant="subtitle2" fontWeight={700}>
-                    {CONNECTOR_TYPE_MAP[connector.connectorTypeId || 1] ?? 'Desconocido'}
+                    {connector.connectorTypeId ? (CONNECTOR_TYPE_MAP[connector.connectorTypeId] ?? 'Desconocido') : 'Sin asignar'}
                   </Typography>
                 </Stack>
               </Box>

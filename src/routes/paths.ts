@@ -78,4 +78,7 @@ export const paths = {
   invoices: {
     list: `/invoices`,
   },
+  managerUsers: {
+    list: `/manager-users`,
+  },
 };

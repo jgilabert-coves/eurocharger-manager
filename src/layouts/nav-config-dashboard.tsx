@@ -134,4 +134,9 @@ export const navData: NavSectionProps['data'] = [
     path: paths.appUsers.list,
     roles: ['Eurocharger', 'Advanced_Profile'],
   },
+  {
+    title: 'Usuarios del gestor',
+    path: paths.managerUsers.list,
+    roles: ['Eurocharger'],
+  },
 ];

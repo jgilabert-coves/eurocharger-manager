@@ -3,10 +3,10 @@ type ConnectorTypeIconProps = {
   size?: number;
 };
 
-type ConnectorType = 'mennekes' | 'ccs' | 'chademo' | 'schuko' | 'generic';
+type ConnectorType = 'mennekes' | 'ccs' | 'chademo' | 'schuko' | 'generic' | 'not_assigned';
 
 function resolveType(name: string | null | undefined): ConnectorType {
-  if (!name) return 'generic';
+  if (!name) return 'not_assigned';
   const lower = name.toLowerCase();
   if (lower.includes('mennekes') || lower.includes('type2') || lower.includes('type 2') || lower.includes('iec62196-t2')) return 'mennekes';
   if (lower.includes('ccs') || lower.includes('combo2') || lower.includes('combo 2')) return 'ccs';
@@ -77,6 +77,15 @@ export function ConnectorTypeIcon({ name, size = 24 }: ConnectorTypeIconProps) {
           strokeLinecap="round"
           fill="none"
         />
+      </svg>
+    );
+  }
+
+  if (type === 'not_assigned') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.4" strokeDasharray="3 2.5" />
+        <line x1="7.5" y1="12" x2="16.5" y2="12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       </svg>
     );
   }

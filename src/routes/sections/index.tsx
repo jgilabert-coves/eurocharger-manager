@@ -15,6 +15,7 @@ import { dashboardRoutes } from './dashboard';
 import { privilegesRoutes } from './privileges';
 import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
+import { managerUsersRoutes } from './manager-users';
 import { chargingStationsRoutes } from './chargingstations';
 // ----------------------------------------------------------------------
 
@@ -44,6 +45,8 @@ export const routesSection: RouteObject[] = [
   ...appUsersRoutes,
 
   ...invoicesRoutes,
+
+  ...managerUsersRoutes,
 
   {
     path: '/',
