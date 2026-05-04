@@ -32,7 +32,7 @@ export function AuthProvider({ children }: Props) {
         setSession(accessToken);
 
         const res = await axios.get(endpoints.auth.me);
-
+        console.log(res);
         // La API devuelve los datos del JWT directamente, NO envueltos en { user: ... }.
         // Estructura real: { user: 9, email: "...", roles: ["Eurocharger"], permissions: [...], ... }
         // La API devuelve { status_code, error, user: { ... } }
@@ -46,6 +46,7 @@ export function AuthProvider({ children }: Props) {
               roles: (apiUser.roles ?? []) as Role[],
               permissions: (apiUser.permissions ?? []) as any,
               client_id: apiUser.client_id,
+              client_name: apiUser.client_name ?? 'Eurocharger',
               accessToken,
             },
             loading: false,

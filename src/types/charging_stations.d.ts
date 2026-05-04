@@ -41,4 +41,5 @@ export type BasicChargingStationInfo = {
   state_province: string | null;
   country: string;
   postal_code: string | null;
+  chargepoints_number: number;
 };

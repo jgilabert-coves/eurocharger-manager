@@ -25,14 +25,15 @@ export type SignUpParams = {
 
 /** Estructura REAL que devuelve /api/auth/me (payload del JWT) */
 export type ApiUserResponse = {
-  user: number;               // ID del usuario (el backend lo llama "user", no "id")
+  user: number; // ID del usuario (el backend lo llama "user", no "id")
   email: string;
-  roles: string[];             // Array de roles (ej: ["Eurocharger"])
-  permissions: string[];       // Array de permisos (ej: ["read-rates", "write-rates"])
+  roles: string[]; // Array de roles (ej: ["Eurocharger"])
+  permissions: string[]; // Array de permisos (ej: ["read-rates", "write-rates"])
   client_id: number | null;
+  client_name: string | null;
   exp: number;
   iat: number;
-}
+};
 
 /** Estructura de la respuesta de /api/auth/sign-in */
 export type SignInResponse = {
@@ -40,9 +41,7 @@ export type SignInResponse = {
   data: string | null;
   user: ApiUserResponse | null;
   error: string | null;
-}
-
-
+};
 
 /** **************************************
  * Sign in
@@ -52,18 +51,18 @@ export const signInWithPassword = async ({ email, password }: SignInParams): Pro
     const params = { email, password };
 
     const res = await axios.post(endpoints.auth.signIn, params);
-
+    console.log('Pidiendo login');
     const { status_code, data, error }: SignInResponse = res.data;
+    console.log(data);
 
-    
     if (status_code != 200) {
-      throw new Error(error ?? 'Error en el servidor, pruebe más adelante.')
+      throw new Error(error ?? 'Error en el servidor, pruebe más adelante.');
     }
 
     if (!data) {
       throw new Error('Error al iniciar sesión, pruebe más adelante');
     }
-  
+
     setSession(data);
   } catch (error) {
     console.error('Error during sign in:', error);

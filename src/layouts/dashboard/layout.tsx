@@ -173,7 +173,7 @@ export function DashboardLayout({
         {!isNavMini && (
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle2" noWrap>
-              {user?.displayName ?? user?.email}
+              {user?.client_name ?? user?.email}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap>
               {user?.email}

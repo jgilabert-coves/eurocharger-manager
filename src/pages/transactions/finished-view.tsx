@@ -28,6 +28,7 @@ export default function TransactionsFinishedView() {
         <TransactionsTable
           endpoint={endpoints.transactions.current}
           extraParams={{ status: 'FINALIZADO' }}
+          showEndDate
         />
       </DashboardContent>
     </>

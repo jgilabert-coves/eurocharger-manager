@@ -102,7 +102,7 @@ export const navData: NavSectionProps['data'] = [
    */
   {
     title: 'Incidencias',
-    path: paths.incidents.list,
+    path: paths.tickets.list,
   },
   {
     title: 'Autorizaciones',

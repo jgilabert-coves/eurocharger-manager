@@ -81,4 +81,12 @@ export const paths = {
   managerUsers: {
     list: `/manager-users`,
   },
+  tickets: {
+    list: `/tickets`,
+    detail: (id: string | number) => `/tickets/${id}`,
+  },
+  locations: {
+    list: `/locations`,
+    detail: (id: string | number) => `/locations/${id}`,
+  },
 };

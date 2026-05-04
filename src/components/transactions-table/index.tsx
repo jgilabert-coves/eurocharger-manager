@@ -22,35 +22,47 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
 import { fDateTime } from 'src/utils/format-time';
 
 import { fetcher } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
+function formatDuration(startDate: Date | string, endDate: Date | string | null): string {
+  const start = new Date(startDate).getTime();
+  const end = endDate ? new Date(endDate).getTime() : Date.now();
+  const diffMs = end - start;
+  if (diffMs < 0) return '—';
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
 
-const STATUS_COLORS: Record<string, 'info' | 'success' | 'warning' | 'error' | 'default'> = {
-  CARGANDO: 'info',
-  FINALIZADO: 'success',
-  ERROR: 'error',
-};
+// ----------------------------------------------------------------------
 
 type TransactionsTableProps = {
   endpoint: string;
   extraParams?: Record<string, string | number>;
   enableSearch?: boolean;
   defaultPageSize?: number;
+  showEndDate?: boolean;
 };
 
 // ----------------------------------------------------------------------
 
-export function TransactionsTable({ 
-  endpoint, 
+export function TransactionsTable({
+  endpoint,
   enableSearch = true,
   defaultPageSize = 10,
-  extraParams 
+  extraParams,
+  showEndDate = false,
 }: TransactionsTableProps) {
+  const router = useRouter();
   const [rows, setRows] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +89,7 @@ export function TransactionsTable({
     } catch (err) {
       console.error('Error fetching transactions:', err);
       setRows([]);
-          } finally {
+    } finally {
       setLoading(false);
     }
   }, [endpoint, extraParams, page, pageSize, searchQuery, orderBy, order]);
@@ -92,6 +104,8 @@ export function TransactionsTable({
     setOrderBy(field);
   };
 
+  const colSpan = showEndDate ? 8 : 7;
+
   return (
     <>
       {/* Search */}
@@ -100,24 +114,24 @@ export function TransactionsTable({
           <TextField
             fullWidth
             placeholder="Buscar por usuario, estación, cargador..."
-              value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(0);
-          }}
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton edge="end">
-                    <Iconify icon="eva:search-fill" width={20} height={20} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-      </Box>
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0);
+            }}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton edge="end">
+                      <Iconify icon="eva:search-fill" width={20} height={20} />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        </Box>
       )}
 
       {/* Table */}
@@ -128,46 +142,67 @@ export function TransactionsTable({
               <TableRow>
                 <TableCell>
                   <TableSortLabel
-                    active={orderBy === 'status'}
-                    direction={orderBy === 'status' ? order : 'asc'}
-                    onClick={() => handleSort('status')}
+                    active={orderBy === 'chargepoint'}
+                    direction={orderBy === 'chargepoint' ? order : 'asc'}
+                    onClick={() => handleSort('chargepoint')}
                   >
-                    Estado
+                    Cargador
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Datos de la estación</TableCell>
+                <TableCell>Conector</TableCell>
+                <TableCell>Duración</TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'startDate'}
+                    direction={orderBy === 'startDate' ? order : 'asc'}
+                    onClick={() => handleSort('startDate')}
+                  >
+                    Inicio
+                  </TableSortLabel>
+                </TableCell>
+                {showEndDate && (
+                  <TableCell>
+                    <TableSortLabel
+                      active={orderBy === 'endDate'}
+                      direction={orderBy === 'endDate' ? order : 'asc'}
+                      onClick={() => handleSort('endDate')}
+                    >
+                      Fin
+                    </TableSortLabel>
+                  </TableCell>
+                )}
                 <TableCell>
                   <TableSortLabel
                     active={orderBy === 'power'}
                     direction={orderBy === 'power' ? order : 'asc'}
                     onClick={() => handleSort('power')}
                   >
-                    Energía / Coste
+                    Energía
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Tarifa</TableCell>
                 <TableCell>
                   <TableSortLabel
-                    active={orderBy === 'date'}
-                    direction={orderBy === 'date' ? order : 'asc'}
-                    onClick={() => handleSort('date')}
+                    active={orderBy === 'total'}
+                    direction={orderBy === 'total' ? order : 'asc'}
+                    onClick={() => handleSort('total')}
                   >
-                    Fecha
+                    Coste
                   </TableSortLabel>
                 </TableCell>
+                <TableCell>Usuario</TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={colSpan} align="center" sx={{ py: 8 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={colSpan} align="center" sx={{ py: 8 }}>
                     <Typography variant="body2" color="text.secondary">
                       No se encontraron recargas
                     </Typography>
@@ -180,117 +215,109 @@ export function TransactionsTable({
                     hover
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   >
-                    {/* Status */}
-                    <TableCell>
-                      <Chip
-                        label={tx.status}
-                        color={STATUS_COLORS[tx.status?.toUpperCase()] ?? 'default'}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-
-                    {/* User */}
-                    <TableCell>
+                    {/* Cargador */}
+                    <TableCell 
+                      onClick={() => tx.chargepoint?.id && router.push(paths.chargingstations.detail(String(tx.chargepoint.id)))}
+                      sx={tx.chargepoint?.id ? { cursor: 'pointer' } : undefined}
+                    >
                       <Stack spacing={0.25}>
-                        <Typography variant="subtitle2">
-                          {tx.appUser?.name ?? '-'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {tx.appUser?.email ?? ''}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-
-                    {/* Station / Chargepoint / Connectors */}
-                    <TableCell>
-                      <Stack spacing={0.5}>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Iconify
-                            icon="mdi:ev-station"
-                            width={18}
-                            sx={{ color: 'primary.main' }}
-                          />
+                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                          <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'primary.main', flexShrink: 0 }} />
                           <Typography variant="subtitle2">
-                            {tx.chargepoint?.name ?? `Cargador #${tx.chargepoint?.id ?? '-'}`}
+                            {tx.chargepoint?.name ?? `${tx.chargepoint?.name ?? '-'}`}
                           </Typography>
                         </Stack>
-
                         {tx.address && (
-                          <Stack
-                            direction="row"
-                            alignItems="center"
-                            spacing={1}
-                            sx={{ pl: 0.5 }}
-                          >
-                            <Iconify
-                              icon="mdi:map-marker-outline"
-                              width={16}
-                              sx={{ color: 'text.secondary' }}
-                            />
-                            <Typography variant="caption" color="text.secondary">
+                          <Stack direction="row" alignItems="center" spacing={0.75}>
+                            <Iconify icon="mdi:map-marker-outline" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+                            <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 200 }}>
                               {tx.address}
                             </Typography>
                           </Stack>
                         )}
-
-                        {tx.chargepoint?.connectors?.map((conn) => (
-                          <Stack
-                            key={conn.id}
-                            direction="row"
-                            alignItems="center"
-                            spacing={1}
-                            sx={{ pl: 0.5 }}
-                          >
-                            <Iconify
-                              icon="mdi:power-plug-outline"
-                              width={14}
-                              sx={{ color: 'text.disabled' }}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                              {conn.name ?? `Conector #${conn.id}`}
-                              {conn.power ? ` · ${conn.power} kW` : ''}
-                            </Typography>
-                            <Chip
-                              label={conn.status}
-                              size="small"
-                              variant="outlined"
-                              sx={{ height: 20, fontSize: '0.65rem' }}
-                            />
-                          </Stack>
-                        ))}
                       </Stack>
                     </TableCell>
 
-                    {/* Power / Cost */}
+                    {/* Conector */}
                     <TableCell>
-                      <Stack spacing={0.25}>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <Iconify
-                            icon="mdi:lightning-bolt"
-                            width={16}
-                            sx={{ color: 'warning.main' }}
-                          />
-                          <Typography variant="subtitle2">
-                            {tx.power ? round(tx.power, 2) : 0} kWh
-                          </Typography>
+                      {tx.chargepoint?.connectors?.length ? (
+                        <Stack spacing={0.5}>
+                          {tx.chargepoint.connectors.map((conn) => (
+                            <Stack key={conn.id} direction="row" alignItems="center" spacing={0.75}>
+                              <Iconify icon="mdi:power-plug-outline" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+                              <Typography variant="caption" color="text.secondary">
+                                {conn.name ?? `Conector ${conn.ocppId}`}
+                                {conn.power ? ` · ${conn.power} kW` : ''}
+                              </Typography>
+                              <Chip
+                                label={conn.status}
+                                size="small"
+                                variant="outlined"
+                                sx={{ height: 18, fontSize: '0.6rem' }}
+                              />
+                            </Stack>
+                          ))}
                         </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                          {tx.total ? round(tx.total, 2) : 0} €
+                      ) : (
+                        <Typography variant="body2" color="text.disabled">—</Typography>
+                      )}
+                    </TableCell>
+
+                    {/* Duración */}
+                    <TableCell>
+                      <Typography variant="body2">
+                        {tx.startDate ? formatDuration(tx.startDate, tx.endDate ?? null) : '—'}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Inicio */}
+                    <TableCell>
+                      <Typography variant="body2">
+                        {tx.startDate ? fDateTime(tx.startDate) : '—'}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Fin (solo finalizadas) */}
+                    {showEndDate && (
+                      <TableCell>
+                        <Typography variant="body2">
+                          {tx.endDate ? fDateTime(tx.endDate) : '—'}
+                        </Typography>
+                      </TableCell>
+                    )}
+
+                    {/* Energía */}
+                    <TableCell>
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Iconify icon="mdi:lightning-bolt" width={15} sx={{ color: 'warning.main' }} />
+                        <Typography variant="body2" fontWeight={600}>
+                          {tx.power ? round(tx.power, 2) : 0} kWh
                         </Typography>
                       </Stack>
                     </TableCell>
 
-                    {/* Rate */}
+                    {/* Coste */}
                     <TableCell>
-                      <Typography variant="body2">{tx.rate?.name ?? '-'}</Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {tx.total ? round(tx.total, 2) : 0} €
+                      </Typography>
                     </TableCell>
 
-                    {/* Date */}
-                    <TableCell>
-                      <Typography variant="body2">
-                        {tx.date ? fDateTime(tx.date) : '-'}
-                      </Typography>
+                    {/* Usuario */}
+                    <TableCell
+                      onClick={() => tx.appUser?.id && router.push(paths.appUsers.detail(tx.appUser.id))}
+                      sx={tx.appUser?.id ? { cursor: 'pointer' } : undefined}
+                    >
+                      {tx.appUser ? (
+                        <Stack spacing={0.25}>
+                          <Typography variant="subtitle2">{tx.appUser.name ?? '—'}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {tx.appUser.email ?? ''}
+                          </Typography>
+                        </Stack>
+                      ) : (
+                        <Typography variant="body2" color="text.disabled">—</Typography>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

@@ -7,9 +7,10 @@ export type Transaction = {
     client?: string;
     chargepoint?: Chargepoint;
     address: string;
-    date: string;
+    startDate: string;
+    endDate: string | null;
     status: string;
-    start_value: number;
+    startValue: number;
     power: number | null;
     total: number;
     appUser?: AppUser;

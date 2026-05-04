@@ -12,11 +12,11 @@ function colorVars(theme: Theme, variant?: 'vertical' | 'mini' | 'horizontal') {
   } = theme;
 
   return {
-    '--nav-item-color': palette.text.secondary,
+    '--nav-item-color': palette.text.primary,
     '--nav-item-hover-bg': palette.action.hover,
     '--nav-item-caption-color': palette.text.disabled,
     // root
-    '--nav-item-root-active-color': palette.primary.main,
+    '--nav-item-root-active-color': palette.primary.dark,
     '--nav-item-root-active-color-on-dark': palette.primary.light,
     '--nav-item-root-active-bg': varAlpha(palette.primary.mainChannel, 0.08),
     '--nav-item-root-active-hover-bg': varAlpha(palette.primary.mainChannel, 0.16),

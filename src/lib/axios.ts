@@ -89,6 +89,16 @@ export const put = async (url: string, data: any) => {
   }
 };
 
+export const patch = async (url: string, data: any) => {
+  try {
+    const res = await axiosInstance.patch(url, data);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to patch:', error);
+    throw error;
+  }
+};
+
 export const del = async (url: string) => {
   try {
     const res = await axiosInstance.delete(url);
@@ -152,6 +162,7 @@ export const endpoints = {
   locations: {
     list: '/locations',
     create: '/locations',
+    single: (id: number) => `/locations/${id}`,
   },
   chargepoints: {
     list: '/chargingstations',
@@ -173,6 +184,14 @@ export const endpoints = {
   },
   incidents: {
     list: '/incidences',
+  },
+  tickets: {
+    list: '/tickets',
+    single: (id: number) => `/tickets/${id}`,
+    create: '/tickets',
+    update: (id: number) => `/tickets/${id}`,
+    tracking: (id: number) => `/tickets/${id}/tracking`,
+    sendEmail: (id: number) => `/tickets/${id}/send-email`,
   },
   ocpp: {
     configuration: '/ocpp/configuration',

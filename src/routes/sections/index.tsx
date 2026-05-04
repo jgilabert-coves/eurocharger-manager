@@ -8,10 +8,12 @@ import { CONFIG } from 'src/global-config';
 import { authRoutes } from './auth';
 import { ratesRoutes } from './rates';
 import { alarmsRoutes } from './alarms';
+import { ticketsRoutes } from './tickets';
 import { appUsersRoutes } from './appusers';
 import { invoicesRoutes } from './invoices';
 import { incidentsRoutes } from './incidents';
 import { dashboardRoutes } from './dashboard';
+import { locationsRoutes } from './locations';
 import { privilegesRoutes } from './privileges';
 import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
@@ -47,6 +49,10 @@ export const routesSection: RouteObject[] = [
   ...invoicesRoutes,
 
   ...managerUsersRoutes,
+
+  ...ticketsRoutes,
+
+  ...locationsRoutes,
 
   {
     path: '/',

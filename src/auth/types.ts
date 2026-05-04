@@ -91,6 +91,7 @@ export type UserType = {
   roles: Role[];
   permissions: Permission[];
   client_id: number | null;
+  client_name: string | 'Eurocharger'
   [key: string]: any; // Permite campos adicionales del backend
 } | null;
 
