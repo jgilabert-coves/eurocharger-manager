@@ -170,7 +170,10 @@ export default function TicketsListView() {
         </Stack>
 
         {/* Search */}
-        <Stack sx={{ mb: 2 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }}
+          spacing={2}
+          alignItems={{ md: 'center' }}
+          sx={{ mb: 3 }}>
           <TextField
             placeholder="Buscar por motivo, descripción, usuario..."
             value={searchQuery}
@@ -179,7 +182,7 @@ export default function TicketsListView() {
               setPage(0);
             }}
             size="small"
-            sx={{ maxWidth: 400 }}
+            sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{
               input: {
                 startAdornment: (
@@ -190,10 +193,6 @@ export default function TicketsListView() {
               },
             }}
           />
-        </Stack>
-
-        {/* Filters */}
-        <Stack direction="row" spacing={2} sx={{ mb: 3 }} flexWrap="wrap">
           <ToggleButtonGroup
             exclusive
             size="small"
@@ -223,6 +222,7 @@ export default function TicketsListView() {
             <ToggleButton value="CALL">Llamada</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
+
 
         <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <TableContainer>
