@@ -79,16 +79,6 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Recargas',
     path: paths.transactions.actives,
-    children: [
-      {
-        title: 'Activas',
-        path: paths.transactions.actives,
-      },
-      {
-        title: 'Finalizadas',
-        path: paths.transactions.completed,
-      },
-    ],
   },
   /**
    * Alarmas — visible para todos los roles

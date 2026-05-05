@@ -62,7 +62,7 @@ export const Logo = forwardRef<HTMLAnchorElement, LogoProps>((props, ref) => {
         () => ({
           width: 40,
           height: 40,
-          ...(!isSingle && { width: 102, height: 36 }),
+          ...(!isSingle && { width: 140, height: 50 }),
           ...(disabled && { pointerEvents: 'none' }),
         }),
         ...(Array.isArray(sx) ? sx : [sx]),

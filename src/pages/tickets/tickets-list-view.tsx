@@ -21,13 +21,14 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
 import InputLabel from '@mui/material/InputLabel';
+import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
 import DialogTitle from '@mui/material/DialogTitle';
 import ToggleButton from '@mui/material/ToggleButton';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -87,6 +88,7 @@ export default function TicketsListView() {
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<TicketStatus | ''>('');
   const [typeFilter, setTypeFilter] = useState<TicketType | ''>('');
 
@@ -96,7 +98,7 @@ export default function TicketsListView() {
   const [selectedUser, setSelectedUser] = useState<AppUserDatatableItem | null>(null);
 
   const { data: res, isLoading } = useQuery<TicketsResponse>({
-    queryKey: ['tickets', 'list', { page, pageSize, statusFilter, typeFilter }],
+    queryKey: ['tickets', 'list', { page, pageSize, searchQuery, statusFilter, typeFilter }],
     queryFn: () =>
       fetcher([
         endpoints.tickets.list,
@@ -104,6 +106,7 @@ export default function TicketsListView() {
           params: {
             page,
             pageSize,
+            ...(searchQuery ? { searchQuery } : {}),
             ...(statusFilter ? { status: statusFilter } : {}),
             ...(typeFilter ? { type: typeFilter } : {}),
           },
@@ -164,6 +167,29 @@ export default function TicketsListView() {
           >
             Nuevo ticket
           </Button>
+        </Stack>
+
+        {/* Search */}
+        <Stack sx={{ mb: 2 }}>
+          <TextField
+            placeholder="Buscar por motivo, descripción, usuario..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0);
+            }}
+            size="small"
+            sx={{ maxWidth: 400 }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify icon="eva:search-fill" width={18} sx={{ color: 'text.disabled' }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
         </Stack>
 
         {/* Filters */}

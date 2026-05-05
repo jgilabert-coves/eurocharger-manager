@@ -2,6 +2,7 @@ import type { AxiosRequestConfig } from 'axios';
 import type { Transaction, TransactionsDataTableResponse } from 'src/types/transactions';
 
 import { round } from 'es-toolkit';
+import { Link } from 'react-router';
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -23,12 +24,12 @@ import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
 
 import { fDateTime } from 'src/utils/format-time';
 
 import { fetcher } from 'src/lib/axios';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 function formatDuration(startDate: Date | string, endDate: Date | string | null): string {
@@ -43,14 +44,26 @@ function formatDuration(startDate: Date | string, endDate: Date | string | null)
   return `${minutes}m`;
 }
 
+const STATUS_COLOR: Record<string, 'info' | 'success' | 'default'> = {
+  CARGANDO: 'info',
+  FINALIZADO: 'success',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  CARGANDO: 'En curso',
+  FINALIZADO: 'Finalizada',
+};
+
 // ----------------------------------------------------------------------
 
 type TransactionsTableProps = {
   endpoint: string;
   extraParams?: Record<string, string | number>;
   enableSearch?: boolean;
+  searchQuery?: string;
   defaultPageSize?: number;
   showEndDate?: boolean;
+  showStatus?: boolean;
 };
 
 // ----------------------------------------------------------------------
@@ -58,19 +71,23 @@ type TransactionsTableProps = {
 export function TransactionsTable({
   endpoint,
   enableSearch = true,
+  searchQuery: searchQueryProp,
   defaultPageSize = 10,
   extraParams,
   showEndDate = false,
+  showStatus = false,
 }: TransactionsTableProps) {
-  const router = useRouter();
   const [rows, setRows] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQueryInternal, setSearchQueryInternal] = useState('');
   const [orderBy, setOrderBy] = useState('date');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+
+  const isControlled = searchQueryProp !== undefined;
+  const searchQuery = isControlled ? searchQueryProp : searchQueryInternal;
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -104,19 +121,20 @@ export function TransactionsTable({
     setOrderBy(field);
   };
 
-  const colSpan = showEndDate ? 8 : 7;
+  const colSpan = (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0);
 
   return (
     <>
       {/* Search */}
-      {enableSearch && (
+      {enableSearch && !isControlled && (
         <Box sx={{ mb: 3 }}>
           <TextField
-            fullWidth
+            size='small'
+            sx={{maxWidth: 400}}
             placeholder="Buscar por usuario, estación, cargador..."
-            value={searchQuery}
+            value={searchQueryInternal}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
+              setSearchQueryInternal(e.target.value);
               setPage(0);
             }}
             slotProps={{
@@ -140,6 +158,7 @@ export function TransactionsTable({
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell sx={{ width: 56, color: 'text.disabled' }}>#</TableCell>
                 <TableCell>
                   <TableSortLabel
                     active={orderBy === 'chargepoint'}
@@ -190,6 +209,7 @@ export function TransactionsTable({
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>Usuario</TableCell>
+                {showStatus && <TableCell>Estado</TableCell>}
               </TableRow>
             </TableHead>
 
@@ -212,20 +232,32 @@ export function TransactionsTable({
                 rows.map((tx) => (
                   <TableRow
                     key={tx.id}
-                    hover
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, userSelect: 'none' }}
                   >
+                    {/* ID */}
+                    <TableCell>
+                      <Typography variant="caption" color="text.disabled">
+                        {tx.id}
+                      </Typography>
+                    </TableCell>
+
                     {/* Cargador */}
-                    <TableCell 
-                      onClick={() => tx.chargepoint?.id && router.push(paths.chargingstations.detail(String(tx.chargepoint.id)))}
-                      sx={tx.chargepoint?.id ? { cursor: 'pointer' } : undefined}
-                    >
+                    <TableCell>
                       <Stack spacing={0.25}>
                         <Stack direction="row" alignItems="center" spacing={0.75}>
                           <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'primary.main', flexShrink: 0 }} />
-                          <Typography variant="subtitle2">
-                            {tx.chargepoint?.name ?? `${tx.chargepoint?.name ?? '-'}`}
-                          </Typography>
+                          {tx.chargepoint?.id ? (
+                            <Link
+                              to={paths.chargingstations.detail(String(tx.chargepoint.id))}
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <Typography variant="subtitle2" color='text.primary'>
+                                {tx.chargepoint.name ?? '-'}
+                              </Typography>
+                            </Link>
+                          ) : (
+                            <Typography variant="subtitle2">{tx.chargepoint?.name ?? '-'}</Typography>
+                          )}
                         </Stack>
                         {tx.address && (
                           <Stack direction="row" alignItems="center" spacing={0.75}>
@@ -304,13 +336,21 @@ export function TransactionsTable({
                     </TableCell>
 
                     {/* Usuario */}
-                    <TableCell
-                      onClick={() => tx.appUser?.id && router.push(paths.appUsers.detail(tx.appUser.id))}
-                      sx={tx.appUser?.id ? { cursor: 'pointer' } : undefined}
-                    >
+                    <TableCell>
                       {tx.appUser ? (
                         <Stack spacing={0.25}>
-                          <Typography variant="subtitle2">{tx.appUser.name ?? '—'}</Typography>
+                          {tx.appUser.id ? (
+                            <Link
+                              to={paths.appUsers.detail(tx.appUser.id)}
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <Typography variant="subtitle2" color='text.primary'>
+                                {tx.appUser.name ?? '—'}
+                              </Typography>
+                            </Link>
+                          ) : (
+                            <Typography variant="subtitle2">{tx.appUser.name ?? '—'}</Typography>
+                          )}
                           <Typography variant="caption" color="text.secondary">
                             {tx.appUser.email ?? ''}
                           </Typography>
@@ -319,6 +359,15 @@ export function TransactionsTable({
                         <Typography variant="body2" color="text.disabled">—</Typography>
                       )}
                     </TableCell>
+
+                    {/* Estado (solo en vista "Todas") */}
+                    {showStatus && (
+                      <TableCell>
+                        <Label color={STATUS_COLOR[tx.status] ?? 'default'} variant="soft">
+                          {STATUS_LABEL[tx.status] ?? tx.status}
+                        </Label>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
