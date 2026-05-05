@@ -4,6 +4,8 @@ import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
+import { RouterLink } from 'src/routes/components';
+
 import { themeConfig } from 'src/theme';
 
 import { Label } from 'src/components/label';
@@ -21,22 +23,25 @@ export type KpiCardProps = {
   trend?: 'up' | 'down';
   icon: string;
   palette: PaletteKey;
+  href?: string;
 };
 
 function resolvePalette(key: PaletteKey) {
   return themeConfig.palette[key];
 }
 
-export function KpiCard({ title, value, subtitle, delta, trend, icon, palette }: KpiCardProps) {
+export function KpiCard({ title, value, subtitle, delta, trend, icon, palette, href }: KpiCardProps) {
   const colors = resolvePalette(palette);
 
   return (
     <Card
+      {...(href ? { component: RouterLink, href } : {})}
       sx={{
         p: 3,
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
+        ...(href && { cursor: 'pointer', textDecoration: 'none', '&:hover': { boxShadow: 6 } }),
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="left" spacing={1}>

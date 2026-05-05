@@ -5,6 +5,8 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
 
+import { paths } from 'src/routes/paths';
+
 import { formatNumber } from 'src/utils/format-number';
 
 import { CONFIG } from 'src/global-config';
@@ -76,6 +78,7 @@ export default function DashboardV6Page() {
               }
               icon="solar:battery-charge-bold"
               palette="primary"
+              href={paths.transactions.actives}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -97,15 +100,16 @@ export default function DashboardV6Page() {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <KpiCard
-              title="Usuarios activos"
+              title="Nuevos usuarios"
               value={appUserGrowth ? formatNumber(appUserGrowth.total) : '...'}
               subtitle={
                 appUserGrowth
-                  ? `+${formatNumber(appUserGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
+                  ? `${formatNumber(appUserGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
                   : '...'
               }
               icon="solar:users-group-rounded-bold"
               palette="warning"
+              href={paths.appUsers.list}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -114,11 +118,12 @@ export default function DashboardV6Page() {
               value={alarmsGrowth ? formatNumber(alarmsGrowth.total) : '...'}
               subtitle={
                 alarmsGrowth
-                  ? `+${formatNumber(alarmsGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
+                  ? `${formatNumber(alarmsGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
                   : '...'
               }
               icon="solar:bell-bing-bold"
               palette="primary"
+              href={paths.alarms.list}
             />
           </Grid>
         </Grid>
