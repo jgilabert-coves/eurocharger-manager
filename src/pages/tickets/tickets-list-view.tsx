@@ -56,8 +56,8 @@ type TicketsResponse = { data: Ticket[]; total?: number; success?: boolean };
 
 const STATUS_COLOR: Record<TicketStatus, 'success' | 'default' | 'error'> = {
   OPEN: 'error',
-  CLOSED: 'default',
-  PENDING: 'success'
+  CLOSED: 'success',
+  PENDING: 'default'
 };
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
@@ -129,7 +129,7 @@ export default function TicketsListView() {
     mutationFn: ({ ticketId, status }: { ticketId: number; status: TicketStatus }) =>
       patch(endpoints.tickets.update(ticketId), { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tickets', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
   });
 
@@ -210,20 +210,21 @@ export default function TicketsListView() {
                   <TableCell>Usuario</TableCell>
                   <TableCell>Creado</TableCell>
                   <TableCell>Motivo</TableCell>
-                  <TableCell>Seguimientos</TableCell>
+                  <TableCell>Seguimiento</TableCell>
+                  <TableCell />
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                    <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                    <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
                       <Typography variant="body2" color="text.secondary">
                         No se encontraron tickets
                       </Typography>
@@ -347,6 +348,18 @@ export default function TicketsListView() {
                         <Typography variant="body2" color="text.secondary">
                           {ticket.tracking.length}
                         </Typography>
+                      </TableCell>
+
+                      <TableCell align="right">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          component={Link}
+                          to={paths.tickets.detail(ticket.id)}
+                          endIcon={<Iconify icon="eva:arrow-forward-fill" />}
+                        >
+                          Ver más
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

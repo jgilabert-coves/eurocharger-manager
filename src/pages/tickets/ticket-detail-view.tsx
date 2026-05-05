@@ -1,6 +1,6 @@
 import type { AppUserDatatableItem } from 'src/types/appuser';
 import type { ChargingStation } from 'src/types/charging_stations';
-import type { Ticket, TicketType, TicketTracking } from 'src/types/tickets';
+import type { Ticket, TicketType, TicketTracking, TicketStatus } from 'src/types/tickets';
 
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -44,6 +44,19 @@ import { StationSearchSelect } from 'src/components/chargepoint/station-search-s
 import { useAuthContext } from 'src/auth/hooks';
 
 import { CONFIG } from '../../global-config';
+
+
+const STATUS_COLOR: Record<TicketStatus, 'success' | 'default' | 'error'> = {
+  OPEN: 'error',
+  CLOSED: 'success',
+  PENDING: 'default'
+};
+
+const STATUS_LABEL: Record<TicketStatus, string> = {
+  PENDING: 'Pendiente',
+  OPEN: 'Abierto',
+  CLOSED: 'Cerrado'
+};
 
 // ----------------------------------------------------------------------
 
@@ -181,8 +194,6 @@ export default function TicketDetailView() {
     );
   }
 
-  const isOpen = ticket.status === 'OPEN';
-
   return (
     <>
       <Helmet>
@@ -212,8 +223,8 @@ export default function TicketDetailView() {
         >
           <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
             <Typography variant="h4">Ticket #{ticket.id}</Typography>
-            <Label color={isOpen ? 'error' : 'default'} variant="soft">
-              {isOpen ? 'Abierto' : 'Cerrado'}
+            <Label color={STATUS_COLOR[ticket.status]} variant="soft">
+              {STATUS_LABEL[ticket.status]}
             </Label>
             <Label color="default" variant="soft">
               {ticket.type === 'APP' ? 'App' : 'Llamada'}
@@ -251,14 +262,14 @@ export default function TicketDetailView() {
             <Button
               variant="contained"
               size="small"
-              color={isOpen ? 'inherit' : 'error'}
+              color={ticket.status === 'CLOSED' ? 'error' : 'inherit'}
               disabled={updatingStatus}
               startIcon={
-                <Iconify icon={isOpen ? 'mdi:close-circle-outline' : 'mdi:lock-open-outline'} />
+                <Iconify icon={ticket.status === 'CLOSED' ? 'mdi:lock-open-outline' : 'mdi:close-circle-outline'} />
               }
-              onClick={() => updateStatus(isOpen ? 'CLOSED' : 'OPEN')}
+              onClick={() => updateStatus(ticket.status === 'CLOSED' ? 'OPEN' : 'CLOSED')}
             >
-              {isOpen ? 'Cerrar ticket' : 'Reabrir ticket'}
+              {ticket.status === 'CLOSED' ? 'Reabrir ticket' : 'Cerrar ticket'}
             </Button>
           </Stack>
         </Stack>
