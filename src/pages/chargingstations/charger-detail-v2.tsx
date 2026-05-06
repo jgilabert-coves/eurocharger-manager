@@ -744,8 +744,18 @@ export default function ChargerDetailV2() {
                 </Stack>
               )}
             </Box>
-
-            <ChargerStatusLabel status={chargepoint.status} />
+            
+            <Button
+              variant="contained"
+              size="small"
+              color='error'
+              startIcon={
+                <Iconify icon='mdi:reload' />
+              }
+              onClick={() => setResetOpen(true)}
+            >
+              Reiniciar
+            </Button>
           </Stack>
 
           {/* ── Warning banner ──────────────────────────────────────────────── */}

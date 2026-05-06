@@ -20,16 +20,16 @@ import { CONFIG } from '../../global-config';
 
 const metadata = { title: `Recargas | ${CONFIG.appName}` };
 
-type StatusFilter = 'ALL' | 'CARGANDO' | 'FINALIZADO';
+type StatusFilter = 'CARGANDO' | 'FINALIZADO';
 
 // ----------------------------------------------------------------------
 
 export default function TransactionsView() {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('CARGANDO');
   const [searchQuery, setSearchQuery] = useState('');
 
   const extraParams = useMemo(
-    (): Record<string, string> => (statusFilter === 'ALL' ? {} : { status: statusFilter }),
+    (): Record<string, string> => (statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
     [statusFilter]
   );
 
@@ -79,7 +79,6 @@ export default function TransactionsView() {
             }}
             sx={{ flexWrap: 'wrap' }}
           >
-            <ToggleButton value="ALL">Todas</ToggleButton>
             <ToggleButton value="CARGANDO">En curso</ToggleButton>
             <ToggleButton value="FINALIZADO">Finalizadas</ToggleButton>
           </ToggleButtonGroup>
@@ -91,7 +90,7 @@ export default function TransactionsView() {
           extraParams={extraParams}
           searchQuery={searchQuery}
           showEndDate={showEndDate}
-          showStatus={statusFilter === 'ALL'}
+          showStatus={false}
         />
       </DashboardContent>
     </>

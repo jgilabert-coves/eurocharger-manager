@@ -32,6 +32,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { ConnectorStatusChip } from 'src/components/chips/connector-status-chip';
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
 import { ChargerStatusLabel } from 'src/components/chargepoint/charger-status-label';
 import { ChargerSetupDialog } from 'src/components/chargepoint/charger-setup-dialog';
@@ -192,7 +193,7 @@ export default function ChargepointsListV2() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: 48, pl: 3 }}>#</TableCell>
+                  <TableCell sx={{ width: 28, pl: 3 }}>#</TableCell>
                   <TableCell>
                     <TableSortLabel
                       active={orderBy === 'name'}
@@ -202,16 +203,7 @@ export default function ChargepointsListV2() {
                       Cargador
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell sx={{ width: 150 }}>
-                    <TableSortLabel
-                      active={orderBy === 'status'}
-                      direction={orderBy === 'status' ? order : 'asc'}
-                      onClick={() => handleSort('status')}
-                    >
-                      Estado
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ width: 100 }}>Config</TableCell>
+                  <TableCell>Dirección</TableCell>
                   <TableCell>Conectores</TableCell>
                   <TableCell sx={{ width: 48 }} />
                 </TableRow>
@@ -277,70 +269,42 @@ export default function ChargepointsListV2() {
                               )}
                             </Stack>
 
-                            {cp.address && (
-                              <Stack
-                                direction="row"
-                                alignItems="center"
-                                spacing={0.75}
-                                sx={{ pl: 3.25 }}
-                              >
-                                <Iconify
-                                  icon="mdi:map-marker-outline"
-                                  width={14}
-                                  sx={{ color: 'text.disabled', flexShrink: 0 }}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  {cp.address}
-                                </Typography>
-                              </Stack>
-                            )}
+                            
                           </Stack>
                         </TableCell>
 
-                        {/* Status */}
+                       {/* Address */}
                         <TableCell>
-                          <ChargerStatusLabel status={cp.status} />
+                         {cp.address && (
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={0.75}
+                          >
+                            <Iconify
+                              icon="mdi:map-marker-outline"
+                              width={14}
+                              sx={{ color: 'text.disabled', flexShrink: 0 }}
+                            />
+                            <Typography variant="caption" color="text.secondary">
+                              {cp.address}
+                            </Typography>
+                          </Stack>
+                        )}
                         </TableCell>
 
-                        {/* Config status */}
+                        {/* Connectors */}
                         <TableCell>
                           {hasWarning ? (
                             <Label color="warning" variant="soft">
                               Incompleto
                             </Label>
                           ) : (
-                            <Label color="success" variant="soft">
-                              OK
-                            </Label>
-                          )}
-                        </TableCell>
-
-                        {/* Connectors */}
-                        <TableCell>
-                          {cp.connectors.length > 0 ? (
                             <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                               {cp.connectors.map((conn) => (
-                                <Chip
-                                  key={conn.id}
-                                  icon={
-                                    <Box
-                                      component="span"
-                                      sx={{ display: 'flex', alignItems: 'center', pl: 0.5 }}
-                                    >
-                                      <ConnectorTypeIcon name={conn.name} size={13} />
-                                    </Box>
-                                  }
-                                  label={conn.name ?? `#${conn.id}`}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{ height: 24, fontSize: '0.7rem' }}
-                                />
+                                <ConnectorStatusChip label={`Conector ${conn.ocppId}`} status={conn.status} type={conn.connectorTypeId}/>
                               ))}
                             </Stack>
-                          ) : (
-                            <Typography variant="caption" color="text.disabled">
-                              Sin conectores
-                            </Typography>
                           )}
                         </TableCell>
 

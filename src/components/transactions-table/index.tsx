@@ -169,7 +169,6 @@ export function TransactionsTable({
                   </TableSortLabel>
                 </TableCell>
                 <TableCell>Conector</TableCell>
-                <TableCell>Duración</TableCell>
                 <TableCell>
                   <TableSortLabel
                     active={orderBy === 'startDate'}
@@ -179,17 +178,7 @@ export function TransactionsTable({
                     Inicio
                   </TableSortLabel>
                 </TableCell>
-                {showEndDate && (
-                  <TableCell>
-                    <TableSortLabel
-                      active={orderBy === 'endDate'}
-                      direction={orderBy === 'endDate' ? order : 'asc'}
-                      onClick={() => handleSort('endDate')}
-                    >
-                      Fin
-                    </TableSortLabel>
-                  </TableCell>
-                )}
+                <TableCell>Duración</TableCell>
                 <TableCell>
                   <TableSortLabel
                     active={orderBy === 'power'}
@@ -278,28 +267,14 @@ export function TransactionsTable({
                             <Stack key={conn.id} direction="row" alignItems="center" spacing={0.75}>
                               <Iconify icon="mdi:power-plug-outline" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
                               <Typography variant="caption" color="text.secondary">
-                                {conn.name ?? `Conector ${conn.ocppId}`}
-                                {conn.power ? ` · ${conn.power} kW` : ''}
+                                {conn.name ?? `${conn.ocppId}`}
                               </Typography>
-                              <Chip
-                                label={conn.status}
-                                size="small"
-                                variant="outlined"
-                                sx={{ height: 18, fontSize: '0.6rem' }}
-                              />
                             </Stack>
                           ))}
                         </Stack>
                       ) : (
                         <Typography variant="body2" color="text.disabled">—</Typography>
                       )}
-                    </TableCell>
-
-                    {/* Duración */}
-                    <TableCell>
-                      <Typography variant="body2">
-                        {tx.startDate ? formatDuration(tx.startDate, tx.endDate ?? null) : '—'}
-                      </Typography>
                     </TableCell>
 
                     {/* Inicio */}
@@ -309,14 +284,12 @@ export function TransactionsTable({
                       </Typography>
                     </TableCell>
 
-                    {/* Fin (solo finalizadas) */}
-                    {showEndDate && (
-                      <TableCell>
-                        <Typography variant="body2">
-                          {tx.endDate ? fDateTime(tx.endDate) : '—'}
-                        </Typography>
-                      </TableCell>
-                    )}
+                    {/* Duración */}
+                    <TableCell>
+                      <Typography variant="body2">
+                        {tx.startDate ? formatDuration(tx.startDate, tx.endDate ?? null) : '—'}
+                      </Typography>
+                    </TableCell>
 
                     {/* Energía */}
                     <TableCell>
@@ -328,7 +301,7 @@ export function TransactionsTable({
                       </Stack>
                     </TableCell>
 
-                    {/* Coste */}
+                    {/* Coste */}                    
                     <TableCell>
                       <Typography variant="body2" fontWeight={600}>
                         {tx.total ? round(tx.total, 2) : 0} €
