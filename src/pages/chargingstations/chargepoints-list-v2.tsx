@@ -125,7 +125,12 @@ export default function ChargepointsListV2() {
 
       <DashboardContent>
         {/* Header */}
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 4 }}>
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{ mb: 4 }}
+        >
           <Box>
             <Typography variant="h4">Cargadores</Typography>
             {!loading && (
@@ -233,7 +238,7 @@ export default function ChargepointsListV2() {
                   </TableRow>
                 ) : (
                   rows.map((cp, index) => {
-                    const hasWarning = cp.connectors.length === 0 ;
+                    const hasWarning = cp.connectors.length === 0;
 
                     return (
                       <TableRow
@@ -268,29 +273,23 @@ export default function ChargepointsListV2() {
                                 </Typography>
                               )}
                             </Stack>
-
-                            
                           </Stack>
                         </TableCell>
 
-                       {/* Address */}
+                        {/* Address */}
                         <TableCell>
-                         {cp.address && (
-                          <Stack
-                            direction="row"
-                            alignItems="center"
-                            spacing={0.75}
-                          >
-                            <Iconify
-                              icon="mdi:map-marker-outline"
-                              width={14}
-                              sx={{ color: 'text.disabled', flexShrink: 0 }}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                              {cp.address}
-                            </Typography>
-                          </Stack>
-                        )}
+                          {cp.address && (
+                            <Stack direction="row" alignItems="center" spacing={0.75}>
+                              <Iconify
+                                icon="mdi:map-marker-outline"
+                                width={14}
+                                sx={{ color: 'text.disabled', flexShrink: 0 }}
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                {cp.address}
+                              </Typography>
+                            </Stack>
+                          )}
                         </TableCell>
 
                         {/* Connectors */}
@@ -302,7 +301,11 @@ export default function ChargepointsListV2() {
                           ) : (
                             <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                               {cp.connectors.map((conn) => (
-                                <ConnectorStatusChip label={`Conector ${conn.ocppId}`} status={conn.status} type={conn.connectorTypeId}/>
+                                <ConnectorStatusChip
+                                  label={`Conector ${conn.ocppId}`}
+                                  status={conn.status}
+                                  connectorType={conn.connectorTypeId}
+                                />
                               ))}
                             </Stack>
                           )}

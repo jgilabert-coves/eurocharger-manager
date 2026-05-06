@@ -32,6 +32,9 @@ import { fetcher } from 'src/lib/axios';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
+import { ConnectorStatusChip } from '../chips/connector-status-chip';
+import { TransactionStatusChip } from '../chips/transaction-status-chip';
+
 function formatDuration(startDate: Date | string, endDate: Date | string | null): string {
   const start = new Date(startDate).getTime();
   const end = endDate ? new Date(endDate).getTime() : Date.now();
@@ -129,8 +132,8 @@ export function TransactionsTable({
       {enableSearch && !isControlled && (
         <Box sx={{ mb: 3 }}>
           <TextField
-            size='small'
-            sx={{maxWidth: 400}}
+            size="small"
+            sx={{ maxWidth: 400 }}
             placeholder="Buscar por usuario, estación, cargador..."
             value={searchQueryInternal}
             onChange={(e) => {
@@ -158,7 +161,6 @@ export function TransactionsTable({
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: 56, color: 'text.disabled' }}>#</TableCell>
                 <TableCell>
                   <TableSortLabel
                     active={orderBy === 'chargepoint'}
@@ -168,36 +170,39 @@ export function TransactionsTable({
                     Cargador
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Conector</TableCell>
-                <TableCell>
+                <TableCell align="center">Conector</TableCell>
+                <TableCell align="center">
                   <TableSortLabel
                     active={orderBy === 'startDate'}
                     direction={orderBy === 'startDate' ? order : 'asc'}
                     onClick={() => handleSort('startDate')}
+                    sx={{ '& .MuiTableSortLabel-icon': { position: 'absolute', right: -20 } }}
                   >
                     Inicio
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Duración</TableCell>
-                <TableCell>
+                <TableCell align="center">Duración</TableCell>
+                <TableCell align="center">
                   <TableSortLabel
                     active={orderBy === 'power'}
                     direction={orderBy === 'power' ? order : 'asc'}
                     onClick={() => handleSort('power')}
+                    sx={{ '& .MuiTableSortLabel-icon': { position: 'absolute', right: -20 } }}
                   >
-                    Energía
+                    kWh
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>
+                <TableCell align="center">
                   <TableSortLabel
                     active={orderBy === 'total'}
                     direction={orderBy === 'total' ? order : 'asc'}
                     onClick={() => handleSort('total')}
+                    sx={{ '& .MuiTableSortLabel-icon': { position: 'absolute', right: -20 } }}
                   >
-                    Coste
+                    €
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Usuario</TableCell>
+                <TableCell align={showStatus ? 'center' : 'left'}>Usuario</TableCell>
                 {showStatus && <TableCell>Estado</TableCell>}
               </TableRow>
             </TableHead>
@@ -223,35 +228,43 @@ export function TransactionsTable({
                     key={tx.id}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 }, userSelect: 'none' }}
                   >
-                    {/* ID */}
-                    <TableCell>
-                      <Typography variant="caption" color="text.disabled">
-                        {tx.id}
-                      </Typography>
-                    </TableCell>
-
                     {/* Cargador */}
                     <TableCell>
                       <Stack spacing={0.25}>
                         <Stack direction="row" alignItems="center" spacing={0.75}>
-                          <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'primary.main', flexShrink: 0 }} />
+                          <Iconify
+                            icon="mdi:ev-station"
+                            width={16}
+                            sx={{ color: 'common.dark', flexShrink: 0 }}
+                          />
                           {tx.chargepoint?.id ? (
                             <Link
                               to={paths.chargingstations.detail(String(tx.chargepoint.id))}
                               style={{ textDecoration: 'none' }}
                             >
-                              <Typography variant="subtitle2" color='text.primary'>
+                              <Typography variant="subtitle2" color="text.primary">
                                 {tx.chargepoint.name ?? '-'}
                               </Typography>
                             </Link>
                           ) : (
-                            <Typography variant="subtitle2">{tx.chargepoint?.name ?? '-'}</Typography>
+                            <Typography variant="subtitle2">
+                              {tx.chargepoint?.name ?? '-'}
+                            </Typography>
                           )}
                         </Stack>
                         {tx.address && (
                           <Stack direction="row" alignItems="center" spacing={0.75}>
-                            <Iconify icon="mdi:map-marker-outline" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
-                            <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 200 }}>
+                            <Iconify
+                              icon="mdi:map-marker-outline"
+                              width={14}
+                              sx={{ color: 'text.disabled', flexShrink: 0 }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              noWrap
+                              sx={{ maxWidth: 200 }}
+                            >
                               {tx.address}
                             </Typography>
                           </Stack>
@@ -260,12 +273,22 @@ export function TransactionsTable({
                     </TableCell>
 
                     {/* Conector */}
-                    <TableCell>
+                    <TableCell align="center">
                       {tx.chargepoint?.connectors?.length ? (
-                        <Stack spacing={0.5}>
+                        <Stack spacing={0.5} alignItems="center">
                           {tx.chargepoint.connectors.map((conn) => (
-                            <Stack key={conn.id} direction="row" alignItems="center" spacing={0.75}>
-                              <Iconify icon="mdi:power-plug-outline" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+                            <Stack
+                              key={conn.id}
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="center"
+                              spacing={0.75}
+                            >
+                              <Iconify
+                                icon="mdi:power-plug-outline"
+                                width={14}
+                                sx={{ color: 'text.disabled', flexShrink: 0 }}
+                              />
                               <Typography variant="caption" color="text.secondary">
                                 {conn.name ?? `${conn.ocppId}`}
                               </Typography>
@@ -273,43 +296,54 @@ export function TransactionsTable({
                           ))}
                         </Stack>
                       ) : (
-                        <Typography variant="body2" color="text.disabled">—</Typography>
+                        <Typography variant="body2" color="text.disabled">
+                          —
+                        </Typography>
                       )}
                     </TableCell>
 
                     {/* Inicio */}
-                    <TableCell>
+                    <TableCell align="center">
                       <Typography variant="body2">
                         {tx.startDate ? fDateTime(tx.startDate) : '—'}
                       </Typography>
                     </TableCell>
 
                     {/* Duración */}
-                    <TableCell>
+                    <TableCell align="center">
                       <Typography variant="body2">
                         {tx.startDate ? formatDuration(tx.startDate, tx.endDate ?? null) : '—'}
                       </Typography>
                     </TableCell>
 
                     {/* Energía */}
-                    <TableCell>
-                      <Stack direction="row" alignItems="center" spacing={0.5}>
-                        <Iconify icon="mdi:lightning-bolt" width={15} sx={{ color: 'warning.main' }} />
+                    <TableCell align="center">
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="center"
+                        spacing={0.5}
+                      >
+                        <Iconify
+                          icon="mdi:lightning-bolt"
+                          width={15}
+                          sx={{ color: 'warning.main' }}
+                        />
                         <Typography variant="body2" fontWeight={600}>
-                          {tx.power ? round(tx.power, 2) : 0} kWh
+                          {tx.power ? round(tx.power, 2) : 0}
                         </Typography>
                       </Stack>
                     </TableCell>
 
-                    {/* Coste */}                    
-                    <TableCell>
+                    {/* Coste */}
+                    <TableCell align="center">
                       <Typography variant="body2" fontWeight={600}>
-                        {tx.total ? round(tx.total, 2) : 0} €
+                        {tx.total ? `${round(tx.total, 2)} €` : '-'}
                       </Typography>
                     </TableCell>
 
                     {/* Usuario */}
-                    <TableCell>
+                    <TableCell align={showStatus ? 'center' : 'left'}>
                       {tx.appUser ? (
                         <Stack spacing={0.25}>
                           {tx.appUser.id ? (
@@ -317,28 +351,33 @@ export function TransactionsTable({
                               to={paths.appUsers.detail(tx.appUser.id)}
                               style={{ textDecoration: 'none' }}
                             >
-                              <Typography variant="subtitle2" color='text.primary'>
+                              <Typography variant="subtitle2" color="text.primary">
                                 {tx.appUser.name ?? '—'}
                               </Typography>
                             </Link>
                           ) : (
                             <Typography variant="subtitle2">{tx.appUser.name ?? '—'}</Typography>
                           )}
-                          <Typography variant="caption" color="text.secondary">
-                            {tx.appUser.email ?? ''}
-                          </Typography>
+                          <Link
+                            to={paths.appUsers.detail(tx.appUser.id)}
+                            style={{ textDecoration: 'none' }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {tx.appUser.email ?? '—'}
+                            </Typography>
+                          </Link>
                         </Stack>
                       ) : (
-                        <Typography variant="body2" color="text.disabled">—</Typography>
+                        <Typography variant="body2" color="text.disabled">
+                          —
+                        </Typography>
                       )}
                     </TableCell>
 
                     {/* Estado (solo en vista "Todas") */}
                     {showStatus && (
                       <TableCell>
-                        <Label color={STATUS_COLOR[tx.status] ?? 'default'} variant="soft">
-                          {STATUS_LABEL[tx.status] ?? tx.status}
-                        </Label>
+                        <TransactionStatusChip status={tx.status} variant='soft'/>
                       </TableCell>
                     )}
                   </TableRow>

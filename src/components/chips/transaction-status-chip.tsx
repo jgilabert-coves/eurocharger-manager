@@ -10,61 +10,35 @@ import { ConnectorTypeIcon } from '../chargepoint';
 // ----------------------------------------------------------------------
 
 const STATUS_COLORS: Record<string, LabelColor> = {
-  available: 'success',
-  charging: 'info',
-  preparing: 'info',
-  finishing: 'info',
-  suspendedev: 'info',
-  suspendedevse: 'info',
-  reserved: 'warning',
-  unavailable: 'error',
-  faulted: 'error',
+  cargando: 'info',
+  finalizado: 'success',
+  cancelado: 'error',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  available: 'Disponible',
-  charging: 'Cargando',
-  preparing: 'Preparando',
-  finishing: 'Finalizando',
-  suspendedev: 'Suspendido',
-  suspendedevse: 'Suspendido',
-  reserved: 'Reservado',
-  unavailable: 'No disponible',
-  faulted: 'Error',
-  disconnected: 'Sin conexión',
-};
-
-const CONNECTOR_TYPE_MAP: Record<number, string> = {
-  1: 'Mennekes',
-  2: 'CHAdeMO',
-  3: 'Schuko',
-  4: 'CCS',
-  5: 'J1772',
-  6: 'Tesla',
+  cargando: 'En curso',
+  finalizado: 'Finalizada',
+  cancelado: 'Cancelada',
 };
 
 // ----------------------------------------------------------------------
 
-type ConnectorStatusLabelProps = {
-  label: string;
-  status?: string | null;
-  connectorType?: number | null;
+type TransactionStatusLabelProps = {
+  status: string;
   variant?: 'soft' | 'outlined';
   sx?: SxProps<Theme>;
 };
 
-export function ConnectorStatusChip({
-  label,
+export function TransactionStatusChip({
   status,
-  connectorType,
   variant = 'soft',
   sx,
-}: ConnectorStatusLabelProps) {
+}: TransactionStatusLabelProps) {
   const key = status?.toLowerCase() ?? '';
   const color = STATUS_COLORS[key] ?? 'default';
 
   const hoverText = status ? STATUS_LABELS[status.toLowerCase()] : null;
-  const labelText = label === status ? STATUS_LABELS[label.toLowerCase()] : label;
+  const labelText = STATUS_LABELS[status.toLowerCase()] 
 
   return (
     <Tooltip title={hoverText ?? ''} disableHoverListener={!hoverText} arrow>
@@ -77,9 +51,6 @@ export function ConnectorStatusChip({
           ...sx,
         }}
       >
-        {connectorType && (
-          <ConnectorTypeIcon name={CONNECTOR_TYPE_MAP[connectorType] ?? null} size={20} />
-        )}
         {labelText}
       </Label>
     </Tooltip>

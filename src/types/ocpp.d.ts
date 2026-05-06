@@ -20,7 +20,9 @@ export type OCPPStartTrasactionRequest = {
 };
 
 export type OCPPAuthorizationResponse = {
-  status: "Accepted" | "Rejected";
+  status_code: number;
+  data: { status: "Accepted" | "Rejected" };
+  error: string | null;
 };
 
 export type OCPPStopTransactionRequest = {

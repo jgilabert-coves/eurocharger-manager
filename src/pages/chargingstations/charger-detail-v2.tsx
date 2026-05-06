@@ -14,6 +14,7 @@ import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid2';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
+import { Tooltip } from '@mui/material';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
@@ -34,10 +35,12 @@ import { Iconify } from 'src/components/iconify';
 import { ResetDialog } from 'src/components/ocpp/reset/dialog';
 import { UnlockDialog } from 'src/components/ocpp/unlock/dialog';
 import { TransactionsTable } from 'src/components/transactions-table';
+import { StopTransactionDialog } from 'src/components/ocpp/stop/dialog';
 import { CreateRateDialog } from 'src/components/rate/create-rate-dialog';
+import { StartTransactionDialog } from 'src/components/ocpp/start/dialog';
 import { AvailabilityDialog } from 'src/components/ocpp/availability/dialog';
+import { ConnectorStatusChip } from 'src/components/chips/connector-status-chip';
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
-import { ChargerStatusLabel } from 'src/components/chargepoint/charger-status-label';
 
 // ----------------------------------------------------------------------
 
@@ -137,9 +140,18 @@ function InfoRow({
 
 // ----------------------------------------------------------------------
 
+const STOP_STATUSES = new Set([
+  'charging',
+  'preparing',
+  'finishing',
+  'suspendedev',
+  'suspendedevse',
+]);
+
 type DialogState = {
-  type: 'availability' | 'unlock' | null;
+  type: 'availability' | 'unlock' | 'start' | 'stop' | null;
   connectorId?: number;
+  transactionId?: number | null;
 };
 
 function ConnectorCard({
@@ -220,12 +232,7 @@ function ConnectorCard({
         <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
           <Stack spacing={1.5}>
             {/* Header */}
-            <Stack
-              direction="row"
-              alignItems="flex-start"
-              justifyContent="space-between"
-              spacing={1}
-            >
+            <Stack direction="row" alignItems="stretch" justifyContent="space-between" spacing={1}>
               <Box>
                 <Typography
                   variant="caption"
@@ -244,18 +251,46 @@ function ConnectorCard({
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Box sx={{ color: 'text.primary', display: 'flex' }}>
                     <ConnectorTypeIcon
-                      name={connector.connectorTypeId ? CONNECTOR_TYPE_MAP[connector.connectorTypeId] : null}
+                      name={
+                        connector.connectorTypeId
+                          ? CONNECTOR_TYPE_MAP[connector.connectorTypeId]
+                          : null
+                      }
                       size={30}
                     />
                   </Box>
                   <Typography variant="subtitle2" fontWeight={700}>
-                    {connector.connectorTypeId ? (CONNECTOR_TYPE_MAP[connector.connectorTypeId] ?? 'Desconocido') : 'Sin asignar'}
+                    {connector.connectorTypeId
+                      ? (CONNECTOR_TYPE_MAP[connector.connectorTypeId] ?? 'Desconocido')
+                      : 'Sin asignar'}
                   </Typography>
                 </Stack>
+
+                <ConnectorStatusChip
+                  label={connector.status}
+                  status={connector.status}
+                  sx={{ mt: 1.5 }}
+                />
               </Box>
 
-              <Stack alignItems="flex-end" spacing={0.75} sx={{ flexShrink: 0 }}>
-                <ChargerStatusLabel status={connector.status} />
+              <Stack
+                alignItems="flex-end"
+                justifyContent="space-between"
+                spacing={0.75}
+                sx={{ flexShrink: 0 }}
+              >
+                <Stack direction="row" spacing={0.5}>
+                  <IconButton
+                    size="small"
+                    title="Editar conector"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(connector);
+                    }}
+                  >
+                    <Iconify icon="mdi:pencil-outline" width={16} />
+                  </IconButton>
+                </Stack>
                 {connector.power != null && (
                   <Box
                     sx={{
@@ -315,36 +350,65 @@ function ConnectorCard({
               )}
 
               <Stack direction="row" spacing={0.5}>
-                <IconButton
-                  size="small"
-                  title="Editar conector"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(connector);
-                  }}
-                >
-                  <Iconify icon="mdi:pencil-outline" width={16} />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  title="Cambiar disponibilidad"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAction({ type: 'availability', connectorId: ocppConnectorId });
-                  }}
-                >
-                  <Iconify icon="mdi:swap-horizontal" width={16} />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  title="Desbloquear conector"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAction({ type: 'unlock', connectorId: ocppConnectorId });
-                  }}
-                >
-                  <Iconify icon="mdi:lock-open-outline" width={16} />
-                </IconButton>
+                {STOP_STATUSES.has(connector.status?.toLowerCase() ?? '') ? (
+                  <Tooltip title="Parar recarga">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAction({
+                          type: 'stop',
+                          connectorId: ocppConnectorId,
+                          transactionId: connector.transactionId,
+                        });
+                      }}
+                    >
+                      <Iconify icon="mdi:stop" width={16} />
+                    </IconButton>
+                  </Tooltip>
+                ) : (
+                  <Tooltip title="Iniciar recarga">
+                    <IconButton
+                      size="small"
+                      color="success"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAction({ type: 'start', connectorId: ocppConnectorId });
+                      }}
+                    >
+                      <Iconify icon="mdi:play" width={16} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+
+                <Tooltip title="Desbloquear conector">
+                  <IconButton
+                    size="small"
+                    color="info"
+                    title="Desbloquear conector"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAction({ type: 'unlock', connectorId: ocppConnectorId });
+                    }}
+                  >
+                    <Iconify icon="mdi:lock-open-outline" width={16} />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Cambiar disponibilidad">
+                  <IconButton
+                    size="small"
+                    color="success"
+                    title="Cambiar disponibilidad"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAction({ type: 'availability', connectorId: ocppConnectorId });
+                    }}
+                  >
+                    <Iconify icon="mdi:swap-horizontal" width={16} />
+                  </IconButton>
+                </Tooltip>
               </Stack>
             </Stack>
 
@@ -744,14 +808,12 @@ export default function ChargerDetailV2() {
                 </Stack>
               )}
             </Box>
-            
+
             <Button
               variant="contained"
               size="small"
-              color='error'
-              startIcon={
-                <Iconify icon='mdi:reload' />
-              }
+              color="error"
+              startIcon={<Iconify icon="mdi:reload" />}
               onClick={() => setResetOpen(true)}
             >
               Reiniciar
@@ -909,6 +971,7 @@ export default function ChargerDetailV2() {
               endpoint={`/chargingstations/${id}/transactions`}
               defaultPageSize={3}
               enableSearch={false}
+              showStatus
             />
           </Box>
         </Stack>
@@ -930,6 +993,23 @@ export default function ChargerDetailV2() {
         open={dialog.type === 'unlock'}
         chargepointId={chargepoint.id}
         connectorId={dialog.connectorId ?? 0}
+        onClose={closeDialog}
+      />
+      <StartTransactionDialog
+        open={dialog.type === 'start'}
+        data={{
+          chargepointId: chargepoint.id,
+          connectorOcppId: dialog.connectorId ?? 0,
+        }}
+        onClose={closeDialog}
+      />
+      <StopTransactionDialog
+        open={dialog.type === 'stop'}
+        data={{
+          chargepointId: chargepoint.id,
+          ocppId: chargepoint.ocpp_id ?? '',
+          transactionId: dialog.transactionId ?? null,
+        }}
         onClose={closeDialog}
       />
     </>
