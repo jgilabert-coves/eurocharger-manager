@@ -40,10 +40,10 @@ const STATUS_COLORS: Record<string, 'success' | 'info' | 'error' | 'warning' | '
   charging: 'info',
   unavailable: 'error',
   reserved: 'warning',
-    preparing: 'info',
-    faulted: 'error',
-    finishing: 'info',
-    suspendedev: 'info',
+  preparing: 'info',
+  faulted: 'error',
+  finishing: 'info',
+  suspendedev: 'info',
 };
 
 type ChargepointsResponse = {
@@ -82,7 +82,7 @@ export default function ChargingStationsView() {
     } catch (err) {
       console.error('Error fetching chargepoints:', err);
       setRows([]);
-          } finally {
+    } finally {
       setLoading(false);
     }
   }, [page, pageSize, searchQuery, orderBy, order]);
@@ -202,11 +202,9 @@ export default function ChargingStationsView() {
                             <Iconify
                               icon="mdi:ev-station"
                               width={18}
-                              sx={{ color: 'primary.main' }}
+                              sx={{ color: 'common.black' }}
                             />
-                            <Typography variant="subtitle2">
-                              {cp.name ?? '-'}
-                            </Typography>
+                            <Typography variant="subtitle2">{cp.name ?? '-'}</Typography>
                             {cp.client_cp_id && (
                               <Typography variant="caption" color="text.secondary">
                                 ({cp.client_cp_id})
@@ -215,12 +213,7 @@ export default function ChargingStationsView() {
                           </Stack>
 
                           {cp.address && (
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={1}
-                              sx={{ pl: 0.5 }}
-                            >
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ pl: 0.5 }}>
                               <Iconify
                                 icon="mdi:map-marker-outline"
                                 width={16}
@@ -233,12 +226,7 @@ export default function ChargingStationsView() {
                           )}
 
                           {cp.ocpp_id && (
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={1}
-                              sx={{ pl: 0.5 }}
-                            >
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ pl: 0.5 }}>
                               <Iconify
                                 icon="mdi:identifier"
                                 width={16}
@@ -257,12 +245,7 @@ export default function ChargingStationsView() {
                         <Stack spacing={0.5}>
                           {cp.connectors?.length > 0 ? (
                             cp.connectors.map((conn) => (
-                              <Stack
-                                key={conn.id}
-                                direction="row"
-                                alignItems="center"
-                                spacing={1}
-                              >
+                              <Stack key={conn.id} direction="row" alignItems="center" spacing={1}>
                                 <Iconify
                                   icon="mdi:power-plug-outline"
                                   width={16}
@@ -274,7 +257,9 @@ export default function ChargingStationsView() {
                                 </Typography>
                                 <Chip
                                   label={conn.status}
-                                  color={STATUS_COLORS[conn.status?.toLowerCase() ?? ''] ?? 'default'}
+                                  color={
+                                    STATUS_COLORS[conn.status?.toLowerCase() ?? ''] ?? 'default'
+                                  }
                                   size="small"
                                   variant="outlined"
                                   sx={{ height: 22, fontSize: '0.7rem' }}

@@ -31,9 +31,6 @@ import { Iconify } from 'src/components/iconify';
 
 import { CONFIG } from '../../global-config';
 
-
-
-
 // ----------------------------------------------------------------------
 
 const metadata = { title: `Reservas | ${CONFIG.appName}` };
@@ -41,7 +38,7 @@ const metadata = { title: `Reservas | ${CONFIG.appName}` };
 const STATUS_COLORS: Record<string, 'info' | 'success' | 'error'> = {
   ACTIVED: 'info',
   EXECUTED: 'success',
-  EXPIRED: 'error'
+  EXPIRED: 'error',
 };
 
 type ReservationsResponse = {
@@ -72,12 +69,8 @@ export default function ReservationsView() {
           searchQuery,
         },
       };
-      const result: ReservationsResponse = await fetcher([
-        endpoints.reservations.list,
-        queryArgs,
-      ]);
+      const result: ReservationsResponse = await fetcher([endpoints.reservations.list, queryArgs]);
       setRows(result.data);
-
     } catch (err) {
       console.error('Error fetching reservations:', err);
       setRows([]);
@@ -229,7 +222,7 @@ export default function ReservationsView() {
                             <Iconify
                               icon="mdi:ev-station"
                               width={18}
-                              sx={{ color: 'primary.dark' }}
+                              sx={{ color: 'common.black' }}
                             />
                             <Typography variant="subtitle2">
                               {reservation.chargingStation?.name ?? '-'}

@@ -168,10 +168,15 @@ export default function LocationsListView() {
                           label={location.chargepoints_number ?? 0}
                           variant="soft"
                           color="default"
-                          icon={<Iconify icon="mdi:ev-station" width={14} />}
+                          icon={
+                            <Iconify
+                              icon="mdi:ev-station"
+                              width={14}
+                              sx={{ color: 'common.black' }}
+                            />
+                          }
                         />
                       </TableCell>
-
                     </TableRow>
                   ))
                 )}

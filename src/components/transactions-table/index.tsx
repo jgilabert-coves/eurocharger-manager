@@ -235,7 +235,7 @@ export function TransactionsTable({
                           <Iconify
                             icon="mdi:ev-station"
                             width={16}
-                            sx={{ color: 'common.dark', flexShrink: 0 }}
+                            sx={{ color: 'common.black', flexShrink: 0 }}
                           />
                           {tx.chargepoint?.id ? (
                             <Link
@@ -377,7 +377,7 @@ export function TransactionsTable({
                     {/* Estado (solo en vista "Todas") */}
                     {showStatus && (
                       <TableCell>
-                        <TransactionStatusChip status={tx.status} variant='soft'/>
+                        <TransactionStatusChip status={tx.status} variant="soft" />
                       </TableCell>
                     )}
                   </TableRow>

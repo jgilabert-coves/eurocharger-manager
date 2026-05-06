@@ -264,7 +264,7 @@ export default function ChargepointsListV2() {
                               <Iconify
                                 icon="mdi:ev-station"
                                 width={18}
-                                sx={{ color: 'primary.main', flexShrink: 0 }}
+                                sx={{ color: 'common.black', flexShrink: 0 }}
                               />
                               <Typography variant="subtitle2">{cp.name ?? '-'}</Typography>
                               {cp.client_cp_id && (

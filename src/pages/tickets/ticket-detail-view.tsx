@@ -45,17 +45,16 @@ import { useAuthContext } from 'src/auth/hooks';
 
 import { CONFIG } from '../../global-config';
 
-
 const STATUS_COLOR: Record<TicketStatus, 'success' | 'default' | 'error'> = {
   OPEN: 'error',
   CLOSED: 'success',
-  PENDING: 'default'
+  PENDING: 'default',
 };
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
   PENDING: 'Pendiente',
   OPEN: 'Abierto',
-  CLOSED: 'Cerrado'
+  CLOSED: 'Cerrado',
 };
 
 // ----------------------------------------------------------------------
@@ -265,7 +264,13 @@ export default function TicketDetailView() {
               color={ticket.status === 'CLOSED' ? 'error' : 'inherit'}
               disabled={updatingStatus}
               startIcon={
-                <Iconify icon={ticket.status === 'CLOSED' ? 'mdi:lock-open-outline' : 'mdi:close-circle-outline'} />
+                <Iconify
+                  icon={
+                    ticket.status === 'CLOSED'
+                      ? 'mdi:lock-open-outline'
+                      : 'mdi:close-circle-outline'
+                  }
+                />
               }
               onClick={() => updateStatus(ticket.status === 'CLOSED' ? 'OPEN' : 'CLOSED')}
             >
@@ -328,7 +333,7 @@ export default function TicketDetailView() {
                               <Iconify
                                 icon="mdi:ev-station"
                                 width={16}
-                                sx={{ color: 'primary.main' }}
+                                sx={{ color: 'common.black' }}
                               />
                               <Typography
                                 variant="body2"
@@ -368,7 +373,9 @@ export default function TicketDetailView() {
                             >
                               {ticket.appUser.email}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">{ticket.appUser.telephone ?? '-'}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {ticket.appUser.telephone ?? '-'}
+                            </Typography>
                           </Stack>
                         </Stack>
                       </>

@@ -38,7 +38,6 @@ import { ClientSelect } from 'src/components/client/client-select';
 import { useAbility } from 'src/auth/hooks/use-ability';
 import { useAuthContext } from 'src/auth/hooks/use-auth-context';
 
-
 // ----------------------------------------------------------------------
 
 const STEPS_EUROCHARGER = ['Cliente', 'Estación', 'Cargador', 'Resumen'];
@@ -553,7 +552,12 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               color="text.secondary"
               fontWeight={600}
               display="block"
-              sx={{ mb: 1, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.65rem' }}
+              sx={{
+                mb: 1,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                fontSize: '0.65rem',
+              }}
             >
               Cliente
             </Typography>
@@ -605,7 +609,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
           </Typography>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Stack direction="row" alignItems="center" spacing={1}>
-              <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'text.disabled' }} />
+              <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'common.black' }} />
               <Typography variant="caption" fontWeight={600}>
                 {chargerName}
               </Typography>

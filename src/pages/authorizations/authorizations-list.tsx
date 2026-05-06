@@ -223,9 +223,7 @@ export default function AuthorizationsListView() {
                       {/* User */}
                       <TableCell>
                         <Stack spacing={0.25}>
-                          <Typography variant="subtitle2">
-                            {group.user.name}
-                          </Typography>
+                          <Typography variant="subtitle2">{group.user.name}</Typography>
                           <Typography variant="caption" color="text.secondary">
                             {group.user.email}
                           </Typography>
@@ -237,7 +235,12 @@ export default function AuthorizationsListView() {
                         <Stack spacing={0.75}>
                           {group.stations.map(({ privilege, station }) =>
                             station.chargepoints?.map((cp) => (
-                              <Stack key={`${privilege.id}-${cp.id}`} direction="row" alignItems="center" spacing={1}>
+                              <Stack
+                                key={`${privilege.id}-${cp.id}`}
+                                direction="row"
+                                alignItems="center"
+                                spacing={1}
+                              >
                                 <Iconify
                                   icon="mdi:ev-plug-type2"
                                   width={16}
@@ -443,9 +446,7 @@ function AddPrivilegeDialog({
                   {userResults.map((u) => (
                     <MenuItem key={u.id} onClick={() => handleSelectUser(u)}>
                       <Stack spacing={0}>
-                        <Typography variant="body2">
-                          {u.name}
-                        </Typography>
+                        <Typography variant="body2">{u.name}</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {u.email}
                         </Typography>
@@ -507,7 +508,7 @@ function AddPrivilegeDialog({
                   }
                   label={
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'primary.dark' }} />
+                      <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'common.black' }} />
                       <Typography variant="body2">{s.name}</Typography>
                     </Stack>
                   }

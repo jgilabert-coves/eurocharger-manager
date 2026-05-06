@@ -58,13 +58,13 @@ type TicketsResponse = { data: Ticket[]; total?: number; success?: boolean };
 const STATUS_COLOR: Record<TicketStatus, 'success' | 'default' | 'error'> = {
   OPEN: 'error',
   CLOSED: 'success',
-  PENDING: 'default'
+  PENDING: 'default',
 };
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
   PENDING: 'Pendiente',
   OPEN: 'Abierto',
-  CLOSED: 'Cerrado'
+  CLOSED: 'Cerrado',
 };
 
 const TYPE_LABEL: Record<TicketType, string> = {
@@ -170,10 +170,12 @@ export default function TicketsListView() {
         </Stack>
 
         {/* Search */}
-        <Stack direction={{ xs: 'column', md: 'row' }}
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
           spacing={2}
           alignItems={{ md: 'center' }}
-          sx={{ mb: 3 }}>
+          sx={{ mb: 3 }}
+        >
           <TextField
             placeholder="Buscar por motivo, descripción, usuario..."
             value={searchQuery}
@@ -223,7 +225,6 @@ export default function TicketsListView() {
           </ToggleButtonGroup>
         </Stack>
 
-
         <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <TableContainer>
             <Table>
@@ -260,7 +261,10 @@ export default function TicketsListView() {
                   rows.map((ticket) => (
                     <TableRow key={ticket.id}>
                       <TableCell>
-                        <Link to={paths.tickets.detail(ticket.id)} style={{ textDecoration: 'none' }}>
+                        <Link
+                          to={paths.tickets.detail(ticket.id)}
+                          style={{ textDecoration: 'none' }}
+                        >
                           <Typography
                             variant="body2"
                             color="text.secondary"
@@ -302,10 +306,14 @@ export default function TicketsListView() {
                             <Label color="default">Pendiente</Label>
                           </MenuItem>
                           <MenuItem value="OPEN">
-                            <Label color="error" variant="soft">Abierto</Label>
+                            <Label color="error" variant="soft">
+                              Abierto
+                            </Label>
                           </MenuItem>
                           <MenuItem value="CLOSED">
-                            <Label color="primary" variant="soft">Cerrado</Label>
+                            <Label color="primary" variant="soft">
+                              Cerrado
+                            </Label>
                           </MenuItem>
                         </Select>
                       </TableCell>
@@ -332,7 +340,9 @@ export default function TicketsListView() {
                             </Stack>
                           </Link>
                         ) : (
-                          <Typography variant="body2" color="text.secondary">—</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            —
+                          </Typography>
                         )}
                       </TableCell>
 

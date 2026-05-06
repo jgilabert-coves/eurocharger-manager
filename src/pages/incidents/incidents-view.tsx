@@ -178,7 +178,7 @@ export default function IncidentsView() {
                             <Iconify
                               icon="mdi:ev-station"
                               width={16}
-                              sx={{ color: 'primary.main', flexShrink: 0 }}
+                              sx={{ color: 'common.black', flexShrink: 0 }}
                             />
                             <Typography variant="subtitle2">
                               {incident.chargingStation?.name ?? '—'}
