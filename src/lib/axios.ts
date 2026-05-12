@@ -214,4 +214,11 @@ export const endpoints = {
     signIn: '/auth/login',
     signUp: '/auth/sign-up',
   },
+  plans: {
+    list: '/plans',
+    create: '/plans',
+    single: (id: string) => `/plans/${id}`,
+    update: (id: string) => `/plans/${id}`,
+    toggleActive: (id: string) => `/plans/${id}/toggle-active`,
+  },
 };
