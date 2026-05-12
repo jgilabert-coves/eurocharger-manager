@@ -232,4 +232,11 @@ export const endpoints = {
     cancelSubscription: (accountId: number) => `/accounts/${accountId}/subscription`,
     promoCodes: (accountId: number) => `/accounts/${accountId}/promo-codes/apply`,
   },
+  plans: {
+    list: '/plans',
+    create: '/plans',
+    single: (id: string) => `/plans/${id}`,
+    update: (id: string) => `/plans/${id}`,
+    toggleActive: (id: string) => `/plans/${id}/toggle-active`,
+  },
 };

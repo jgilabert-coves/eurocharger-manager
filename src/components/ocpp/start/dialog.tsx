@@ -46,7 +46,7 @@ export function StartTransactionDialog({
     mutationFn: () =>
       chargepointService.startTransaction(data.chargepointId, {
         connectorId: data.connectorOcppId,
-        idTag: selectedUser!.cardId ?? '',
+        idTag: `${selectedUser?.id ?? ''}`,
       }),
     onSuccess: (res) => {
       setResult(res.data.status);
