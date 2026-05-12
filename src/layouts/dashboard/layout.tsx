@@ -36,6 +36,7 @@ import { LanguagePopover } from '../components/language-popover';
 import { ContactsPopover } from '../components/contacts-popover';
 import { WorkspacesPopover } from '../components/workspaces-popover';
 import { navData as dashboardNavData } from '../nav-config-dashboard';
+import { SubscriptionBanner } from '../components/subscription-banner';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 
@@ -173,7 +174,7 @@ export function DashboardLayout({
         {!isNavMini && (
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle2" noWrap>
-              {user?.client_name ?? user?.email}
+              {user?.account_name ?? user?.email}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap>
               {user?.email}
@@ -203,7 +204,12 @@ export function DashboardLayout({
 
   const renderFooter = () => null;
 
-  const renderMain = () => <MainSection {...slotProps?.main}>{children}</MainSection>;
+  const renderMain = () => (
+    <MainSection {...slotProps?.main}>
+      <SubscriptionBanner />
+      {children}
+    </MainSection>
+  );
 
   return (
     <LayoutSection

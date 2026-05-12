@@ -26,14 +26,14 @@ export function useAbility() {
    * Comprueba si el usuario tiene un permiso específico.
    * Equivalente a: Gate::allows('rates.create') en Laravel.
    *
-   * NOTA: El rol 'Eurocharger' tiene acceso total (como Gate::before en Laravel).
+   * NOTA: El rol 'eurocharger' tiene acceso total (como Gate::before en Laravel).
    */
   const can = useCallback(
     (permission: Permission): boolean => {
       if (!user) return false;
 
       // Los admins tienen acceso total (similar a Gate::before en Laravel)
-      if (user.roles?.includes('Eurocharger')) return true;
+      if (user.roles?.includes('eurocharger')) return true;
 
       return user.permissions?.includes(permission) ?? false;
     },

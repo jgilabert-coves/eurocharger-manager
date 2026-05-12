@@ -33,17 +33,17 @@ import { CONFIG } from '../../global-config';
 const metadata = { title: `Usuarios del gestor | ${CONFIG.appName}` };
 
 const ROLE_LABEL: Record<ManagerUserRole, string> = {
-  Basic_Profile: 'Basic',
-  Medium_Profile: 'Medium',
-  Advanced_Profile: 'Advanced',
-  Eurocharger: 'Eurocharger',
+  saas_guest: 'Invitado',
+  saas_admin: 'Admin',
+  saas_owner: 'Propietario',
+  eurocharger: 'Eurocharger',
 };
 
 const ROLE_COLOR: Record<ManagerUserRole, 'default' | 'info' | 'warning' | 'primary'> = {
-  Basic_Profile: 'default',
-  Medium_Profile: 'info',
-  Advanced_Profile: 'warning',
-  Eurocharger: 'primary',
+  saas_guest: 'default',
+  saas_admin: 'info',
+  saas_owner: 'warning',
+  eurocharger: 'primary',
 };
 
 function dateToString(value?: string | null): string {

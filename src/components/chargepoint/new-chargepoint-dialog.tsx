@@ -145,7 +145,7 @@ export type NewChargepointDialogProps = {
 export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepointDialogProps) {
   const { hasRole } = useAbility();
   const { user } = useAuthContext();
-  const isEurocharger = hasRole('Eurocharger');
+  const isEurocharger = hasRole('eurocharger');
   const STEPS = isEurocharger ? STEPS_EUROCHARGER : STEPS_CLIENT;
 
   const [step, setStep] = useState(0);
@@ -239,7 +239,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         name: chargerName.trim(),
         is_private: chargerIsPrivate,
         location_id: locationId,
-        client_id: isEurocharger ? selectedClient!.id : user?.client_id,
+        client_id: isEurocharger ? selectedClient!.id : user?.account_id,
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;

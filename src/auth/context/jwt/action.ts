@@ -1,7 +1,6 @@
 import axios, { endpoints } from 'src/lib/axios';
 
 import { setSession } from './utils';
-import { JWT_STORAGE_KEY } from './constant';
 
 // ----------------------------------------------------------------------
 
@@ -13,8 +12,14 @@ export type SignInParams = {
 export type SignUpParams = {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  cif?: string;
+  phone?: string;
+};
+
+export type SignUpResult = {
+  accountId: number;
+  userId: number;
 };
 
 // ----------------------------------------------------------------------
@@ -27,10 +32,10 @@ export type SignUpParams = {
 export type ApiUserResponse = {
   user: number; // ID del usuario (el backend lo llama "user", no "id")
   email: string;
-  roles: string[]; // Array de roles (ej: ["Eurocharger"])
+  roles: string[]; // Array de roles (ej: ["eurocharger"])
   permissions: string[]; // Array de permisos (ej: ["read-rates", "write-rates"])
-  client_id: number | null;
-  client_name: string | null;
+  account_id: number | null;
+  account_name: string | null;
   exp: number;
   iat: number;
 };
@@ -73,29 +78,23 @@ export const signInWithPassword = async ({ email, password }: SignInParams): Pro
 /** **************************************
  * Sign up
  *************************************** */
-export const signUp = async ({
-  email,
-  password,
-  firstName,
-  lastName,
-}: SignUpParams): Promise<void> => {
-  const params = {
-    email,
-    password,
-    firstName,
-    lastName,
-  };
+export const signUp = async ({ email, password, fullName, cif, phone }: SignUpParams): Promise<SignUpResult> => {
+  const params: Record<string, string> = { email, password, fullName };
+  if (cif) params.cif = cif;
+  if (phone) params.phone = phone;
 
   try {
-    const res = await axios.post(endpoints.auth.signUp, params);
+    const res = await axios.post(endpoints.auth.register, params);
 
-    const { accessToken } = res.data;
+    const { status_code, data, error } = res.data;
 
-    if (!accessToken) {
-      throw new Error('Access token not found in response');
+    if (status_code !== 201 || !data?.token) {
+      throw new Error(error ?? 'Error al crear la cuenta, pruebe más adelante.');
     }
 
-    sessionStorage.setItem(JWT_STORAGE_KEY, accessToken);
+    setSession(data.token);
+
+    return { accountId: data.accountId, userId: data.userId };
   } catch (error) {
     console.error('Error during sign up:', error);
     throw error;

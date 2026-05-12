@@ -9,7 +9,9 @@
       "Bash(xargs cat *)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "Bash(xargs ls *)",
-      "Bash(yarn tsc:watch)"
+      "Bash(yarn tsc:watch)",
+      "Bash(yarn --ignore-engines tsc --noEmit)",
+      "Bash(yarn tsc *)"
     ]
   }
 }

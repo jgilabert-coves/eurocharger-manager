@@ -1,9 +1,8 @@
 // ----------------------------------------------------------------------
 // Roles disponibles en la aplicación.
-// Añadir nuevos roles aquí cuando sea necesario (ej: 'technician', 'viewer').
-// Equivalente a los roles de Spatie/Laravel Permission.
+// Ver src/auth/roles.ts para constantes ROLE_LEVEL y ROLE_HIERARCHY.
 // ----------------------------------------------------------------------
-export type Role = 'Eurocharger' | 'Basic_Profile' | 'Medium_Profile' | 'Advanced_Profile' | 'Eduardo';
+export type Role = 'eurocharger' | 'saas_guest' | 'saas_admin' | 'saas_owner';
 
 // ----------------------------------------------------------------------
 // Permisos granulares de la aplicación.
@@ -90,8 +89,8 @@ export type UserType = {
   name: string | null;
   roles: Role[];
   permissions: Permission[];
-  client_id: number | null;
-  client_name: string | 'Eurocharger'
+  account_id: number | null;
+  account_name: string | 'Eurocharger'
   [key: string]: any; // Permite campos adicionales del backend
 } | null;
 

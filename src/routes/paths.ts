@@ -22,6 +22,7 @@ export const paths = {
     jwt: {
       signIn: `${ROOTS.AUTH}/jwt/sign-in`,
       signUp: `${ROOTS.AUTH}/jwt/sign-up`,
+      paymentSetup: `${ROOTS.AUTH}/jwt/payment-setup`,
     },
     firebase: {
       signIn: `${ROOTS.AUTH}/firebase/sign-in`,
@@ -88,5 +89,11 @@ export const paths = {
   locations: {
     list: `/locations`,
     detail: (id: string | number) => `/locations/${id}`,
+  },
+  subscription: {
+    root: `/subscription`,
+  },
+  plans: {
+    list: `/plans`,
   },
 };

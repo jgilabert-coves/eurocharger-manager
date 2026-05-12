@@ -177,7 +177,7 @@ function getPeriodType(start: Date, end: Date): { label: string; color: 'success
 export default function InvoicesView() {
   const { hasRole } = useAbility();
   const { user } = useAuthContext();
-  const isEurocharger = hasRole('Eurocharger');
+  const isEurocharger = hasRole('eurocharger');
   const [dateFilter, setDateFilter] = useState<DateFilter>('3m');
 
   const filteredInvoices = useMemo(() => {
@@ -193,10 +193,10 @@ export default function InvoicesView() {
 
     let invoices = MOCK_INVOICES;
     if (!isEurocharger) {
-      invoices = invoices.filter((inv) => inv.client_id === user?.client_id);
+      invoices = invoices.filter((inv) => inv.client_id === user?.account_id);
     }
     return invoices.filter((inv) => new Date(inv.issue_date) >= cutoff);
-  }, [isEurocharger, user?.client_id, dateFilter]);
+  }, [isEurocharger, user?.account_id, dateFilter]);
 
   return (
     <>

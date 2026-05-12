@@ -213,5 +213,23 @@ export const endpoints = {
     me: '/auth/me',
     signIn: '/auth/login',
     signUp: '/auth/sign-up',
+    register: '/auth/register',
+    checkEmail: '/auth/check-email',
+  },
+  billing: {
+    setupIntent: '/billing/setup-intent',
+    subscribe: '/billing/subscribe',
+  },
+  plans: {
+    list: '/plans',
+    single: (id: string) => `/plans/${id}`,
+    create: '/plans',
+    update: (id: string) => `/plans/${id}`,
+    toggleActive: (id: string) => `/plans/${id}/active`,
+  },
+  accounts: {
+    subscription: (accountId: number) => `/accounts/${accountId}/subscription`,
+    cancelSubscription: (accountId: number) => `/accounts/${accountId}/subscription`,
+    promoCodes: (accountId: number) => `/accounts/${accountId}/promo-codes/apply`,
   },
 };

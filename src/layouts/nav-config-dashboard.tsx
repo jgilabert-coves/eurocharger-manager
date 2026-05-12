@@ -52,8 +52,8 @@ const ICONS = {
 // Si NO se pone `roles`, el item es visible para TODOS los roles.
 //
 // Ejemplo:
-//   { title: 'Usuarios', path: '/users', roles: ['Eurocharger'] }
-//   → Solo visible para el rol 'Eurocharger'
+//   { title: 'Usuarios', path: '/users', roles: ['eurocharger'] }
+//   → Solo visible para el rol 'eurocharger'
 //
 //   { title: 'Dashboard', path: '/dashboard' }
 //   → Visible para todos los roles
@@ -112,21 +112,26 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Reservas',
     path: paths.reservations.list,
-    roles: ["Eurocharger"]
+    roles: ['eurocharger'],
   },
   {
     title: 'Tarifas',
     path: paths.rates.list,
-    roles: ['Eurocharger', 'Advanced_Profile']
+    roles: ['eurocharger', 'saas_owner'],
   },
   {
     title: 'Usuarios',
     path: paths.appUsers.list,
-    roles: ['Eurocharger', 'Advanced_Profile'],
+    roles: ['eurocharger', 'saas_owner'],
   },
   {
     title: 'Usuarios del gestor',
     path: paths.managerUsers.list,
-    roles: ['Eurocharger'],
+    roles: ['eurocharger'],
+  },
+  {
+    title: 'Planes',
+    path: paths.plans.list,
+    roles: ['eurocharger'],
   },
 ];

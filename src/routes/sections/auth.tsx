@@ -7,7 +7,7 @@ import { AuthSplitLayout } from 'src/layouts/auth-split';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
-import { GuestGuard } from 'src/auth/guard';
+import { AuthGuard, GuestGuard } from 'src/auth/guard';
 
 // ----------------------------------------------------------------------
 
@@ -17,6 +17,7 @@ import { GuestGuard } from 'src/auth/guard';
 const Jwt = {
   SignInPage: lazy(() => import('src/pages/auth/jwt/sign-in')),
   SignUpPage: lazy(() => import('src/pages/auth/jwt/sign-up')),
+  PaymentSetupPage: lazy(() => import('src/pages/auth/jwt/payment-setup')),
 };
 
 const authJwt = {
@@ -44,6 +45,20 @@ const authJwt = {
             <Jwt.SignUpPage />
           </AuthSplitLayout>
         </GuestGuard>
+      ),
+    },
+    {
+      path: 'payment-setup',
+      element: (
+        <AuthGuard>
+          <AuthSplitLayout
+            slotProps={{
+              section: { title: 'Activa tu suscripción' },
+            }}
+          >
+            <Jwt.PaymentSetupPage />
+          </AuthSplitLayout>
+        </AuthGuard>
       ),
     },
   ],

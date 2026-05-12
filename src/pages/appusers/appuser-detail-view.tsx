@@ -615,7 +615,7 @@ function BillingSection({
 
 function WalletCard({ user, onSaved }: { user: AppUser; onSaved: () => void }) {
   const { hasRole } = useAbility();
-  const isEurocharger = hasRole('Eurocharger');
+  const isEurocharger = hasRole('eurocharger');
 
   const [topupOpen, setTopupOpen] = useState(false);
   const [amount, setAmount] = useState('');

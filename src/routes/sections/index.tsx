@@ -7,6 +7,7 @@ import { CONFIG } from 'src/global-config';
 
 import { authRoutes } from './auth';
 import { ratesRoutes } from './rates';
+import { plansRoutes } from './plans';
 import { alarmsRoutes } from './alarms';
 import { ticketsRoutes } from './tickets';
 import { appUsersRoutes } from './appusers';
@@ -17,6 +18,7 @@ import { locationsRoutes } from './locations';
 import { privilegesRoutes } from './privileges';
 import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
+import { subscriptionRoutes } from './subscription';
 import { managerUsersRoutes } from './manager-users';
 import { chargingStationsRoutes } from './chargingstations';
 // ----------------------------------------------------------------------
@@ -53,6 +55,10 @@ export const routesSection: RouteObject[] = [
   ...ticketsRoutes,
 
   ...locationsRoutes,
+
+  ...subscriptionRoutes,
+
+  ...plansRoutes,
 
   {
     path: '/',

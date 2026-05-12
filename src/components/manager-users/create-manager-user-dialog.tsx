@@ -26,10 +26,10 @@ import { ClientSelect } from 'src/components/client/client-select';
 // ----------------------------------------------------------------------
 
 const ROLES: { value: ManagerUserRole; label: string }[] = [
-  { value: 'Basic_Profile', label: 'Basic' },
-  { value: 'Medium_Profile', label: 'Medium' },
-  { value: 'Advanced_Profile', label: 'Advanced' },
-  { value: 'Eurocharger', label: 'Eurocharger' },
+  { value: 'saas_guest', label: 'Invitado' },
+  { value: 'saas_admin', label: 'Admin' },
+  { value: 'saas_owner', label: 'Propietario' },
+  { value: 'eurocharger', label: 'Eurocharger' },
 ];
 
 function generatePassword(): string {
@@ -57,7 +57,7 @@ const DEFAULT_FORM: CreateManagerUserPayload = {
   last_name: '',
   email: '',
   password: '',
-  role: 'Basic_Profile',
+  role: 'saas_guest',
   client_id: null,
 };
 
@@ -69,7 +69,7 @@ export function CreateManagerUserDialog({ open, onClose, onSuccess }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const isEurocharger = form.role === 'Eurocharger';
+  const isEurocharger = form.role === 'eurocharger';
 
   const canSubmit =
     form.first_name.trim() !== '' &&
@@ -79,8 +79,8 @@ export function CreateManagerUserDialog({ open, onClose, onSuccess }: Props) {
     form.role !== '' as any;
 
   const handleRoleChange = (role: ManagerUserRole) => {
-    setForm((f) => ({ ...f, role, client_id: role === 'Eurocharger' ? null : f.client_id }));
-    if (role === 'Eurocharger') setSelectedClient(null);
+    setForm((f) => ({ ...f, role, client_id: role === 'eurocharger' ? null : f.client_id }));
+    if (role === 'eurocharger') setSelectedClient(null);
   };
 
   const handleGeneratePassword = () => {

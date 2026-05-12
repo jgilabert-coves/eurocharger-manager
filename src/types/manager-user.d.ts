@@ -1,4 +1,4 @@
-type ManagerUserRole = 'Basic_Profile' | 'Medium_Profile' | 'Advanced_Profile' | 'Eurocharger';
+type ManagerUserRole = 'saas_guest' | 'saas_admin' | 'saas_owner' | 'eurocharger';
 
 type ManagerUser = {
   id: number;
