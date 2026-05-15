@@ -1,13 +1,10 @@
 import { useSetState } from 'minimal-shared/hooks';
 import { useMemo, useEffect, useCallback } from 'react';
 
-import { ROOTS } from 'src/routes/paths';
-
 import axios, { endpoints } from 'src/lib/axios';
 
 import { JWT_STORAGE_KEY } from './constant';
 import { AuthContext } from '../auth-context';
-import { useRouter } from '../../../routes/hooks';
 import { setSession, isValidToken } from './utils';
 
 import type { ApiUserResponse } from './action';
@@ -22,8 +19,6 @@ type Props = {
 export function AuthProvider({ children }: Props) {
   const { state, setState } = useSetState<AuthState>({ user: null, loading: true });
 
-  const router = useRouter()
-
   const checkUserSession = useCallback(async () => {
     try {
       const accessToken = sessionStorage.getItem(JWT_STORAGE_KEY);
@@ -32,10 +27,6 @@ export function AuthProvider({ children }: Props) {
         setSession(accessToken);
 
         const res = await axios.get(endpoints.auth.me);
-        console.log(res);
-        // La API devuelve los datos del JWT directamente, NO envueltos en { user: ... }.
-        // Estructura real: { user: 9, email: "...", roles: ["Eurocharger"], permissions: [...], ... }
-        // La API devuelve { status_code, error, user: { ... } }
         const apiUser: ApiUserResponse = res.data?.user ?? res.data;
         if (apiUser) {
           setState({
@@ -47,6 +38,7 @@ export function AuthProvider({ children }: Props) {
               permissions: (apiUser.permissions ?? []) as any,
               account_id: apiUser.account_id,
               account_name: apiUser.account_name ?? 'Eurocharger',
+              membership_id: apiUser.membership_id ?? null,
               accessToken,
             },
             loading: false,

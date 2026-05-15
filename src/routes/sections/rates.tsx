@@ -5,7 +5,7 @@ import { lazy, Suspense } from 'react';
 
 import { usePathname } from '../hooks';
 import { CONFIG } from '../../global-config';
-import { AuthGuard } from '../../auth/guard';
+import { AuthGuard, RoleGuard } from '../../auth/guard';
 import { DashboardLayout } from '../../layouts/dashboard';
 import { LoadingScreen } from '../../components/loading-screen';
 
@@ -28,11 +28,23 @@ const dashboardLayout = () => (
   </DashboardLayout>
 );
 
-const listLayout = () => <ListPage />;
+const listLayout = () => (
+  <RoleGuard roles={['eurocharger', 'saas_admin', 'saas_owner']}>
+    <ListPage />
+  </RoleGuard>
+);
 
-const detailLayout = () => <DetailPage />;
+const detailLayout = () => (
+  <RoleGuard roles={['eurocharger', 'saas_admin', 'saas_owner']}>
+    <DetailPage />
+  </RoleGuard>
+);
 
-const createLayout = () => <CreatePage />;
+const createLayout = () => (
+  <RoleGuard roles={['eurocharger', 'saas_admin', 'saas_owner']}>
+    <CreatePage />
+  </RoleGuard>
+);
 
 export const ratesRoutes: RouteObject[] = [
   {

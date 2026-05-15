@@ -16,10 +16,12 @@ import { incidentsRoutes } from './incidents';
 import { dashboardRoutes } from './dashboard';
 import { locationsRoutes } from './locations';
 import { privilegesRoutes } from './privileges';
+import { invitationsRoutes } from './invitations';
 import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
 import { subscriptionRoutes } from './subscription';
 import { managerUsersRoutes } from './manager-users';
+import { chargerGroupsRoutes } from './charger-groups';
 import { chargingStationsRoutes } from './chargingstations';
 // ----------------------------------------------------------------------
 
@@ -57,6 +59,10 @@ export const routesSection: RouteObject[] = [
   ...locationsRoutes,
 
   ...subscriptionRoutes,
+
+  ...invitationsRoutes,
+
+  ...chargerGroupsRoutes,
 
   ...plansRoutes,
 

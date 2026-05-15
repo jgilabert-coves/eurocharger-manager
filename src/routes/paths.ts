@@ -23,6 +23,7 @@ export const paths = {
       signIn: `${ROOTS.AUTH}/jwt/sign-in`,
       signUp: `${ROOTS.AUTH}/jwt/sign-up`,
       paymentSetup: `${ROOTS.AUTH}/jwt/payment-setup`,
+      profileSelect: `${ROOTS.AUTH}/jwt/profile-select`,
     },
     firebase: {
       signIn: `${ROOTS.AUTH}/firebase/sign-in`,
@@ -95,5 +96,12 @@ export const paths = {
   },
   plans: {
     list: `/plans`,
+  },
+  invitations: {
+    list: `/invitations`,
+    accept: `/invitations/accept`,
+  },
+  chargerGroups: {
+    list: `/charger-groups`,
   },
 };

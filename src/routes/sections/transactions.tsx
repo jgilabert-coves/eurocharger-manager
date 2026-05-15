@@ -5,7 +5,7 @@ import {lazy, Suspense} from "react";
 
 import {usePathname} from "../hooks";
 import {CONFIG} from "../../global-config";
-import {AuthGuard} from "../../auth/guard";
+import {AuthGuard, RoleGuard} from "../../auth/guard";
 import {DashboardLayout} from "../../layouts/dashboard";
 import {LoadingScreen} from "../../components/loading-screen";
 
@@ -28,11 +28,15 @@ const dashboardLayout = () => (
 );
 
 const activesLayout = () => (
-    <ActivesPage/>
+    <RoleGuard roles={['eurocharger', 'saas_admin', 'saas_owner', 'saas_guest']}>
+        <ActivesPage />
+    </RoleGuard>
 );
 
 const finishedLayout = () => (
-    <CompletedPage/>
+    <RoleGuard roles={['eurocharger', 'saas_admin', 'saas_owner', 'saas_guest']}>
+        <CompletedPage />
+    </RoleGuard>
 );
 
 

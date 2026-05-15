@@ -5,7 +5,7 @@ import { lazy, Suspense } from 'react';
 
 import { usePathname } from '../hooks';
 import { CONFIG } from '../../global-config';
-import { AuthGuard } from '../../auth/guard';
+import { AuthGuard, RoleGuard } from '../../auth/guard';
 import { DashboardLayout } from '../../layouts/dashboard';
 import { LoadingScreen } from '../../components/loading-screen';
 
@@ -26,7 +26,11 @@ const dashboardLayout = () => (
   </DashboardLayout>
 );
 
-const privilegesLayout = () => <PrivilegesPage />;
+const privilegesLayout = () => (
+  <RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}>
+    <PrivilegesPage />
+  </RoleGuard>
+);
 
 export const privilegesRoutes: RouteObject[] = [
   {

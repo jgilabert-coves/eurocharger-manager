@@ -5,7 +5,7 @@ import { lazy, Suspense } from 'react';
 
 import { usePathname } from '../hooks';
 import { CONFIG } from '../../global-config';
-import { AuthGuard } from '../../auth/guard';
+import { AuthGuard, RoleGuard } from '../../auth/guard';
 import { DashboardLayout } from '../../layouts/dashboard';
 import { LoadingScreen } from '../../components/loading-screen';
 
@@ -27,8 +27,17 @@ const dashboardLayout = () => (
   </DashboardLayout>
 );
 
-const appUsersLayout = () => <AppUsersView />;
-const appUserDetailLayout = () => <AppUserDetailView />;
+const appUsersLayout = () => (
+  <RoleGuard roles={['saas_guest', 'saas_admin', 'saas_owner', 'eurocharger']}>
+    <AppUsersView />
+  </RoleGuard>
+);
+
+const appUserDetailLayout = () => (
+  <RoleGuard roles={['saas_guest', 'saas_admin', 'saas_owner', 'eurocharger']}>
+    <AppUserDetailView />
+  </RoleGuard>
+);
 
 export const appUsersRoutes: RouteObject[] = [
   {
@@ -41,9 +50,11 @@ export const appUsersRoutes: RouteObject[] = [
       },
       {
         path: ':id',
-        element: CONFIG.auth.skip
-          ? appUserDetailLayout()
-          : <AuthGuard>{appUserDetailLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? (
+          appUserDetailLayout()
+        ) : (
+          <AuthGuard>{appUserDetailLayout()}</AuthGuard>
+        ),
       },
     ],
   },

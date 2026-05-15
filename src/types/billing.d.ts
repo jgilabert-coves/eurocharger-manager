@@ -1,5 +1,24 @@
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused';
 
+export type InvoiceStatus = 'paid' | 'open' | 'void' | 'draft' | 'uncollectible';
+
+export interface Invoice {
+  id: string;
+  account_id: number;
+  subscription_id: string;
+  stripe_invoice_id: string;
+  status: InvoiceStatus;
+  subtotal_cents: number;
+  discount_cents: number;
+  credits_applied_cents: number;
+  total_cents: number;
+  attempt_count: number;
+  paid_at: string | null;
+  due_date: string | null;
+  created_at: string;
+  verifactu_code: string | null;
+}
+
 export type SubscriptionItemType = 'base' | 'chargers' | 'guests' | 'sim';
 
 export interface SubscriptionItem {

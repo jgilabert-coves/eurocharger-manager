@@ -67,11 +67,22 @@ export const SignUpSchema = zod.object({
 type PaymentFormProps = {
   plan: Plan;
   billingPeriod: BillingPeriod;
+  accountData: SignUpSchemaType;
+  isAccountCreated: boolean;
+  onAccountCreated: () => void;
   onSuccess: () => void;
   onBack: () => void;
 };
 
-function PaymentForm({ plan, billingPeriod, onSuccess, onBack }: PaymentFormProps) {
+function PaymentForm({
+  plan,
+  billingPeriod,
+  accountData,
+  isAccountCreated,
+  onAccountCreated,
+  onSuccess,
+  onBack,
+}: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -91,23 +102,59 @@ function PaymentForm({ plan, billingPeriod, onSuccess, onBack }: PaymentFormProp
     setErrorMessage(null);
 
     try {
-      const { setupIntent, error } = await stripe.confirmSetup({
-        elements,
-        confirmParams: { return_url: window.location.href },
-        redirect: 'if_required',
-      });
-
-      if (error) {
-        setErrorMessage(error.message ?? 'Error al procesar el método de pago');
+      // 1. Validate the Elements form (required before createPaymentMethod in deferred mode)
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setErrorMessage(submitError.message ?? 'Error al validar el formulario de pago');
         return;
       }
 
-      const paymentMethodId = setupIntent?.payment_method as string;
-      await post(endpoints.billing.subscribe, {
-        paymentMethodId,
+      // 2. Collect payment method via Stripe — no account created yet
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        elements,
+        params: {
+          billing_details: {
+            name: accountData.fullName,
+            email: accountData.email,
+          },
+        },
+      });
+
+      if (pmError || !paymentMethod) {
+        setErrorMessage(pmError?.message ?? 'Error al procesar el método de pago');
+        return;
+      }
+
+      // 3. Create account (skipped on retry if already created)
+      if (!isAccountCreated) {
+        await signUp({
+          email: accountData.email,
+          password: accountData.password,
+          fullName: accountData.fullName,
+          cif: accountData.cif || undefined,
+          phone: accountData.phone || undefined,
+        });
+        onAccountCreated();
+      }
+
+      // 4. Subscribe — backend attaches payment method + creates subscription
+      const res = await post(endpoints.billing.subscribe, {
+        paymentMethodId: paymentMethod.id,
         planId: plan.id,
         billingPeriod,
       });
+
+      // 5. Handle SCA/3DS if the subscription requires further authentication
+      if (res.data?.requiresAction && res.data?.clientSecret) {
+        const { error: actionError } = await stripe.handleNextAction({
+          clientSecret: res.data.clientSecret,
+        });
+        if (actionError) {
+          setErrorMessage(actionError.message ?? 'Error al autenticar el pago');
+          return;
+        }
+      }
+
       onSuccess();
     } catch {
       setErrorMessage('Error al activar la suscripción. Por favor, inténtalo de nuevo.');
@@ -189,12 +236,10 @@ export function JwtSignUpView() {
   const { checkUserSession } = useAuthContext();
 
   const [step, setStep] = useState(0);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [planLoading, setPlanLoading] = useState(false);
-  // Prevents re-creating the account if the user goes back to plan selection
+  // Persisted across PaymentForm remounts (back/forward) to avoid duplicate signUp
   const [accountCreated, setAccountCreated] = useState(false);
 
   const methods = useForm<SignUpSchemaType>({
@@ -207,7 +252,7 @@ export function JwtSignUpView() {
     formState: { isSubmitting },
   } = methods;
 
-  // Step 0 → 1: validate form + check email availability (no account created yet)
+  // Step 0 → 1: validate form + check email availability
   const onSubmitAccountStep = handleSubmit(async (data) => {
     try {
       await post(endpoints.auth.checkEmail, { email: data.email });
@@ -218,36 +263,25 @@ export function JwtSignUpView() {
     }
   });
 
-  // Step 1 → 2: create account + setup intent
-  const handlePlanConfirmed = async (plan: Plan, period: BillingPeriod) => {
-    try {
-      setPlanLoading(true);
-      setErrorMessage(null);
-      setSelectedPlan(plan);
-      setBillingPeriod(period);
-
-      if (!accountCreated) {
-        const { email, password, fullName, cif, phone } = methods.getValues();
-        await signUp({ email, password, fullName, cif: cif || undefined, phone: phone || undefined });
-        setAccountCreated(true);
-      }
-
-      const res = await post(endpoints.billing.setupIntent, {});
-      setClientSecret(res.data?.clientSecret ?? null);
-      setStep(2);
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error) ?? 'Error al preparar la suscripción. Inténtalo de nuevo.'
-      );
-    } finally {
-      setPlanLoading(false);
-    }
+  // Step 1 → 2: store plan selection, advance — no API calls
+  const handlePlanConfirmed = (plan: Plan, period: BillingPeriod) => {
+    setSelectedPlan(plan);
+    setBillingPeriod(period);
+    setErrorMessage(null);
+    setStep(2);
   };
 
   const handlePaymentSuccess = async () => {
     await checkUserSession?.();
     router.push(paths.dashboard.root);
   };
+
+  const planAmount =
+    selectedPlan != null
+      ? ((billingPeriod === 'annual'
+          ? selectedPlan.items.base.annual?.priceCents
+          : selectedPlan.items.base.monthly?.priceCents) ?? 0)
+      : 0;
 
   const renderAccountForm = () => (
     <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
@@ -343,29 +377,24 @@ export function JwtSignUpView() {
       )}
 
       {step === 1 && (
-        <PlanSelector onConfirm={handlePlanConfirmed} confirmLoading={planLoading} />
+        <PlanSelector onConfirm={handlePlanConfirmed} confirmLoading={false} />
       )}
 
-      {step === 2 && selectedPlan && clientSecret && (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
+      {step === 2 && selectedPlan && (
+        <Elements
+          stripe={stripePromise}
+          options={{ mode: 'subscription', currency: 'eur', amount: planAmount, paymentMethodCreation: 'manual' }}
+        >
           <PaymentForm
             plan={selectedPlan}
             billingPeriod={billingPeriod}
+            accountData={methods.getValues()}
+            isAccountCreated={accountCreated}
+            onAccountCreated={() => setAccountCreated(true)}
             onSuccess={handlePaymentSuccess}
-            onBack={() => {
-              setStep(1);
-              setClientSecret(null);
-            }}
+            onBack={() => setStep(1)}
           />
         </Elements>
-      )}
-
-      {step === 2 && (!selectedPlan || !clientSecret) && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <Typography color="text.secondary" variant="body2">
-            No se pudo cargar el formulario de pago.
-          </Typography>
-        </Box>
       )}
 
       {step === 0 && <SignUpTerms />}

@@ -5,7 +5,7 @@ import { lazy, Suspense } from 'react';
 
 import { usePathname } from '../hooks';
 import { CONFIG } from '../../global-config';
-import { AuthGuard } from '../../auth/guard';
+import { AuthGuard, RoleGuard } from '../../auth/guard';
 import { DashboardLayout } from '../../layouts/dashboard';
 import { LoadingScreen } from '../../components/loading-screen';
 
@@ -26,6 +26,12 @@ const dashboardLayout = () => (
   </DashboardLayout>
 );
 
+const plansLayout = () => (
+  <RoleGuard roles={['eurocharger']}>
+    <PlansView />
+  </RoleGuard>
+);
+
 export const plansRoutes: RouteObject[] = [
   {
     path: 'plans',
@@ -33,7 +39,9 @@ export const plansRoutes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: <PlansView />,
+        element: CONFIG.auth.skip
+          ? plansLayout()
+          : <AuthGuard>{plansLayout()}</AuthGuard>,
       },
     ],
   },

@@ -11,7 +11,9 @@
       "Bash(xargs ls *)",
       "Bash(yarn tsc:watch)",
       "Bash(yarn --ignore-engines tsc --noEmit)",
-      "Bash(yarn tsc *)"
+      "Bash(yarn tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(node_modules/.bin/tsc --noEmit)"
     ]
   }
 }

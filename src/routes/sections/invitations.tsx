@@ -3,13 +3,17 @@ import type { RouteObject } from 'react-router';
 import { Outlet } from 'react-router';
 import { lazy, Suspense } from 'react';
 
+import { SplashScreen , LoadingScreen } from 'src/components/loading-screen';
+
 import { usePathname } from '../hooks';
 import { CONFIG } from '../../global-config';
 import { AuthGuard, RoleGuard } from '../../auth/guard';
 import { DashboardLayout } from '../../layouts/dashboard';
-import { LoadingScreen } from '../../components/loading-screen';
 
-const InvoicesView = lazy(() => import('src/pages/invoices/invoices-view'));
+// ----------------------------------------------------------------------
+
+const InvitationsView = lazy(() => import('src/pages/invitations/invitations-view'));
+const AcceptInvitationView = lazy(() => import('src/pages/invitations/accept-invitation-view'));
 
 function SuspenseOutlet() {
   const pathname = usePathname();
@@ -26,21 +30,31 @@ const dashboardLayout = () => (
   </DashboardLayout>
 );
 
-const invoicesLayout = () => (
+const listLayout = () => (
   <RoleGuard roles={['saas_owner', 'eurocharger']}>
-    <InvoicesView />
+    <InvitationsView />
   </RoleGuard>
 );
 
-export const invoicesRoutes: RouteObject[] = [
+export const invitationsRoutes: RouteObject[] = [
+  // Dashboard route — requires authentication
   {
-    path: 'invoices',
+    path: 'invitations',
     element: CONFIG.auth.skip ? dashboardLayout() : <AuthGuard>{dashboardLayout()}</AuthGuard>,
     children: [
       {
         path: '',
-        element: CONFIG.auth.skip ? invoicesLayout() : <AuthGuard>{invoicesLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? listLayout() : <AuthGuard>{listLayout()}</AuthGuard>,
       },
     ],
+  },
+  // Public accept route — no authentication required
+  {
+    path: 'invitations/accept',
+    element: (
+      <Suspense fallback={<SplashScreen />}>
+        <AcceptInvitationView />
+      </Suspense>
+    ),
   },
 ];

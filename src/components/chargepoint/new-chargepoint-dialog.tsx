@@ -1,12 +1,13 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import type { Client } from 'src/types/clients';
-import type { MapLayerMouseEvent } from 'react-map-gl';
+import type { GeocodingFeature } from 'src/lib/geocoding';
+import type { MapRef, MapLayerMouseEvent } from 'react-map-gl';
 import type { BasicChargingStationInfo } from 'src/types/charging_stations';
 
-import { useState } from 'react';
 import Map, { Marker } from 'react-map-gl';
 import { useQuery } from '@tanstack/react-query';
+import { useRef, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Step from '@mui/material/Step';
@@ -23,6 +24,7 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
+import Autocomplete from '@mui/material/Autocomplete';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -31,6 +33,13 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { CONFIG } from 'src/global-config';
 import { post, fetcher, endpoints } from 'src/lib/axios';
+import {
+  COUNTRY_MAP,
+  parseLatLon,
+  geocodeQuery,
+  POSTAL_CODE_TO_PROVINCE,
+  extractAddressComponents,
+} from 'src/lib/geocoding';
 
 import { Iconify } from 'src/components/iconify';
 import { ClientSelect } from 'src/components/client/client-select';
@@ -40,7 +49,7 @@ import { useAuthContext } from 'src/auth/hooks/use-auth-context';
 
 // ----------------------------------------------------------------------
 
-const STEPS_EUROCHARGER = ['Cliente', 'Estación', 'Cargador', 'Resumen'];
+const STEPS_EUROCHARGER = ['Propietario', 'Estación', 'Cargador', 'Resumen'];
 const STEPS_CLIENT = ['Estación', 'Cargador', 'Resumen'];
 
 type StationMode = 'existing' | 'new';
@@ -159,13 +168,30 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   const [selectedStation, setSelectedStation] = useState<BasicChargingStationInfo | null>(null);
   const [newStation, setNewStation] = useState<NewStationForm>(DEFAULT_NEW_STATION);
 
+  // Map search
+  const mapRef = useRef<MapRef>(null);
+  const [mapSearch, setMapSearch] = useState('');
+  const [mapOptions, setMapOptions] = useState<GeocodingFeature[]>([]);
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
+
   // Step 2 – Single charger
   const [chargerName, setChargerName] = useState('');
   const [chargerIsPrivate, setChargerIsPrivate] = useState(false);
+  const [chargerGroupId, setChargerGroupId] = useState('');
 
   // Submit
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const groupAccountId = isEurocharger ? (selectedClient?.id ?? 0) : (user?.account_id ?? 0);
+
+  const { data: groupsData, isLoading: groupsLoading } = useQuery<ChargerGroupsResponse>({
+    queryKey: ['charger-groups', groupAccountId],
+    queryFn: () => fetcher(endpoints.accounts.chargerGroups(groupAccountId)),
+    enabled: open && !!groupAccountId,
+    staleTime: 2 * 60 * 1000,
+  });
+  const groups: ChargerGroup[] = groupsData?.data ?? [];
 
   const { data: stations = [], isLoading: stationsLoading } = useQuery<BasicChargingStationInfo[]>({
     queryKey: ['locations', stationSearch],
@@ -179,6 +205,105 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     enabled: open && stationMode === 'existing',
   });
 
+  useEffect(() => {
+    if (groups.length === 1 && chargerGroupId === '') {
+      setChargerGroupId(groups[0].id);
+    }
+  }, [groups, chargerGroupId]);
+
+  // Debounced geocoding search for the map search bar
+  useEffect(() => {
+    if (!mapSearch.trim()) {
+      setMapOptions([]);
+      return undefined;
+    }
+
+    const latLon = parseLatLon(mapSearch);
+    if (latLon) {
+      handleLatLonSearch(latLon.lat, latLon.lng);
+      return undefined;
+    }
+
+    const timer = setTimeout(async () => {
+      setMapSearchLoading(true);
+      const results = await geocodeQuery(mapSearch, CONFIG.mapboxApiKey);
+      setMapOptions(results);
+      setMapSearchLoading(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapSearch]);
+
+  function applyGeocodingFeature(feature: GeocodingFeature) {
+    const [lng, lat] = feature.center;
+    const components = extractAddressComponents(feature);
+    const countryEs = components.country ? (COUNTRY_MAP[components.country] ?? '') : '';
+    const prefix = components.postalCode?.slice(0, 2) ?? '';
+    const province = countryEs === 'España' ? (POSTAL_CODE_TO_PROVINCE[prefix] ?? '') : '';
+
+    mapRef.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 1200 });
+
+    setNewStation((p) => ({
+      ...p,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6),
+      address: components.address || p.address,
+      city: components.city || p.city,
+      postalCode: components.postalCode || p.postalCode,
+      country: countryEs || p.country,
+      province: countryEs === 'España' ? province : '',
+    }));
+  }
+
+  function handleGeocodingSelect(feature: GeocodingFeature | null) {
+    if (!feature) return;
+    applyGeocodingFeature(feature);
+    setMapSearch('');
+    setMapOptions([]);
+  }
+
+  async function handleLatLonSearch(lat: number, lng: number) {
+    setMapSearchLoading(true);
+    const results = await geocodeQuery(`${lng},${lat}`, CONFIG.mapboxApiKey);
+    setMapSearchLoading(false);
+    if (results.length > 0) {
+      applyGeocodingFeature(results[0]);
+      setMapSearch('');
+      setMapOptions([]);
+    } else {
+      mapRef.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 1200 });
+      setNewStation((p) => ({
+        ...p,
+        latitude: lat.toFixed(6),
+        longitude: lng.toFixed(6),
+      }));
+      setMapSearch('');
+    }
+  }
+
+  async function handlePostalCodeBlur() {
+    const code = newStation.postalCode.trim();
+    if (code.length < 4) return;
+
+    const results = await geocodeQuery(`${code} ${newStation.country}`, CONFIG.mapboxApiKey, {
+      types: 'postcode',
+    });
+    if (results.length === 0) return;
+
+    const components = extractAddressComponents(results[0]);
+    const countryEs = components.country ? (COUNTRY_MAP[components.country] ?? '') : '';
+    const prefix = code.slice(0, 2);
+    const province = countryEs === 'España' ? (POSTAL_CODE_TO_PROVINCE[prefix] ?? '') : '';
+
+    setNewStation((p) => ({
+      ...p,
+      city: p.city || components.city || '',
+      country: countryEs || p.country,
+      province: countryEs === 'España' ? province || p.province : p.province,
+    }));
+  }
+
   const handleClose = () => {
     setStep(0);
     setSelectedClient(null);
@@ -186,8 +311,11 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     setSelectedStation(null);
     setNewStation(DEFAULT_NEW_STATION);
     setStationSearch('');
+    setMapSearch('');
+    setMapOptions([]);
     setChargerName('');
     setChargerIsPrivate(false);
+    setChargerGroupId('');
     setError(null);
     onClose();
   };
@@ -210,7 +338,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         newStation.longitude !== ''
       );
     }
-    if (step === chargerStepIndex) return chargerName.trim() !== '';
+    if (step === chargerStepIndex) return chargerName.trim() !== '' && chargerGroupId !== '';
     return true;
   })();
 
@@ -239,7 +367,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         name: chargerName.trim(),
         is_private: chargerIsPrivate,
         location_id: locationId,
-        client_id: isEurocharger ? selectedClient!.id : user?.account_id,
+        chargerGroupId,
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;
@@ -257,9 +385,15 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   const renderStep0 = () => (
     <Stack spacing={2}>
       <Typography variant="body2" color="text.secondary">
-        Selecciona el cliente al que pertenecerá el cargador o crea uno nuevo.
+        Selecciona el propietario al que pertenecerá el cargador o crea uno nuevo.
       </Typography>
-      <ClientSelect value={selectedClient} onChange={setSelectedClient} />
+      <ClientSelect
+        value={selectedClient}
+        onChange={(c) => {
+          setSelectedClient(c);
+          setChargerGroupId('');
+        }}
+      />
     </Stack>
   );
 
@@ -382,6 +516,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               sx={{ minWidth: 130 }}
               value={newStation.postalCode}
               onChange={(e) => setNewStation((p) => ({ ...p, postalCode: e.target.value }))}
+              onBlur={handlePostalCodeBlur}
               placeholder="29006"
             />
           </Stack>
@@ -429,6 +564,49 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
             >
               Ubicación en el mapa <span style={{ color: 'inherit' }}>*</span>
             </Typography>
+
+            <Autocomplete
+              freeSolo
+              size="small"
+              options={mapOptions}
+              loading={mapSearchLoading}
+              getOptionLabel={(o) => (typeof o === 'string' ? o : o.place_name)}
+              inputValue={mapSearch}
+              onInputChange={(_, v) => setMapSearch(v)}
+              onChange={(_, v) => {
+                if (v && typeof v !== 'string') handleGeocodingSelect(v);
+              }}
+              filterOptions={(x) => x}
+              sx={{ mb: 1 }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Buscar dirección o lat, lng..."
+                  slotProps={{
+                    input: {
+                      ...params.InputProps,
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Iconify
+                            icon="eva:search-fill"
+                            width={16}
+                            sx={{ color: 'text.disabled' }}
+                          />
+                        </InputAdornment>
+                      ),
+                      endAdornment: mapSearchLoading ? (
+                        <InputAdornment position="end">
+                          <CircularProgress size={14} />
+                        </InputAdornment>
+                      ) : (
+                        params.InputProps.endAdornment
+                      ),
+                    },
+                  }}
+                />
+              )}
+            />
+
             <Box
               sx={{
                 borderRadius: 1.5,
@@ -440,6 +618,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               }}
             >
               <Map
+                ref={mapRef}
                 mapboxAccessToken={CONFIG.mapboxApiKey}
                 initialViewState={{ longitude: -3.7, latitude: 40.4, zoom: 5 }}
                 mapStyle="mapbox://styles/mapbox/streets-v12"
@@ -484,7 +663,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
                 color="text.disabled"
                 sx={{ mt: 0.5, display: 'block' }}
               >
-                Haz clic en el mapa para colocar la chincheta
+                Busca una dirección o haz clic en el mapa para colocar la chincheta
               </Typography>
             )}
           </Box>
@@ -514,10 +693,32 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         }
         label="Acceso privado"
       />
+      <TextField
+        select
+        label="Propietario"
+        required
+        size="small"
+        fullWidth
+        value={chargerGroupId}
+        onChange={(e) => setChargerGroupId(e.target.value)}
+        disabled={groupsLoading || groups.length === 0}
+        helperText={
+          groupsLoading
+            ? 'Cargando propietarios...'
+            : groups.length === 0
+              ? 'No hay propietarios. Crea uno antes en la sección Propietarios.'
+              : undefined
+        }
+      >
+        {groups.map((g) => (
+          <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
+        ))}
+      </TextField>
     </Stack>
   );
 
   const renderStep3 = () => {
+    const selectedGroup = groups.find((g) => g.id === chargerGroupId) ?? null;
     const stationLabel =
       stationMode === 'existing'
         ? {
@@ -559,11 +760,31 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
                 fontSize: '0.65rem',
               }}
             >
-              Cliente
+              Empresa
             </Typography>
             <Typography variant="subtitle2">{selectedClient?.business_name}</Typography>
           </Box>
         )}
+
+        <Box
+          sx={(t) => ({ p: 2, borderRadius: 1.5, border: `1px solid ${t.vars.palette.divider}` })}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            fontWeight={600}
+            display="block"
+            sx={{
+              mb: 1,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              fontSize: '0.65rem',
+            }}
+          >
+            Propietario
+          </Typography>
+          <Typography variant="subtitle2">{selectedGroup?.name}</Typography>
+        </Box>
 
         <Box
           sx={(t) => ({ p: 2, borderRadius: 1.5, border: `1px solid ${t.vars.palette.divider}` })}

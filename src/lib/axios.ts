@@ -215,10 +215,15 @@ export const endpoints = {
     signUp: '/auth/sign-up',
     register: '/auth/register',
     checkEmail: '/auth/check-email',
+    selectProfile: '/auth/select-profile',
+    profiles: '/auth/profiles',
+    switchProfile: '/auth/switch-profile',
   },
   billing: {
     setupIntent: '/billing/setup-intent',
     subscribe: '/billing/subscribe',
+    invoices: '/billing/invoices',
+    invoicePdf: (id: string) => `/billing/invoices/${id}/pdf`,
   },
   plans: {
     list: '/plans',
@@ -227,16 +232,21 @@ export const endpoints = {
     update: (id: string) => `/plans/${id}`,
     toggleActive: (id: string) => `/plans/${id}/active`,
   },
+  chargerGroupsAll: '/charger-groups',
   accounts: {
     subscription: (accountId: number) => `/accounts/${accountId}/subscription`,
     cancelSubscription: (accountId: number) => `/accounts/${accountId}/subscription`,
     promoCodes: (accountId: number) => `/accounts/${accountId}/promo-codes/apply`,
+    chargerGroups: (accountId: number) => `/accounts/${accountId}/charger-groups`,
+    chargerGroup: (accountId: number, groupId: string) => `/accounts/${accountId}/charger-groups/${groupId}`,
+    chargerGroupChargers: (accountId: number, groupId: string) => `/accounts/${accountId}/charger-groups/${groupId}/chargers`,
+    chargerGroupCharger: (accountId: number, groupId: string, chargerId: number) => `/accounts/${accountId}/charger-groups/${groupId}/chargers/${chargerId}`,
   },
-  plans: {
-    list: '/plans',
-    create: '/plans',
-    single: (id: string) => `/plans/${id}`,
-    update: (id: string) => `/plans/${id}`,
-    toggleActive: (id: string) => `/plans/${id}/toggle-active`,
+  invitations: {
+    list: (accountId: number) => `/accounts/${accountId}/invitations`,
+    create: (accountId: number) => `/accounts/${accountId}/invitations`,
+    revoke: (accountId: number, id: string) => `/accounts/${accountId}/invitations/${id}`,
+    validate: (token: string) => `/invitations/validate/${token}`,
+    accept: '/invitations/accept',
   },
 };

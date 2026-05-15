@@ -22,6 +22,7 @@ import { useAuthContext } from '../../hooks';
 import { getErrorMessage } from '../../utils';
 import { FormHead } from '../../components/form-head';
 import { signInWithPassword } from '../../context/jwt';
+import { PROFILE_SELECTION_KEY } from '../../context/jwt/constant';
 
 // ----------------------------------------------------------------------
 
@@ -66,9 +67,15 @@ export function JwtSignInView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signInWithPassword({ email: data.email, password: data.password });
-      await checkUserSession?.();
+      const result = await signInWithPassword({ email: data.email, password: data.password });
 
+      if (result.type === 'profile_selection') {
+        sessionStorage.setItem(PROFILE_SELECTION_KEY, JSON.stringify(result.data));
+        router.push(paths.auth.jwt.profileSelect);
+        return;
+      }
+
+      await checkUserSession?.();
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -123,7 +130,7 @@ export function JwtSignInView() {
         loading={isSubmitting}
         loadingIndicator="Acceder"
       >
-        Sign in
+        Iniciar sesión
       </LoadingButton>
     </Box>
   );

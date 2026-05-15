@@ -2,10 +2,8 @@ import type { NavSectionProps } from 'src/components/nav-section';
 
 import { paths } from 'src/routes/paths';
 
-import { IcBolt } from 'src/assets/icons';
 import { CONFIG } from 'src/global-config';
 
-import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 // ----------------------------------------------------------------------
 
@@ -72,6 +70,7 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Cargadores',
     path: paths.chargingstations.list,
+
   },
   /**
    * Transactions — visible para todos los roles
@@ -93,14 +92,17 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Incidencias',
     path: paths.tickets.list,
+    roles: ['eurocharger', 'saas_admin', 'saas_owner'],
   },
   {
     title: 'Autorizaciones',
     path: paths.privileges.list,
+    roles: ['eurocharger', 'saas_admin', 'saas_owner'],
   },
   {
     title: 'Pagos',
     path: paths.invoices.list,
+    roles: ['eurocharger', 'saas_owner'],
   },
   
   /**
@@ -117,12 +119,12 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Tarifas',
     path: paths.rates.list,
-    roles: ['eurocharger', 'saas_owner'],
+    roles: ['eurocharger', 'saas_owner', 'saas_admin'],
   },
   {
     title: 'Usuarios',
     path: paths.appUsers.list,
-    roles: ['eurocharger', 'saas_owner'],
+    roles: ['eurocharger', 'saas_owner', 'saas_admin', 'saas_guest'],
   },
   {
     title: 'Usuarios del gestor',
@@ -133,5 +135,15 @@ export const navData: NavSectionProps['data'] = [
     title: 'Planes',
     path: paths.plans.list,
     roles: ['eurocharger'],
+  },
+  {
+    title: 'Invitaciones',
+    path: paths.invitations.list,
+    roles: ['saas_owner', 'eurocharger'],
+  },
+  {
+    title: 'Propietarios',
+    path: paths.chargerGroups.list,
+    roles: ['saas_owner', 'eurocharger'],
   },
 ];

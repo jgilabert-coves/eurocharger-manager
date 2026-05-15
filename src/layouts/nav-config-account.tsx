@@ -11,5 +11,12 @@ export const _account: AccountDrawerProps['data'] = [
     label: 'Suscripción',
     href: paths.subscription.root,
     icon: <Iconify icon="solar:card-bold-duotone" />,
+    roles: ['saas_owner'],
+  },
+  {
+    label: 'Invitaciones',
+    href: paths.invitations.list,
+    icon: <Iconify icon="solar:letter-bold-duotone" />,
+    roles: ['saas_owner'],
   },
 ];

@@ -36,31 +36,38 @@ export type ApiUserResponse = {
   permissions: string[]; // Array de permisos (ej: ["read-rates", "write-rates"])
   account_id: number | null;
   account_name: string | null;
+  membership_id: string | null;
   exp: number;
   iat: number;
 };
 
-/** Estructura de la respuesta de /api/auth/sign-in */
-export type SignInResponse = {
+/** Respuesta de login para usuario con un único perfil */
+export type SingleProfileLoginResponse = {
   status_code: number;
-  data: string | null;
-  user: ApiUserResponse | null;
+  data: string;
   error: string | null;
 };
+
+/** Respuesta de login para usuario con múltiples perfiles */
+export type MultiProfileLoginResponse = {
+  status_code: number;
+  data: ProfileSelectionData;
+  error: string | null;
+};
+
+export type SignInResult =
+  | { type: 'authenticated' }
+  | { type: 'profile_selection'; data: ProfileSelectionData };
 
 /** **************************************
  * Sign in
  *************************************** */
-export const signInWithPassword = async ({ email, password }: SignInParams): Promise<void> => {
+export const signInWithPassword = async ({ email, password }: SignInParams): Promise<SignInResult> => {
   try {
-    const params = { email, password };
+    const res = await axios.post(endpoints.auth.signIn, { email, password });
+    const { status_code, data, error } = res.data;
 
-    const res = await axios.post(endpoints.auth.signIn, params);
-    console.log('Pidiendo login');
-    const { status_code, data, error }: SignInResponse = res.data;
-    console.log(data);
-
-    if (status_code != 200) {
+    if (status_code !== 200) {
       throw new Error(error ?? 'Error en el servidor, pruebe más adelante.');
     }
 
@@ -68,9 +75,60 @@ export const signInWithPassword = async ({ email, password }: SignInParams): Pro
       throw new Error('Error al iniciar sesión, pruebe más adelante');
     }
 
-    setSession(data);
+    // Caso B: múltiples perfiles — el backend devuelve un objeto con requires_profile_selection
+    if (typeof data === 'object' && data.requires_profile_selection) {
+      return { type: 'profile_selection', data: data as ProfileSelectionData };
+    }
+
+    // Caso A: un solo perfil — el backend devuelve el JWT directamente como string
+    setSession(data as string);
+    return { type: 'authenticated' };
   } catch (error) {
     console.error('Error during sign in:', error);
+    throw error;
+  }
+};
+
+/** **************************************
+ * Select profile (multi-profile flow)
+ *************************************** */
+export const selectProfile = async (
+  membershipId: string,
+  profileSelectionToken: string
+): Promise<void> => {
+  try {
+    const res = await axios.post(endpoints.auth.selectProfile, {
+      membershipId,
+      profileSelectionToken,
+    });
+    const { status_code, data, error } = res.data;
+
+    if (status_code !== 200 || !data) {
+      throw new Error(error ?? 'Error al seleccionar el perfil.');
+    }
+
+    setSession(data as string);
+  } catch (error) {
+    console.error('Error during profile selection:', error);
+    throw error;
+  }
+};
+
+/** **************************************
+ * Switch profile (already authenticated)
+ *************************************** */
+export const switchProfile = async (membershipId: string): Promise<void> => {
+  try {
+    const res = await axios.post(endpoints.auth.switchProfile, { membershipId });
+    const { status_code, data, error } = res.data;
+
+    if (status_code !== 200 || !data) {
+      throw new Error(error ?? 'Error al cambiar de perfil.');
+    }
+
+    setSession(data as string);
+  } catch (error) {
+    console.error('Error during profile switch:', error);
     throw error;
   }
 };

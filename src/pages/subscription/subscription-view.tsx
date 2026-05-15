@@ -1,4 +1,4 @@
-import type { Subscription, SubscriptionStatus } from 'src/types/billing';
+import type { Invoice, Subscription, InvoiceStatus, SubscriptionStatus } from 'src/types/billing';
 
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -13,10 +13,12 @@ import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -30,7 +32,10 @@ import { fDate } from 'src/utils/format-time';
 import { DashboardContent } from 'src/layouts/dashboard';
 import axiosInstance, { fetcher, endpoints } from 'src/lib/axios';
 
+import { Iconify } from 'src/components/iconify';
+
 import { useAuthContext } from 'src/auth/hooks';
+import { JWT_STORAGE_KEY } from 'src/auth/context/jwt';
 
 import { CONFIG } from '../../global-config';
 
@@ -54,6 +59,22 @@ const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   paused: 'Pausada',
 };
 
+const INVOICE_STATUS_COLOR: Record<InvoiceStatus, 'success' | 'warning' | 'default' | 'error'> = {
+  paid: 'success',
+  open: 'warning',
+  void: 'default',
+  draft: 'default',
+  uncollectible: 'error',
+};
+
+const INVOICE_STATUS_LABEL: Record<InvoiceStatus, string> = {
+  paid: 'Pagada',
+  open: 'Pendiente',
+  void: 'Anulada',
+  draft: 'Borrador',
+  uncollectible: 'Incobrable',
+};
+
 const ITEM_LABEL: Record<string, string> = {
   base: 'Cuota base',
   chargers: 'Cargadores',
@@ -64,6 +85,7 @@ const ITEM_LABEL: Record<string, string> = {
 // ----------------------------------------------------------------------
 
 type SubscriptionResponse = { status_code: number; data: Subscription; error: string | null };
+type InvoicesResponse = { status_code: number; total: number; data: Invoice[]; error: string | null };
 
 export default function SubscriptionView() {
   const { user } = useAuthContext();
@@ -73,6 +95,8 @@ export default function SubscriptionView() {
   const [canceling, setCanceling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const accountId = user?.account_id;
 
@@ -83,12 +107,17 @@ export default function SubscriptionView() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const subscription = res?.data;
+  const { data: invoicesRes, isLoading: invoicesLoading } = useQuery<InvoicesResponse>({
+    queryKey: ['invoices'],
+    queryFn: () => fetcher(endpoints.billing.invoices),
+    staleTime: 2 * 60 * 1000,
+  });
 
-  const estimatedCents = subscription?.items.reduce(
-    (sum, item) => sum + item.unit_price_cents * item.quantity,
-    0
-  ) ?? 0;
+  const subscription = res?.data;
+  const invoices = invoicesRes?.data ?? [];
+
+  const estimatedCents =
+    subscription?.items.reduce((sum, item) => sum + item.unit_price_cents * item.quantity, 0) ?? 0;
 
   const handleCancelConfirm = async () => {
     if (!accountId) return;
@@ -105,6 +134,48 @@ export default function SubscriptionView() {
       setCancelError('No se pudo cancelar la suscripción. Inténtalo de nuevo.');
     } finally {
       setCanceling(false);
+    }
+  };
+
+  const fetchInvoiceBlob = async (invoice: Invoice): Promise<Blob> => {
+    const token = sessionStorage.getItem(JWT_STORAGE_KEY);
+    const response = await fetch(
+      `${CONFIG.serverUrl}${endpoints.billing.invoicePdf(invoice.id)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!response.ok) throw new Error();
+    return response.blob();
+  };
+
+  const handleDownloadPdf = async (invoice: Invoice) => {
+    setDownloadingId(invoice.id);
+    try {
+      const blob = await fetchInvoiceBlob(invoice);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factura-${invoice.verifactu_code ?? invoice.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silent — button stops loading, user can retry
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleViewPdf = async (invoice: Invoice) => {
+    setViewingId(invoice.id);
+    try {
+      const blob = await fetchInvoiceBlob(invoice);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // Revoke after a delay so the new tab has time to load the blob
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      // silent
+    } finally {
+      setViewingId(null);
     }
   };
 
@@ -162,6 +233,100 @@ export default function SubscriptionView() {
     );
   };
 
+  const renderInvoices = () => (
+    <Card sx={{ p: 3 }}>
+      <Typography variant="subtitle1" sx={{ mb: 2 }}>
+        Historial de facturas
+      </Typography>
+
+      {invoicesLoading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress size={24} />
+        </Box>
+      )}
+
+      {!invoicesLoading && invoices.length === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          No hay facturas disponibles.
+        </Typography>
+      )}
+
+      {!invoicesLoading && invoices.length > 0 && (
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Fecha</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell>Código</TableCell>
+                <TableCell align="right">Importe</TableCell>
+                <TableCell align="center">PDF</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {invoices.map((invoice) => (
+                <TableRow key={invoice.id}>
+                  <TableCell>{fDate(invoice.created_at)}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={INVOICE_STATUS_LABEL[invoice.status]}
+                      color={INVOICE_STATUS_COLOR[invoice.status]}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {invoice.verifactu_code ?? '—'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" fontWeight={600}>
+                      {(invoice.total_cents / 100).toFixed(2)} €
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Stack direction="row" justifyContent="center">
+                      <Tooltip title="Ver en nueva pestaña">
+                        <span>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleViewPdf(invoice)}
+                            disabled={viewingId === invoice.id || downloadingId === invoice.id}
+                          >
+                            {viewingId === invoice.id ? (
+                              <CircularProgress size={16} />
+                            ) : (
+                              <Iconify icon="solar:eye-bold" width={18} />
+                            )}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Descargar">
+                        <span>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDownloadPdf(invoice)}
+                            disabled={downloadingId === invoice.id || viewingId === invoice.id}
+                          >
+                            {downloadingId === invoice.id ? (
+                              <CircularProgress size={16} />
+                            ) : (
+                              <Iconify icon="solar:download-minimalistic-bold" width={18} />
+                            )}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Card>
+  );
+
   return (
     <>
       <Helmet>
@@ -185,9 +350,7 @@ export default function SubscriptionView() {
           )}
 
           {error && (
-            <Alert severity="error">
-              No se pudo cargar la información de suscripción.
-            </Alert>
+            <Alert severity="error">No se pudo cargar la información de suscripción.</Alert>
           )}
 
           {subscription && (
@@ -197,7 +360,12 @@ export default function SubscriptionView() {
                   <Typography variant="h6">Estado</Typography>
                   {renderStatus()}
                   {subscription.cancel_at_period_end && (
-                    <Chip label="Cancela al final del periodo" color="warning" size="small" variant="outlined" />
+                    <Chip
+                      label="Cancela al final del periodo"
+                      color="warning"
+                      size="small"
+                      variant="outlined"
+                    />
                   )}
                 </Stack>
 
@@ -220,11 +388,7 @@ export default function SubscriptionView() {
 
                 {subscription.status !== 'canceled' && !subscription.cancel_at_period_end && (
                   <Box sx={{ pt: 1 }}>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => setCancelOpen(true)}
-                    >
+                    <Button variant="outlined" color="error" onClick={() => setCancelOpen(true)}>
                       Cancelar suscripción
                     </Button>
                   </Box>
@@ -232,6 +396,8 @@ export default function SubscriptionView() {
               </Stack>
             </Card>
           )}
+
+          {renderInvoices()}
         </Stack>
       </DashboardContent>
 
@@ -239,8 +405,8 @@ export default function SubscriptionView() {
         <DialogTitle>¿Cancelar suscripción?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Tu suscripción continuará activa hasta el final del periodo actual y no se renovará.
-            No se realizarán más cobros después de esa fecha.
+            Tu suscripción continuará activa hasta el final del periodo actual y no se renovará. No
+            se realizarán más cobros después de esa fecha.
           </DialogContentText>
           {cancelError && (
             <Alert severity="error" sx={{ mt: 2 }}>

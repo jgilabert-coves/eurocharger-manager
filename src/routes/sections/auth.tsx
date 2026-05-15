@@ -18,6 +18,7 @@ const Jwt = {
   SignInPage: lazy(() => import('src/pages/auth/jwt/sign-in')),
   SignUpPage: lazy(() => import('src/pages/auth/jwt/sign-up')),
   PaymentSetupPage: lazy(() => import('src/pages/auth/jwt/payment-setup')),
+  ProfileSelectPage: lazy(() => import('src/pages/auth/jwt/profile-select')),
 };
 
 const authJwt = {
@@ -60,6 +61,10 @@ const authJwt = {
           </AuthSplitLayout>
         </AuthGuard>
       ),
+    },
+    {
+      path: 'profile-select',
+      element: <Jwt.ProfileSelectPage />,
     },
   ],
 };

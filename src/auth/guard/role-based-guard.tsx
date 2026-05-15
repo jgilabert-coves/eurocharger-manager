@@ -1,9 +1,13 @@
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { m } from 'framer-motion';
+import { useNavigate } from 'react-router';
 
+import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
+
+import { paths } from 'src/routes/paths';
 
 import { ForbiddenIllustration } from 'src/assets/illustrations';
 
@@ -60,19 +64,13 @@ export function RoleGuard({
   hasContent = true,
 }: RoleGuardProps) {
   const { hasAnyRole, canAny } = useAbility();
+  const navigate = useNavigate();
 
-  // --- Evaluación de acceso ---
-  // Si se pasan roles, el usuario debe tener al menos uno
   const roleAllowed = !roles || hasAnyRole(roles);
-
-  // Si se pasan permisos, el usuario debe tener al menos uno
   const permissionAllowed = !permissions || canAny(permissions);
-
-  // Acceso concedido solo si AMBAS condiciones se cumplen
   const hasAccess = roleAllowed && permissionAllowed;
 
   if (!hasAccess) {
-    // Si hasContent es true, mostramos página de error 403
     return hasContent ? (
       <Container
         component={MotionContainer}
@@ -92,6 +90,22 @@ export function RoleGuard({
 
         <m.div variants={varBounce('in')}>
           <ForbiddenIllustration sx={{ my: { xs: 5, sm: 10 } }} />
+        </m.div>
+
+        <m.div variants={varBounce('in')}>
+          <Button
+            size="large"
+            variant="contained"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate(paths.dashboard.root, { replace: true });
+              }
+            }}
+          >
+            Volver
+          </Button>
         </m.div>
       </Container>
     ) : null;
