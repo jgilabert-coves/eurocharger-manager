@@ -139,14 +139,6 @@ export function JwtSignInView() {
     <>
       <FormHead
         title="Inicia sesión"
-        description={
-          <>
-            {`¿No tienes cuenta? `}
-            <Link component={RouterLink} href={paths.auth.jwt.signUp} variant="subtitle2">
-              Regístrate
-            </Link>
-          </>
-        }
         sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
 
