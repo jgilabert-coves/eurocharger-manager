@@ -53,6 +53,7 @@ const STEPS_EUROCHARGER = ['Propietario', 'Estación', 'Cargador', 'Resumen'];
 const STEPS_CLIENT = ['Estación', 'Cargador', 'Resumen'];
 
 type StationMode = 'existing' | 'new';
+type GroupMode = 'existing' | 'new';
 
 const SPAIN_PROVINCES = [
   'Álava',
@@ -178,6 +179,8 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   const [chargerName, setChargerName] = useState('');
   const [chargerIsPrivate, setChargerIsPrivate] = useState(false);
   const [chargerGroupId, setChargerGroupId] = useState('');
+  const [groupMode, setGroupMode] = useState<GroupMode>('existing');
+  const [newGroupName, setNewGroupName] = useState('');
 
   // Submit
   const [loading, setLoading] = useState(false);
@@ -316,6 +319,8 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     setChargerName('');
     setChargerIsPrivate(false);
     setChargerGroupId('');
+    setGroupMode('existing');
+    setNewGroupName('');
     setError(null);
     onClose();
   };
@@ -338,7 +343,10 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         newStation.longitude !== ''
       );
     }
-    if (step === chargerStepIndex) return chargerName.trim() !== '' && chargerGroupId !== '';
+    if (step === chargerStepIndex) {
+      if (groupMode === 'new') return chargerName.trim() !== '' && newGroupName.trim() !== '';
+      return chargerName.trim() !== '' && chargerGroupId !== '';
+    }
     return true;
   })();
 
@@ -363,11 +371,20 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         locationId = selectedStation!.id;
       }
 
+      let resolvedGroupId = chargerGroupId;
+      if (groupMode === 'new') {
+        const groupRes = await post(endpoints.accounts.chargerGroups(groupAccountId), {
+          name: newGroupName.trim(),
+          chargerIds: [],
+        });
+        resolvedGroupId = groupRes?.data?.id ?? groupRes?.id;
+      }
+
       const res = await post(endpoints.chargepoints.create, {
         name: chargerName.trim(),
         is_private: chargerIsPrivate,
         location_id: locationId,
-        chargerGroupId,
+        chargerGroupId: resolvedGroupId,
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;
@@ -693,32 +710,71 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         }
         label="Acceso privado"
       />
-      <TextField
-        select
-        label="Propietario"
-        required
-        size="small"
-        fullWidth
-        value={chargerGroupId}
-        onChange={(e) => setChargerGroupId(e.target.value)}
-        disabled={groupsLoading || groups.length === 0}
-        helperText={
-          groupsLoading
-            ? 'Cargando propietarios...'
-            : groups.length === 0
-              ? 'No hay propietarios. Crea uno antes en la sección Propietarios.'
-              : undefined
-        }
-      >
-        {groups.map((g) => (
-          <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
-        ))}
-      </TextField>
+
+      <Box>
+        <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+          Propietario <span style={{ color: 'inherit' }}>*</span>
+        </Typography>
+        <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+          <Button
+            size="small"
+            variant={groupMode === 'existing' ? 'contained' : 'outlined'}
+            onClick={() => setGroupMode('existing')}
+            sx={{ flex: 1 }}
+          >
+            Propietario existente
+          </Button>
+          <Button
+            size="small"
+            variant={groupMode === 'new' ? 'contained' : 'outlined'}
+            onClick={() => setGroupMode('new')}
+            sx={{ flex: 1 }}
+          >
+            Nuevo propietario
+          </Button>
+        </Stack>
+
+        {groupMode === 'existing' ? (
+          <TextField
+            select
+            size="small"
+            fullWidth
+            value={chargerGroupId}
+            onChange={(e) => setChargerGroupId(e.target.value)}
+            disabled={groupsLoading || groups.length === 0}
+            helperText={
+              groupsLoading
+                ? 'Cargando propietarios...'
+                : groups.length === 0
+                  ? 'No hay propietarios. Crea uno nuevo o ve a la sección Propietarios.'
+                  : undefined
+            }
+          >
+            {groups.map((g) => (
+              <MenuItem key={g.id} value={g.id}>
+                {g.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        ) : (
+          <TextField
+            size="small"
+            fullWidth
+            value={newGroupName}
+            onChange={(e) => setNewGroupName(e.target.value)}
+            placeholder="Ej. Ayuntamiento de X"
+            helperText="Se creará un nuevo propietario con este nombre"
+          />
+        )}
+      </Box>
     </Stack>
   );
 
   const renderStep3 = () => {
-    const selectedGroup = groups.find((g) => g.id === chargerGroupId) ?? null;
+    const selectedGroup =
+      groupMode === 'new'
+        ? { name: newGroupName }
+        : (groups.find((g) => g.id === chargerGroupId) ?? null);
     const stationLabel =
       stationMode === 'existing'
         ? {
