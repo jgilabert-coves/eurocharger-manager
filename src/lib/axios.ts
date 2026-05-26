@@ -25,7 +25,6 @@ axiosInstance.interceptors.request.use((config) => {
   // Get the token from session storage
   const token = sessionStorage.getItem(JWT_STORAGE_KEY);
   if (token) {
-    console.log(`Token ${token}`);
     config.headers['Authorization'] = `Bearer ${token}`;
   }
 
