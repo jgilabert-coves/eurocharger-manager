@@ -708,6 +708,7 @@ export default function ChargerDetailV2() {
 
   const [chargepoint, setChargepoint] = useState<Chargepoint | undefined>();
   const [loading, setLoading] = useState(true);
+  const [ocppConnected, setOcppConnected] = useState<boolean | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ type: null });
   const [resetOpen, setResetOpen] = useState(false);
   const [editState, setEditState] = useState<
@@ -725,10 +726,19 @@ export default function ChargerDetailV2() {
     }
   };
 
+  const loadOcppStatus = async () => {
+    try {
+      const response = await fetcher(endpoints.chargepoints.isConnected(Number(id)));
+      setOcppConnected(response?.data?.connected ?? false);
+    } catch {
+      setOcppConnected(false);
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await loadChargepoint();
+      await Promise.all([loadChargepoint(), loadOcppStatus()]);
       setLoading(false);
     };
     load();
@@ -866,7 +876,29 @@ export default function ChargerDetailV2() {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <SectionCard title="Configuración OCPP">
+              <SectionCard
+                title="Configuración OCPP"
+                action={
+                  <Stack direction="row" alignItems="center" spacing={0.75}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: ocppConnected ? 'success.main' : 'error.main',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      fontWeight={600}
+                      color={ocppConnected ? 'success.main' : 'error.main'}
+                    >
+                      {ocppConnected ? 'Conectado' : 'Desconectado'}
+                    </Typography>
+                  </Stack>
+                }
+              >
                 <InfoRow label="OCPP ID" value={chargepoint.ocpp_id} />
                 <InfoRow
                   label="Endpoint"

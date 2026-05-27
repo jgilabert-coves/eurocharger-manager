@@ -97,7 +97,7 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Autorizaciones',
     path: paths.privileges.list,
-    roles: ['eurocharger', 'saas_admin', 'saas_owner'],
+    roles: ['eurocharger', 'saas_owner'],
   },
   {
     title: 'Pagos',

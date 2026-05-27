@@ -170,6 +170,7 @@ export const endpoints = {
     changeAvailability: (id: number) => `/chargingstations/${id}/ocpp/change-availability`,
     unlock: (id: number) => `/chargingstations/${id}/ocpp/unlock-connector`,
     reset: (id: number) => `/chargingstations/${id}/ocpp/reset`,
+    isConnected: (id: number) => `/chargingstations/${id}/ocpp/is-connected`,
   },
   connectors: {
     create: (chargepointId: number) => `/chargingstations/${chargepointId}/connectors`,
