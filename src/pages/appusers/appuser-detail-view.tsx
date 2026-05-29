@@ -680,7 +680,7 @@ function WalletCard({ user, onSaved }: { user: AppUser; onSaved: () => void }) {
               </Typography>
             </Stack>
             <Typography variant="h5" fontWeight={700} color="primary.main">
-              {((user.walletBalance ?? 0) / 100).toLocaleString('es-ES', {
+              {(user.walletBalance ?? 0).toLocaleString('es-ES', {
                 style: 'currency',
                 currency: 'EUR',
               })}
