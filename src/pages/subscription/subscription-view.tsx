@@ -185,7 +185,6 @@ export default function SubscriptionView() {
   };
 
   const renderStatus = () => {
-    console.log(subscription);
     if (!subscription) return null;
     return (
       <Chip
@@ -365,14 +364,7 @@ export default function SubscriptionView() {
                 <Stack direction="row" alignItems="center" spacing={2}>
                   <Typography variant="h6">Estado</Typography>
                   {renderStatus()}
-                  {/*subscription.cancel_at_period_end && (
-                    <Chip
-                      label="Cancela al final del periodo"
-                      color="warning"
-                      size="small"
-                      variant="outlined"
-                    />
-                  )*/}
+                  {/* TODO: show cancellation banner when cancel_at_period_end is true */}
                 </Stack>
 
                 {renderPeriod()}
