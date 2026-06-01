@@ -31,21 +31,16 @@ const ITEM_LABELS: Record<ItemKey, string> = {
   guests:      'Invitados',
 };
 
-interface PriceFields {
-  monthly: string;
-  yearly: string;
-}
-
 interface FormState {
   name: string;
   isDefault: boolean;
   trialDays: string;
   maxGuests: string;
-  base: PriceFields;
-  chargers: PriceFields;
-  sim: PriceFields;
-  call_center: PriceFields;
-  guests: PriceFields;
+  base: string;
+  chargers: string;
+  sim: string;
+  call_center: string;
+  guests: string;
 }
 
 const DEFAULT_FORM: FormState = {
@@ -53,11 +48,11 @@ const DEFAULT_FORM: FormState = {
   isDefault: false,
   trialDays: '0',
   maxGuests: '',
-  base:        { monthly: '', yearly: '' },
-  chargers:    { monthly: '', yearly: '' },
-  sim:         { monthly: '', yearly: '' },
-  call_center: { monthly: '', yearly: '' },
-  guests:      { monthly: '', yearly: '' },
+  base:        '',
+  chargers:    '',
+  sim:         '',
+  call_center: '',
+  guests:      '',
 };
 
 function eurosToCents(value: string): number | undefined {
@@ -87,8 +82,8 @@ export function CreatePlanDialog({ open, onClose, onSuccess }: Props) {
     onClose();
   };
 
-  const handlePriceChange = (item: ItemKey, field: 'monthly' | 'yearly', value: string) => {
-    setForm((f) => ({ ...f, [item]: { ...f[item], [field]: value } }));
+  const handlePriceChange = (item: ItemKey, value: string) => {
+    setForm((f) => ({ ...f, [item]: value }));
   };
 
   const handleSubmit = async () => {
@@ -104,19 +99,15 @@ export function CreatePlanDialog({ open, onClose, onSuccess }: Props) {
       };
 
       const hasItems = (['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).some(
-        (k) => form[k].monthly !== ''
+        (k) => form[k] !== ''
       );
 
       if (hasItems) {
         body.items = {} as CreatePlanBody['items'];
         (['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).forEach((k) => {
-          const monthly = eurosToCents(form[k].monthly);
-          const yearly = eurosToCents(form[k].yearly);
+          const monthly = eurosToCents(form[k]);
           if (monthly != null) {
-            (body.items as any)[k] = {
-              monthlyPriceCents: monthly,
-              ...(yearly != null ? { yearlyPriceCents: yearly } : {}),
-            };
+            (body.items as any)[k] = { monthlyPriceCents: monthly };
           }
         });
       }
@@ -194,41 +185,19 @@ export function CreatePlanDialog({ open, onClose, onSuccess }: Props) {
             <Divider sx={{ mb: 2 }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {(['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).map((item) => (
-                <Box key={item}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mb: 0.75, display: 'block' }}
-                  >
-                    {ITEM_LABELS[item]}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1.5 }}>
-                    <TextField
-                      label="Mensual"
-                      size="small"
-                      value={form[item].monthly}
-                      onChange={(e) => handlePriceChange(item, 'monthly', e.target.value)}
-                      slotProps={{
-                        input: {
-                          endAdornment: <InputAdornment position="end">€</InputAdornment>,
-                        },
-                      }}
-                      sx={{ flex: 1 }}
-                    />
-                    <TextField
-                      label="Anual (opcional)"
-                      size="small"
-                      value={form[item].yearly}
-                      onChange={(e) => handlePriceChange(item, 'yearly', e.target.value)}
-                      slotProps={{
-                        input: {
-                          endAdornment: <InputAdornment position="end">€</InputAdornment>,
-                        },
-                      }}
-                      sx={{ flex: 1 }}
-                    />
-                  </Box>
-                </Box>
+                <TextField
+                  key={item}
+                  label={ITEM_LABELS[item]}
+                  size="small"
+                  fullWidth
+                  value={form[item]}
+                  onChange={(e) => handlePriceChange(item, e.target.value)}
+                  slotProps={{
+                    input: {
+                      endAdornment: <InputAdornment position="end">€/mes</InputAdornment>,
+                    },
+                  }}
+                />
               ))}
             </Box>
           </Box>

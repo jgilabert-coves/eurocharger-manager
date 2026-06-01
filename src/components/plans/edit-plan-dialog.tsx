@@ -31,21 +31,16 @@ const ITEM_LABELS: Record<ItemKey, string> = {
   guests:      'Invitados',
 };
 
-interface PriceFields {
-  monthly: string;
-  yearly: string;
-}
-
 interface FormState {
   name: string;
   isDefault: boolean;
   trialDays: string;
   maxGuests: string;
-  base: PriceFields;
-  chargers: PriceFields;
-  sim: PriceFields;
-  call_center: PriceFields;
-  guests: PriceFields;
+  base: string;
+  chargers: string;
+  sim: string;
+  call_center: string;
+  guests: string;
 }
 
 function centsToEuros(cents: number | null | undefined): string {
@@ -65,26 +60,11 @@ function planToForm(plan: Plan): FormState {
     isDefault: Boolean(plan.isDefault),
     trialDays: String(plan.trialDays),
     maxGuests: plan.maxGuests != null ? String(plan.maxGuests) : '',
-    base: {
-      monthly: centsToEuros(plan.items.base.monthly?.priceCents),
-      yearly: centsToEuros(plan.items.base.annual?.priceCents),
-    },
-    chargers: {
-      monthly: centsToEuros(plan.items.chargers.monthly?.priceCents),
-      yearly: centsToEuros(plan.items.chargers.annual?.priceCents),
-    },
-    sim: {
-      monthly: centsToEuros(plan.items.sim.monthly?.priceCents),
-      yearly: centsToEuros(plan.items.sim.annual?.priceCents),
-    },
-    call_center: {
-      monthly: centsToEuros(plan.items.call_center?.monthly?.priceCents),
-      yearly:  centsToEuros(plan.items.call_center?.annual?.priceCents),
-    },
-    guests: {
-      monthly: centsToEuros(plan.items.guests.monthly?.priceCents),
-      yearly: centsToEuros(plan.items.guests.annual?.priceCents),
-    },
+    base:        centsToEuros(plan.items.base.monthly?.priceCents),
+    chargers:    centsToEuros(plan.items.chargers.monthly?.priceCents),
+    sim:         centsToEuros(plan.items.sim.monthly?.priceCents),
+    call_center: centsToEuros(plan.items.call_center?.monthly?.priceCents),
+    guests:      centsToEuros(plan.items.guests.monthly?.priceCents),
   };
 }
 
@@ -113,8 +93,8 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
     onClose();
   };
 
-  const handlePriceChange = (item: ItemKey, field: 'monthly' | 'yearly', value: string) => {
-    setForm((f) => ({ ...f, [item]: { ...f[item], [field]: value } }));
+  const handlePriceChange = (item: ItemKey, value: string) => {
+    setForm((f) => ({ ...f, [item]: value }));
   };
 
   const handleSubmit = async () => {
@@ -131,13 +111,9 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
       };
 
       (['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).forEach((k) => {
-        const monthly = eurosToCents(form[k].monthly);
-        const yearly = eurosToCents(form[k].yearly);
-        if (monthly != null || yearly != null) {
-          (body.items as any)[k] = {
-            ...(monthly != null ? { monthlyPriceCents: monthly } : {}),
-            ...(yearly != null ? { yearlyPriceCents: yearly } : {}),
-          };
+        const monthly = eurosToCents(form[k]);
+        if (monthly != null) {
+          (body.items as any)[k] = { monthlyPriceCents: monthly };
         }
       });
 
@@ -222,41 +198,19 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
             </Alert>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {(['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).map((item) => (
-                <Box key={item}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mb: 0.75, display: 'block' }}
-                  >
-                    {ITEM_LABELS[item]}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1.5 }}>
-                    <TextField
-                      label="Mensual"
-                      size="small"
-                      value={form[item].monthly}
-                      onChange={(e) => handlePriceChange(item, 'monthly', e.target.value)}
-                      slotProps={{
-                        input: {
-                          endAdornment: <InputAdornment position="end">€</InputAdornment>,
-                        },
-                      }}
-                      sx={{ flex: 1 }}
-                    />
-                    <TextField
-                      label="Anual (opcional)"
-                      size="small"
-                      value={form[item].yearly}
-                      onChange={(e) => handlePriceChange(item, 'yearly', e.target.value)}
-                      slotProps={{
-                        input: {
-                          endAdornment: <InputAdornment position="end">€</InputAdornment>,
-                        },
-                      }}
-                      sx={{ flex: 1 }}
-                    />
-                  </Box>
-                </Box>
+                <TextField
+                  key={item}
+                  label={ITEM_LABELS[item]}
+                  size="small"
+                  fullWidth
+                  value={form[item]}
+                  onChange={(e) => handlePriceChange(item, e.target.value)}
+                  slotProps={{
+                    input: {
+                      endAdornment: <InputAdornment position="end">€/mes</InputAdornment>,
+                    },
+                  }}
+                />
               ))}
             </Box>
           </Box>
