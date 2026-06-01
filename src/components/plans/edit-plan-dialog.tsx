@@ -78,8 +78,8 @@ function planToForm(plan: Plan): FormState {
       yearly: centsToEuros(plan.items.sim.annual?.priceCents),
     },
     call_center: {
-      monthly: centsToEuros(plan.items.call_center.monthly?.priceCents),
-      yearly:  centsToEuros(plan.items.call_center.annual?.priceCents),
+      monthly: centsToEuros(plan.items.call_center?.monthly?.priceCents),
+      yearly:  centsToEuros(plan.items.call_center?.annual?.priceCents),
     },
     guests: {
       monthly: centsToEuros(plan.items.guests.monthly?.priceCents),
