@@ -21,13 +21,14 @@ import { post, endpoints } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 
-type ItemKey = 'base' | 'chargers' | 'sim' | 'guests';
+type ItemKey = 'base' | 'chargers' | 'sim' | 'call_center' | 'guests';
 
 const ITEM_LABELS: Record<ItemKey, string> = {
-  base: 'Base',
-  chargers: 'Cargadores',
-  sim: 'SIM',
-  guests: 'Invitados',
+  base:        'Base',
+  chargers:    'Cargadores',
+  sim:         'SIM',
+  call_center: 'Call Center',
+  guests:      'Invitados',
 };
 
 interface PriceFields {
@@ -43,6 +44,7 @@ interface FormState {
   base: PriceFields;
   chargers: PriceFields;
   sim: PriceFields;
+  call_center: PriceFields;
   guests: PriceFields;
 }
 
@@ -51,10 +53,11 @@ const DEFAULT_FORM: FormState = {
   isDefault: false,
   trialDays: '0',
   maxGuests: '',
-  base: { monthly: '', yearly: '' },
-  chargers: { monthly: '', yearly: '' },
-  sim: { monthly: '', yearly: '' },
-  guests: { monthly: '', yearly: '' },
+  base:        { monthly: '', yearly: '' },
+  chargers:    { monthly: '', yearly: '' },
+  sim:         { monthly: '', yearly: '' },
+  call_center: { monthly: '', yearly: '' },
+  guests:      { monthly: '', yearly: '' },
 };
 
 function eurosToCents(value: string): number | undefined {
@@ -100,13 +103,13 @@ export function CreatePlanDialog({ open, onClose, onSuccess }: Props) {
         maxGuests: form.maxGuests !== '' ? parseInt(form.maxGuests, 10) : null,
       };
 
-      const hasItems = (['base', 'chargers', 'sim', 'guests'] as ItemKey[]).some(
+      const hasItems = (['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).some(
         (k) => form[k].monthly !== ''
       );
 
       if (hasItems) {
         body.items = {} as CreatePlanBody['items'];
-        (['base', 'chargers', 'sim', 'guests'] as ItemKey[]).forEach((k) => {
+        (['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).forEach((k) => {
           const monthly = eurosToCents(form[k].monthly);
           const yearly = eurosToCents(form[k].yearly);
           if (monthly != null) {
@@ -190,7 +193,7 @@ export function CreatePlanDialog({ open, onClose, onSuccess }: Props) {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {(['base', 'chargers', 'sim', 'guests'] as ItemKey[]).map((item) => (
+              {(['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).map((item) => (
                 <Box key={item}>
                   <Typography
                     variant="caption"

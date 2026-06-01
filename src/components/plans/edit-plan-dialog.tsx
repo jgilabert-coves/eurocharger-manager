@@ -21,13 +21,14 @@ import { patch, endpoints } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 
-type ItemKey = 'base' | 'chargers' | 'sim' | 'guests';
+type ItemKey = 'base' | 'chargers' | 'sim' | 'call_center' | 'guests';
 
 const ITEM_LABELS: Record<ItemKey, string> = {
-  base: 'Base',
-  chargers: 'Cargadores',
-  sim: 'SIM',
-  guests: 'Invitados',
+  base:        'Base',
+  chargers:    'Cargadores',
+  sim:         'SIM',
+  call_center: 'Call Center',
+  guests:      'Invitados',
 };
 
 interface PriceFields {
@@ -43,6 +44,7 @@ interface FormState {
   base: PriceFields;
   chargers: PriceFields;
   sim: PriceFields;
+  call_center: PriceFields;
   guests: PriceFields;
 }
 
@@ -74,6 +76,10 @@ function planToForm(plan: Plan): FormState {
     sim: {
       monthly: centsToEuros(plan.items.sim.monthly?.priceCents),
       yearly: centsToEuros(plan.items.sim.annual?.priceCents),
+    },
+    call_center: {
+      monthly: centsToEuros(plan.items.call_center.monthly?.priceCents),
+      yearly:  centsToEuros(plan.items.call_center.annual?.priceCents),
     },
     guests: {
       monthly: centsToEuros(plan.items.guests.monthly?.priceCents),
@@ -124,7 +130,7 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
         items: {},
       };
 
-      (['base', 'chargers', 'sim', 'guests'] as ItemKey[]).forEach((k) => {
+      (['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).forEach((k) => {
         const monthly = eurosToCents(form[k].monthly);
         const yearly = eurosToCents(form[k].yearly);
         if (monthly != null || yearly != null) {
@@ -215,7 +221,7 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
               suscripciones activas mantienen el precio anterior hasta que cambien de plan.
             </Alert>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {(['base', 'chargers', 'sim', 'guests'] as ItemKey[]).map((item) => (
+              {(['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).map((item) => (
                 <Box key={item}>
                   <Typography
                     variant="caption"

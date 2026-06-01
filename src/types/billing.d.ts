@@ -1,4 +1,4 @@
-export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused';
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused' | 'incomplete' | 'incomplete_expired';
 
 export type InvoiceStatus = 'paid' | 'open' | 'void' | 'draft' | 'uncollectible';
 
@@ -19,7 +19,7 @@ export interface Invoice {
   verifactu_code: string | null;
 }
 
-export type SubscriptionItemType = 'base' | 'chargers' | 'guests' | 'sim';
+export type SubscriptionItemType = 'base' | 'chargers' | 'guests' | 'sim' | 'call_center';
 
 export interface SubscriptionItem {
   id: string;
@@ -71,10 +71,11 @@ export interface Plan {
   isDefault: boolean;
   createdAt: string;
   items: {
-    base: PlanItem;
-    chargers: PlanItem;
-    sim: PlanItem;
-    guests: PlanItem;
+    base:        PlanItem;
+    chargers:    PlanItem;
+    sim:         PlanItem;
+    call_center: PlanItem;
+    guests:      PlanItem;
   };
 }
 
@@ -85,10 +86,11 @@ export interface CreatePlanBody {
   trialDays?: number;
   currency?: string;
   items?: {
-    base: { monthlyPriceCents: number; yearlyPriceCents?: number };
-    chargers: { monthlyPriceCents: number; yearlyPriceCents?: number };
-    sim: { monthlyPriceCents: number; yearlyPriceCents?: number };
-    guests: { monthlyPriceCents: number; yearlyPriceCents?: number };
+    base:        { monthlyPriceCents: number; yearlyPriceCents?: number };
+    chargers:    { monthlyPriceCents: number; yearlyPriceCents?: number };
+    sim:         { monthlyPriceCents: number; yearlyPriceCents?: number };
+    call_center: { monthlyPriceCents: number; yearlyPriceCents?: number };
+    guests:      { monthlyPriceCents: number; yearlyPriceCents?: number };
   };
 }
 
@@ -99,9 +101,10 @@ export interface UpdatePlanBody {
   isActive?: boolean;
   trialDays?: number;
   items?: {
-    base?: { monthlyPriceCents?: number; yearlyPriceCents?: number };
-    chargers?: { monthlyPriceCents?: number; yearlyPriceCents?: number };
-    sim?: { monthlyPriceCents?: number; yearlyPriceCents?: number };
-    guests?: { monthlyPriceCents?: number; yearlyPriceCents?: number };
+    base?:        { monthlyPriceCents?: number; yearlyPriceCents?: number };
+    chargers?:    { monthlyPriceCents?: number; yearlyPriceCents?: number };
+    sim?:         { monthlyPriceCents?: number; yearlyPriceCents?: number };
+    call_center?: { monthlyPriceCents?: number; yearlyPriceCents?: number };
+    guests?:      { monthlyPriceCents?: number; yearlyPriceCents?: number };
   };
 }
