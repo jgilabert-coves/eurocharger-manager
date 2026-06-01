@@ -3,7 +3,7 @@ import type { BillingPeriod } from 'src/components/plans/plan-selector';
 
 import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';

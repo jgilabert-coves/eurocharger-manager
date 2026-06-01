@@ -5,7 +5,6 @@ import Tooltip from '@mui/material/Tooltip';
 
 import { Label } from 'src/components/label';
 
-import { ConnectorTypeIcon } from '../chargepoint';
 
 // ----------------------------------------------------------------------
 

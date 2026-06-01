@@ -525,7 +525,7 @@ export function ChargerSetupDialog({ open, chargepointId, onClose }: ChargerSetu
       setChargepoint(null);
       setEditState({ mode: 'idle' });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [open, chargepointId]);
 
   const handleClose = () => {

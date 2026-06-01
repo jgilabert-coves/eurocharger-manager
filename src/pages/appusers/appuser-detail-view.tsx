@@ -1,3 +1,5 @@
+import type { AppUser, BillingDetails } from 'src/types/appuser';
+
 import { useParams } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
@@ -27,7 +29,7 @@ import { useRouter } from 'src/routes/hooks';
 import { CONFIG } from 'src/global-config';
 import { COUNTRIES } from 'src/assets/data/countries';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { post, put, fetcher, endpoints } from 'src/lib/axios';
+import { put, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -35,7 +37,6 @@ import { TransactionsTable } from 'src/components/transactions-table';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
 
-import { BillingDetails, type AppUser } from 'src/types/appuser';
 
 // ----------------------------------------------------------------------
 

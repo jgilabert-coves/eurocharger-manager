@@ -7,10 +7,9 @@ import type {
   OCPPStartTrasactionRequest,
   OCPPStopTransactionRequest,
   OCPPCancelReservationRequest,
-  OCPPChangeAvailabilityRequest,
 } from 'src/types/ocpp';
 
-import { endpoints, fetcher, post } from 'src/lib/axios';
+import { post, fetcher, endpoints } from 'src/lib/axios';
 
 export const CHANGE_AVAILABILITY_TYPES = {
   Available: 'Available',

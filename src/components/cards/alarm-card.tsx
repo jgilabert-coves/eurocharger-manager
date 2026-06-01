@@ -6,7 +6,7 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
-import { fDateTime, fToNow } from 'src/utils/format-time';
+import { fToNow, fDateTime } from 'src/utils/format-time';
 
 import { Iconify } from 'src/components/iconify';
 

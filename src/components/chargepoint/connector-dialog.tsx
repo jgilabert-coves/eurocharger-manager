@@ -14,7 +14,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { post, put, endpoints } from 'src/lib/axios';
+import { put, post, endpoints } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 

@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
@@ -27,14 +26,12 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import { useRouter } from 'src/routes/hooks';
 
-import { endpoints, fetcher } from 'src/lib/axios';
+import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConnectorStatusChip } from 'src/components/chips/connector-status-chip';
-import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
-import { ChargerStatusLabel } from 'src/components/chargepoint/charger-status-label';
 import { ChargerSetupDialog } from 'src/components/chargepoint/charger-setup-dialog';
 import { NewChargepointDialog } from 'src/components/chargepoint/new-chargepoint-dialog';
 

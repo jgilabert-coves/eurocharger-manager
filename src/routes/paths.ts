@@ -24,6 +24,8 @@ export const paths = {
       signUp: `${ROOTS.AUTH}/jwt/sign-up`,
       paymentSetup: `${ROOTS.AUTH}/jwt/payment-setup`,
       profileSelect: `${ROOTS.AUTH}/jwt/profile-select`,
+      forgotPassword: `${ROOTS.AUTH}/jwt/forgot-password`,
+      resetPassword: `${ROOTS.AUTH}/jwt/reset-password`,
     },
     firebase: {
       signIn: `${ROOTS.AUTH}/firebase/sign-in`,
@@ -103,5 +105,11 @@ export const paths = {
   },
   chargerGroups: {
     list: `/charger-groups`,
+  },
+  chargerTransfer: {
+    root: `/charger-transfer`,
+  },
+  adminSubscriptions: {
+    root: '/admin/subscriptions',
   },
 };

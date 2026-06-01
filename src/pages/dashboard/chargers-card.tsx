@@ -10,7 +10,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 
 import { themeConfig } from 'src/theme';
 import { IcPlug } from 'src/assets/icons';
-import { endpoints, fetcher } from 'src/lib/axios';
+import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type ConnectorStatusTotals } from 'src/types/dashboard';
 

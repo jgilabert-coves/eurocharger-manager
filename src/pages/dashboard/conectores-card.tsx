@@ -5,8 +5,8 @@ import Card from '@mui/material/Card';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
-import { endpoints, fetcher } from 'src/lib/axios';
-import { IcSignal, IcTotal, IcMenunekes, IcCCS, IcChademo, IcSchuko } from 'src/assets/icons';
+import { fetcher, endpoints } from 'src/lib/axios';
+import { IcCCS, IcTotal, IcSignal, IcSchuko, IcChademo, IcMenunekes } from 'src/assets/icons';
 
 import { type ConnectorTypeBreakdown } from 'src/types/dashboard';
 

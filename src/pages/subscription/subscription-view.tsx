@@ -1,4 +1,4 @@
-import type { Invoice, Subscription, InvoiceStatus, SubscriptionStatus } from 'src/types/billing';
+import type { Invoice, Subscription, InvoiceStatus, SubscriptionStatus, SubscriptionDiscount } from 'src/types/billing';
 
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -51,6 +51,7 @@ const STATUS_COLOR: Record<SubscriptionStatus, 'success' | 'warning' | 'error' |
   paused: 'default',
   incomplete: 'warning',
   incomplete_expired: 'error',
+  unpaid: 'error',
 };
 
 const STATUS_LABEL: Record<SubscriptionStatus, string> = {
@@ -61,6 +62,7 @@ const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   paused: 'Pausada',
   incomplete: 'Incompleta',
   incomplete_expired: 'Expirada',
+  unpaid: 'Impago',
 };
 
 const INVOICE_STATUS_COLOR: Record<InvoiceStatus, 'success' | 'warning' | 'default' | 'error'> = {
@@ -123,6 +125,20 @@ export default function SubscriptionView() {
 
   const estimatedCents =
     subscription?.items.reduce((sum, item) => sum + item.unit_price_cents * item.quantity, 0) ?? 0;
+
+  const activeDiscount = subscription?.discounts?.[0] ?? null;
+  const discountBaseAmountCents = (() => {
+    if (!activeDiscount) return 0;
+    if (activeDiscount.applies_to === 'total') return estimatedCents;
+    const matchedItem = subscription?.items.find((i) => i.type === activeDiscount.applies_to);
+    return matchedItem ? matchedItem.unit_price_cents * matchedItem.quantity : 0;
+  })();
+  const discountAmountCents = activeDiscount
+    ? activeDiscount.discount_type === 'percent'
+      ? Math.round(discountBaseAmountCents * activeDiscount.discount_value / 100)
+      : Math.min(activeDiscount.discount_value, discountBaseAmountCents)
+    : 0;
+  const discountedCents = estimatedCents - discountAmountCents;
 
   const handleCancelConfirm = async () => {
     if (!accountId) return;
@@ -188,8 +204,8 @@ export default function SubscriptionView() {
     if (!subscription) return null;
     return (
       <Chip
-        label={STATUS_LABEL[subscription.status]}
-        color={STATUS_COLOR[subscription.status]}
+        label={STATUS_LABEL[subscription.status] ?? subscription.status}
+        color={STATUS_COLOR[subscription.status] ?? 'default'}
         size="small"
         sx={{ fontWeight: 600 }}
       />
@@ -205,6 +221,29 @@ export default function SubscriptionView() {
           {fDate(subscription.current_period_start)} → {fDate(subscription.current_period_end)}
         </strong>
       </Typography>
+    );
+  };
+
+  const formatDiscount = (d: SubscriptionDiscount) => {
+    const value =
+      d.discount_type === 'percent'
+        ? `${d.discount_value}%`
+        : `${(d.discount_value / 100).toFixed(2)} €`;
+    if (d.duration === 'forever') return `${value} de descuento permanente`;
+    if (d.duration === 'once') return `${value} de descuento (una vez)`;
+    return `${value} de descuento los primeros ${d.duration_months} meses`;
+  };
+
+  const renderDiscounts = () => {
+    if (!subscription?.discounts?.length) return null;
+    return (
+      <Stack spacing={1}>
+        {subscription.discounts.map((d) => (
+          <Alert key={d.id} severity="success" icon={false} sx={{ py: 0.5 }}>
+            <strong>{d.coupon_name}</strong> — {formatDiscount(d)}
+          </Alert>
+        ))}
+      </Stack>
     );
   };
 
@@ -285,9 +324,23 @@ export default function SubscriptionView() {
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Typography variant="body2" fontWeight={600}>
-                      {(invoice.total_cents / 100).toFixed(2)} €
-                    </Typography>
+                    {invoice.tax_cents > 0 ? (
+                      <Stack alignItems="flex-end" spacing={0}>
+                        <Typography variant="caption" color="text.secondary">
+                          Base: {(invoice.subtotal_cents / 100).toFixed(2)} €
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          IVA 21%: {(invoice.tax_cents / 100).toFixed(2)} €
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {(invoice.total_cents / 100).toFixed(2)} €
+                        </Typography>
+                      </Stack>
+                    ) : (
+                      <Typography variant="body2" fontWeight={600}>
+                        {(invoice.total_cents / 100).toFixed(2)} €
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell align="center">
                     <Stack direction="row" justifyContent="center">
@@ -373,15 +426,33 @@ export default function SubscriptionView() {
 
                 <Typography variant="subtitle1">Detalle de la suscripción</Typography>
 
+                {renderDiscounts()}
+
                 {renderItems()}
 
                 <Divider />
 
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                   <Typography variant="subtitle1">Total estimado / mes</Typography>
-                  <Typography variant="h5" color="primary">
-                    {(estimatedCents / 100).toFixed(2)} €
-                  </Typography>
+                  <Stack alignItems="flex-end" spacing={0.25}>
+                    <Typography variant="caption" color="text.secondary">
+                      Base: {(estimatedCents / 100).toFixed(2)} €
+                    </Typography>
+                    {discountAmountCents > 0 && (
+                      <Typography variant="caption" color="success.main">
+                        Descuento ({activeDiscount!.discount_type === 'percent'
+                          ? `${activeDiscount!.discount_value}%`
+                          : `${(activeDiscount!.discount_value / 100).toFixed(2)} €`}
+                        ): -{(discountAmountCents / 100).toFixed(2)} €
+                      </Typography>
+                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      IVA 21%: {(discountedCents * 0.21 / 100).toFixed(2)} €
+                    </Typography>
+                    <Typography variant="h5" color="primary">
+                      {(discountedCents * 1.21 / 100).toFixed(2)} €
+                    </Typography>
+                  </Stack>
                 </Stack>
 
                 {subscription.status !== 'canceled' && !subscription.cancel_at_period_end && (

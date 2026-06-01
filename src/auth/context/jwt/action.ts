@@ -22,6 +22,26 @@ export type SignUpResult = {
   userId: number;
 };
 
+export type RegisterAndSubscribeParams = {
+  email: string;
+  password: string;
+  fullName: string;
+  cif?: string;
+  phone?: string;
+  paymentMethodId: string;
+  planId: string;
+  billingPeriod: 'monthly' | 'annual';
+  promoCode?: string;
+};
+
+export type RegisterAndSubscribeResult = {
+  accountId: number;
+  userId: number;
+  subscriptionId: string;
+  requiresAction: boolean;
+  clientSecret: string | null;
+};
+
 // ----------------------------------------------------------------------
 // Tipos de respuesta de la API.
 // La API devuelve `roles` (array) y `user` (id numérico),
@@ -134,6 +154,44 @@ export const switchProfile = async (membershipId: string): Promise<void> => {
 };
 
 /** **************************************
+ * Register and subscribe (atomic)
+ *************************************** */
+export const registerAndSubscribe = async (params: RegisterAndSubscribeParams): Promise<RegisterAndSubscribeResult> => {
+  try {
+    const res = await axios.post(endpoints.auth.registerAndSubscribe, {
+      fullName: params.fullName,
+      email: params.email,
+      password: params.password,
+      cif: params.cif,
+      phone: params.phone,
+      paymentMethodId: params.paymentMethodId,
+      planId: params.planId,
+      billingInterval: params.billingPeriod === 'annual' ? 'year' : 'month',
+      promoCode: params.promoCode,
+    });
+
+    const { status_code, data, error } = res.data;
+
+    if (status_code !== 201 || !data?.token) {
+      throw new Error(error ?? 'Error al crear la cuenta, pruebe más adelante.');
+    }
+
+    setSession(data.token);
+
+    return {
+      accountId: data.accountId,
+      userId: data.userId,
+      subscriptionId: data.subscriptionId,
+      requiresAction: data.requiresAction ?? false,
+      clientSecret: data.clientSecret ?? null,
+    };
+  } catch (error) {
+    console.error('Error during register and subscribe:', error);
+    throw error;
+  }
+};
+
+/** **************************************
  * Sign up
  *************************************** */
 export const signUp = async ({ email, password, fullName, cif, phone }: SignUpParams): Promise<SignUpResult> => {
@@ -155,6 +213,34 @@ export const signUp = async ({ email, password, fullName, cif, phone }: SignUpPa
     return { accountId: data.accountId, userId: data.userId };
   } catch (error) {
     console.error('Error during sign up:', error);
+    throw error;
+  }
+};
+
+/** **************************************
+ * Forgot password
+ *************************************** */
+export const forgotPassword = async (email: string): Promise<void> => {
+  try {
+    await axios.post(endpoints.auth.forgotPassword, { email });
+  } catch (error) {
+    console.error('Error during forgot password:', error);
+    throw error;
+  }
+};
+
+/** **************************************
+ * Reset password
+ *************************************** */
+export const resetPassword = async (token: string, password: string): Promise<void> => {
+  try {
+    const res = await axios.post(endpoints.auth.resetPassword, { token, password });
+    const { status_code, error } = res.data;
+    if (status_code !== 200) {
+      throw new Error(error ?? 'Error al restablecer la contraseña.');
+    }
+  } catch (error) {
+    console.error('Error during reset password:', error);
     throw error;
   }
 };

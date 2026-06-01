@@ -1,4 +1,4 @@
-export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused' | 'incomplete' | 'incomplete_expired';
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused' | 'incomplete' | 'incomplete_expired' | 'unpaid';
 
 export type InvoiceStatus = 'paid' | 'open' | 'void' | 'draft' | 'uncollectible';
 
@@ -11,6 +11,7 @@ export interface Invoice {
   subtotal_cents: number;
   discount_cents: number;
   credits_applied_cents: number;
+  tax_cents: number;
   total_cents: number;
   attempt_count: number;
   paid_at: string | null;
@@ -29,6 +30,18 @@ export interface SubscriptionItem {
   unit_price_cents: number;
 }
 
+export interface SubscriptionDiscount {
+  id: string;
+  starts_at: string;
+  ends_at: string | null;
+  coupon_name: string;
+  discount_type: 'percent' | 'fixed_amount';
+  discount_value: number;
+  applies_to: string;
+  duration: 'once' | 'repeating' | 'forever';
+  duration_months: number | null;
+}
+
 export interface Subscription {
   id: string;
   account_id: number;
@@ -40,6 +53,7 @@ export interface Subscription {
   current_period_end: string | null;
   cancel_at_period_end: boolean;
   items: SubscriptionItem[];
+  discounts: SubscriptionDiscount[];
 }
 
 // ----------------------------------------------------------------------

@@ -1,6 +1,6 @@
-import { Client } from './clients';
-import { AppUser } from './appuser';
-import { ChargingStation } from './charging_stations';
+import type { Client } from './clients';
+import type { AppUser } from './appuser';
+import type { ChargingStation } from './charging_stations';
 
 export type ChargingStationsPrivilege = {
     id: number;

@@ -1,4 +1,4 @@
-import { tk, fmtN, fmtEur, fmtT } from './tokens';
+import { tk, fmtN, fmtT, fmtEur } from './tokens';
 
 export const PERIODS = ['Semana', 'Mes', 'Año', 'Periodo'] as const;
 export type Period = (typeof PERIODS)[number];

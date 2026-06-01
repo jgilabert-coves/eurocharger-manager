@@ -1,6 +1,6 @@
 import type { AppUserDatatableItem } from 'src/types/appuser';
 import type { ChargingStation } from 'src/types/charging_stations';
-import type { Ticket, TicketType, TicketTracking, TicketStatus } from 'src/types/tickets';
+import type { Ticket, TicketType, TicketStatus, TicketTracking } from 'src/types/tickets';
 
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -9,7 +9,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';

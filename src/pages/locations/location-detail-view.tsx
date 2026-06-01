@@ -24,7 +24,6 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
-import { ChargerStatusLabel } from 'src/components/chargepoint/charger-status-label';
 
 import { CONFIG } from '../../global-config';
 

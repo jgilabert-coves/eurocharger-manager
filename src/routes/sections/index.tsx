@@ -22,7 +22,9 @@ import { reservationsRoutes } from './reservations';
 import { subscriptionRoutes } from './subscription';
 import { managerUsersRoutes } from './manager-users';
 import { chargerGroupsRoutes } from './charger-groups';
+import { chargerTransferRoutes } from './charger-transfer';
 import { chargingStationsRoutes } from './chargingstations';
+import { adminSubscriptionsRoutes } from './admin-subscriptions';
 // ----------------------------------------------------------------------
 
 const Page404 = lazy(() => import('src/pages/error/404'));
@@ -64,7 +66,11 @@ export const routesSection: RouteObject[] = [
 
   ...chargerGroupsRoutes,
 
+  ...chargerTransferRoutes,
+
   ...plansRoutes,
+
+  ...adminSubscriptionsRoutes,
 
   {
     path: '/',

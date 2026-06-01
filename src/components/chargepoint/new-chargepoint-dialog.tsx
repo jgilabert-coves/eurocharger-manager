@@ -1,8 +1,8 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+import type { Subscription } from 'src/types/billing';
 import type { GeocodingFeature } from 'src/lib/geocoding';
 import type { MapRef, MapLayerMouseEvent } from 'react-map-gl';
-import type { Subscription } from 'src/types/billing';
 import type { BasicChargingStationInfo } from 'src/types/charging_stations';
 
 import Map, { Marker } from 'react-map-gl';

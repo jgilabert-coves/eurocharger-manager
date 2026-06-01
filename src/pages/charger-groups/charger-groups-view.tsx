@@ -12,7 +12,6 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Divider from '@mui/material/Divider';
-import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
@@ -27,15 +26,17 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { paths } from 'src/routes/paths';
 
-import { post, put, del, fetcher, endpoints } from 'src/lib/axios';
+import { put, del, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
 import { useAuthContext } from 'src/auth/hooks';
 import { useAbility } from 'src/auth/hooks/use-ability';
 
-
 // ----------------------------------------------------------------------
+
+type Account = { id: number; business_name: string; };
+type AccountsResponse = { data: Account[]; total: number; };
 
 type ChargepointsApiResponse = {
   data: Chargepoint[];
@@ -50,17 +51,43 @@ function CreateGroupDialog({
   open,
   onClose,
   onSuccess,
+  isEurocharger,
 }: {
   accountId: number;
   chargepoints: Chargepoint[];
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  isEurocharger: boolean;
 }) {
   const [name, setName] = useState('');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<number | ''>('');
+  const [accountSearch, setAccountSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const { data: accountsData } = useQuery<AccountsResponse>({
+    queryKey: ['accounts-list'],
+    queryFn: () => fetcher([endpoints.accounts.list, { params: { pageSize: 1000 } }]),
+    enabled: isEurocharger && open,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: accountChargepointsData } = useQuery<ChargepointsApiResponse>({
+    queryKey: ['chargepoints-by-account', selectedAccountId],
+    queryFn: () =>
+      fetcher([endpoints.chargepoints.list, { params: { account_id: selectedAccountId, pageSize: 1000 } }]),
+    enabled: isEurocharger && !!selectedAccountId,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const accounts: Account[] = accountsData?.data ?? [];
+  const availableChargepoints = isEurocharger
+    ? (accountChargepointsData?.data ?? [])
+    : chargepoints;
+
+  const targetAccountId = isEurocharger ? (selectedAccountId as number) : accountId;
 
   const toggle = (id: number) =>
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -68,16 +95,19 @@ function CreateGroupDialog({
   const handleClose = () => {
     setName('');
     setSelectedIds([]);
+    setSelectedAccountId('');
+    setAccountSearch('');
     setError(null);
     onClose();
   };
 
   const handleCreate = async () => {
     if (!name.trim()) return;
+    if (isEurocharger && !selectedAccountId) return;
     setLoading(true);
     setError(null);
     try {
-      await post(endpoints.accounts.chargerGroups(accountId), {
+      await post(endpoints.accounts.chargerGroups(targetAccountId), {
         name: name.trim(),
         chargerIds: selectedIds,
       });
@@ -104,12 +134,92 @@ function CreateGroupDialog({
       </DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+        {isEurocharger && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+              Cuenta <span style={{ color: 'inherit' }}>*</span>
+            </Typography>
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="Buscar cuenta..."
+              value={accountSearch}
+              onChange={(e) => setAccountSearch(e.target.value)}
+              sx={{ mb: 1 }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.disabled' }} />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            <Box
+              sx={{
+                maxHeight: 180,
+                overflowY: 'auto',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
+              {accounts
+                .filter((a) =>
+                  a.business_name.toLowerCase().includes(accountSearch.toLowerCase())
+                )
+                .map((acc) => {
+                  const isSelected = selectedAccountId === acc.id;
+                  return (
+                    <Box
+                      key={acc.id}
+                      onClick={() => {
+                        setSelectedAccountId(acc.id);
+                        setSelectedIds([]);
+                      }}
+                      sx={(t) => ({
+                        px: 1.5,
+                        py: 1,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: isSelected ? 'primary.lighter' : 'background.paper',
+                        borderBottom: `1px solid ${t.vars.palette.divider}`,
+                        '&:last-child': { borderBottom: 'none' },
+                        '&:hover': { bgcolor: isSelected ? 'primary.lighter' : 'action.hover' },
+                      })}
+                    >
+                      <Typography variant="body2">{acc.business_name}</Typography>
+                      {isSelected && (
+                        <Iconify
+                          icon="eva:checkmark-circle-2-fill"
+                          width={18}
+                          sx={{ color: 'primary.main', flexShrink: 0 }}
+                        />
+                      )}
+                    </Box>
+                  );
+                })}
+              {accounts.filter((a) =>
+                a.business_name.toLowerCase().includes(accountSearch.toLowerCase())
+              ).length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
+                  No se encontraron cuentas.
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        )}
+
         <TextField
           label="Nombre del propietario"
           required
           size="small"
           fullWidth
-          autoFocus
+          autoFocus={!isEurocharger}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ej: Ayuntamiento de X"
@@ -118,13 +228,24 @@ function CreateGroupDialog({
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
           Cargadores a incluir (opcional)
         </Typography>
-        <Box sx={{ maxHeight: 240, overflow: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}>
-          {chargepoints.length === 0 ? (
+        <Box
+          sx={{
+            maxHeight: 240,
+            overflow: 'auto',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            p: 1,
+          }}
+        >
+          {availableChargepoints.length === 0 ? (
             <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-              No hay cargadores disponibles.
+              {isEurocharger && !selectedAccountId
+                ? 'Selecciona una cuenta primero.'
+                : 'No hay cargadores disponibles.'}
             </Typography>
           ) : (
-            chargepoints.map((cp) => (
+            availableChargepoints.map((cp) => (
               <FormControlLabel
                 key={cp.id}
                 control={
@@ -142,10 +263,12 @@ function CreateGroupDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>Cancelar</Button>
+        <Button onClick={handleClose} disabled={loading}>
+          Cancelar
+        </Button>
         <Button
           variant="contained"
-          disabled={!name.trim() || loading}
+          disabled={!name.trim() || (isEurocharger && !selectedAccountId) || loading}
           onClick={handleCreate}
           startIcon={loading ? <CircularProgress size={14} color="inherit" /> : undefined}
         >
@@ -206,7 +329,9 @@ function RenameDialog({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancelar</Button>
+        <Button onClick={onClose} disabled={loading}>
+          Cancelar
+        </Button>
         <Button
           variant="contained"
           disabled={!name.trim() || loading}
@@ -229,6 +354,7 @@ function AddChargersDialog({
   open,
   onClose,
   onSuccess,
+  isEurocharger,
 }: {
   accountId: number;
   group: ChargerGroup | null;
@@ -236,12 +362,29 @@ function AddChargersDialog({
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  isEurocharger: boolean;
 }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const available = chargepoints.filter((cp) => !group?.chargers.some((item) => Number(item.id) === cp.id));
+  const { data: accountChargepointsData } = useQuery<ChargepointsApiResponse>({
+    queryKey: ['chargepoints-by-account', group?.account_id],
+    queryFn: () =>
+      fetcher([
+        endpoints.chargepoints.list,
+        { params: { account_id: group!.account_id, pageSize: 1000 } },
+      ]),
+    enabled: isEurocharger && open && !!group,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const allChargepoints = isEurocharger ? (accountChargepointsData?.data ?? []) : chargepoints;
+  const available = allChargepoints.filter(
+    (cp) => !group?.chargers.some((item) => Number(item.id) === cp.id)
+  );
+
+  const targetAccountId = isEurocharger ? (group?.account_id ?? accountId) : accountId;
 
   const toggle = (id: number) =>
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -251,7 +394,7 @@ function AddChargersDialog({
     setLoading(true);
     setError(null);
     try {
-      await post(endpoints.accounts.chargerGroupChargers(accountId, group.id), {
+      await post(endpoints.accounts.chargerGroupChargers(targetAccountId, group.id), {
         chargerIds: selectedIds,
       });
       setSelectedIds([]);
@@ -278,10 +421,21 @@ function AddChargersDialog({
       </DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <Box sx={{ maxHeight: 280, overflow: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}>
+        <Box
+          sx={{
+            maxHeight: 280,
+            overflow: 'auto',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            p: 1,
+          }}
+        >
           {available.length === 0 ? (
             <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-              Todos los cargadores ya están en este propietario.
+              {isEurocharger && !accountChargepointsData
+                ? 'Cargando...'
+                : 'Todos los cargadores ya están en este propietario.'}
             </Typography>
           ) : (
             available.map((cp) => (
@@ -302,7 +456,9 @@ function AddChargersDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancelar</Button>
+        <Button onClick={onClose} disabled={loading}>
+          Cancelar
+        </Button>
         <Button
           variant="contained"
           disabled={selectedIds.length === 0 || loading}
@@ -362,15 +518,19 @@ export default function ChargerGroupsView() {
     });
 
   const deleteGroup = useMutation({
-    mutationFn: (groupId: string) => del(endpoints.accounts.chargerGroup(accountId, groupId)),
+    mutationFn: ({ groupId, acctId }: { groupId: string; acctId: number }) =>
+      del(endpoints.accounts.chargerGroup(acctId, groupId)),
     onSuccess: invalidate,
   });
 
   const removeCharger = useMutation({
-    mutationFn: ({ groupId, chargerId }: { groupId: string; chargerId: number }) =>
-      del(endpoints.accounts.chargerGroupCharger(accountId, groupId, chargerId)),
+    mutationFn: ({ groupId, chargerId, acctId }: { groupId: string; chargerId: number; acctId: number }) =>
+      del(endpoints.accounts.chargerGroupCharger(acctId, groupId, chargerId)),
     onSuccess: invalidate,
   });
+
+  const getGroupAccountId = (group: ChargerGroup) =>
+    isEurocharger ? group.account_id : accountId;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -385,15 +545,13 @@ export default function ChargerGroupsView() {
               : 'Organiza tus cargadores por propietario para asignar acceso a los invitados.'}
           </Typography>
         </Box>
-        {!isEurocharger && (
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-            onClick={() => setCreateOpen(true)}
-          >
-            Nuevo propietario
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={() => setCreateOpen(true)}
+        >
+          Nuevo propietario
+        </Button>
       </Stack>
 
       {isEurocharger && (
@@ -450,7 +608,11 @@ export default function ChargerGroupsView() {
             <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
               <Box>
                 {isEurocharger && group.account_name && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mb: 0.25 }}
+                  >
                     {group.account_name}
                   </Typography>
                 )}
@@ -461,32 +623,32 @@ export default function ChargerGroupsView() {
                   {group.chargers.length} cargador{group.chargers.length !== 1 ? 'es' : ''}
                 </Typography>
               </Box>
-              {!isEurocharger && (
-                <Stack direction="row" spacing={0.5}>
-                  <IconButton
-                    size="small"
-                    title="Añadir cargadores"
-                    onClick={() => setAddChargersGroup(group)}
-                  >
-                    <Iconify icon="mingcute:add-line" width={18} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    title="Renombrar"
-                    onClick={() => setRenameGroup(group)}
-                  >
-                    <Iconify icon="solar:pen-bold" width={18} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    title="Eliminar propietario"
-                    color="error"
-                    onClick={() => deleteGroup.mutate(group.id)}
-                  >
-                    <Iconify icon="solar:trash-bin-trash-bold" width={18} />
-                  </IconButton>
-                </Stack>
-              )}
+              <Stack direction="row" spacing={0.5}>
+                <IconButton
+                  size="small"
+                  title="Añadir cargadores"
+                  onClick={() => setAddChargersGroup(group)}
+                >
+                  <Iconify icon="mingcute:add-line" width={18} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  title="Renombrar"
+                  onClick={() => setRenameGroup(group)}
+                >
+                  <Iconify icon="solar:pen-bold" width={18} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  title="Eliminar propietario"
+                  color="error"
+                  onClick={() =>
+                    deleteGroup.mutate({ groupId: group.id, acctId: getGroupAccountId(group) })
+                  }
+                >
+                  <Iconify icon="solar:trash-bin-trash-bold" width={18} />
+                </IconButton>
+              </Stack>
             </Stack>
 
             {group.chargers.length > 0 && (
@@ -499,10 +661,12 @@ export default function ChargerGroupsView() {
                       size="small"
                       label={item.name}
                       onClick={() => navigate(paths.chargingstations.detail(item.id))}
-                      onDelete={
-                        !isEurocharger
-                          ? () => removeCharger.mutate({ groupId: group.id, chargerId: Number(item.id) })
-                          : undefined
+                      onDelete={() =>
+                        removeCharger.mutate({
+                          groupId: group.id,
+                          chargerId: Number(item.id),
+                          acctId: getGroupAccountId(group),
+                        })
                       }
                     />
                   ))}
@@ -543,10 +707,11 @@ export default function ChargerGroupsView() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onSuccess={invalidate}
+        isEurocharger={isEurocharger}
       />
 
       <RenameDialog
-        accountId={accountId}
+        accountId={renameGroup ? getGroupAccountId(renameGroup) : accountId}
         group={renameGroup}
         open={!!renameGroup}
         onClose={() => setRenameGroup(null)}
@@ -560,6 +725,7 @@ export default function ChargerGroupsView() {
         open={!!addChargersGroup}
         onClose={() => setAddChargersGroup(null)}
         onSuccess={invalidate}
+        isEurocharger={isEurocharger}
       />
     </Box>
   );

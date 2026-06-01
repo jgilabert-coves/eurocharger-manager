@@ -11,7 +11,7 @@ import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 
 import { IcCoin } from 'src/assets/icons';
-import { endpoints, fetcher } from 'src/lib/axios';
+import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type ActiveCharge } from 'src/types/dashboard';
 

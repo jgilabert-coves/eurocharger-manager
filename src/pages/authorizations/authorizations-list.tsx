@@ -34,10 +34,9 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { fDateTime } from 'src/utils/format-time';
 
-import axiosInstance from 'src/lib/axios';
 import { CONFIG } from 'src/global-config';
-import { fetcher, post, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
+import axiosInstance, { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 

@@ -7,8 +7,8 @@ import Avatar from '@mui/material/Avatar';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
-import { IcUsers, IcPlug } from 'src/assets/icons';
-import { endpoints, fetcher } from 'src/lib/axios';
+import { IcPlug, IcUsers } from 'src/assets/icons';
+import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type TopUser, type TopChargepoint } from 'src/types/dashboard';
 

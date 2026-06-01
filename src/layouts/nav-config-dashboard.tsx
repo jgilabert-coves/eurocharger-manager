@@ -137,6 +137,11 @@ export const navData: NavSectionProps['data'] = [
     roles: ['eurocharger'],
   },
   {
+    title: 'Suscripciones',
+    path: paths.adminSubscriptions.root,
+    roles: ['eurocharger'],
+  },
+  {
     title: 'Invitaciones',
     path: paths.invitations.list,
     roles: ['saas_owner', 'eurocharger'],
@@ -145,5 +150,10 @@ export const navData: NavSectionProps['data'] = [
     title: 'Propietarios',
     path: paths.chargerGroups.list,
     roles: ['saas_owner', 'eurocharger'],
+  },
+  {
+    title: 'Traspasar cargadores',
+    path: paths.chargerTransfer.root,
+    roles: ['eurocharger'],
   },
 ];

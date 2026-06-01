@@ -1,5 +1,7 @@
 export * from './social-icons';
 
+export * from './dashboard-icons';
+
 export { default as SentIcon } from './sent-icon';
 
 export { default as PasswordIcon } from './password-icon';
@@ -13,5 +15,3 @@ export { default as PlanStarterIcon } from './plan-starter-icon';
 export { default as PlanPremiumIcon } from './plan-premium-icon';
 
 export { default as NewPasswordIcon } from './new-password-icon';
-
-export * from './dashboard-icons';

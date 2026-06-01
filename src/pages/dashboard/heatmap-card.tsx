@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 
 import { themeConfig } from 'src/theme';
 import { IcClock } from 'src/assets/icons';
-import { endpoints, fetcher } from 'src/lib/axios';
+import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type HeatmapResponse } from 'src/types/dashboard';
 

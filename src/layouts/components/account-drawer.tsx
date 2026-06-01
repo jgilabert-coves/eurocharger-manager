@@ -1,7 +1,6 @@
 import type { Role } from 'src/auth/types';
 import type { IconButtonProps } from '@mui/material/IconButton';
 
-import { varAlpha } from 'minimal-shared/utils';
 import { useBoolean } from 'minimal-shared/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -11,7 +10,6 @@ import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
 import Drawer from '@mui/material/Drawer';
-import Tooltip from '@mui/material/Tooltip';
 import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
@@ -33,7 +31,6 @@ import { AnimateBorder } from 'src/components/animate';
 import { useAuthContext } from 'src/auth/hooks';
 import { switchProfile } from 'src/auth/context/jwt/action';
 
-import { UpgradeBlock } from './nav-upgrade';
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
 

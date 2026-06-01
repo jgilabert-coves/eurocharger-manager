@@ -10,7 +10,7 @@ import { paths } from 'src/routes/paths';
 import { formatNumber } from 'src/utils/format-number';
 
 import { CONFIG } from 'src/global-config';
-import { endpoints, fetcher } from 'src/lib/axios';
+import { fetcher, endpoints } from 'src/lib/axios';
 
 import { StatsChart } from 'src/components/cards/stats-chart';
 
@@ -26,7 +26,6 @@ import { HeatmapCard } from './heatmap-card';
 import { ChargersCard } from './chargers-card';
 import { ConnTypeCard } from './conn-type-card';
 import { ConectoresCard } from './conectores-card';
-import { MantenimientoCard } from './mantenimiento-card';
 import { KpiCard } from '../../components/cards/kpi-card';
 import { DashboardContent } from '../../layouts/dashboard';
 

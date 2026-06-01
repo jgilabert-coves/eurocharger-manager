@@ -5,9 +5,10 @@ import { z as zod } from 'zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { loadStripe } from '@stripe/stripe-js';
+import { useQuery } from '@tanstack/react-query';
 import { useBoolean } from 'minimal-shared/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -26,16 +27,16 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
-import { post, endpoints } from 'src/lib/axios';
+import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 import { PlanSelector } from 'src/components/plans/plan-selector';
 
-import { signUp } from '../../context/jwt';
 import { useAuthContext } from '../../hooks';
 import { getErrorMessage } from '../../utils';
 import { FormHead } from '../../components/form-head';
+import { registerAndSubscribe } from '../../context/jwt';
 import { SignUpTerms } from '../../components/sign-up-terms';
 
 // ----------------------------------------------------------------------
@@ -68,21 +69,11 @@ type PaymentFormProps = {
   plan: Plan;
   billingPeriod: BillingPeriod;
   accountData: SignUpSchemaType;
-  isAccountCreated: boolean;
-  onAccountCreated: () => void;
   onSuccess: () => void;
   onBack: () => void;
 };
 
-function PaymentForm({
-  plan,
-  billingPeriod,
-  accountData,
-  isAccountCreated,
-  onAccountCreated,
-  onSuccess,
-  onBack,
-}: PaymentFormProps) {
+function PaymentForm({ plan, billingPeriod, accountData, onSuccess, onBack }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -109,7 +100,7 @@ function PaymentForm({
         return;
       }
 
-      // 2. Collect payment method via Stripe — no account created yet
+      // 2. Collect payment method via Stripe
       const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
         elements,
         params: {
@@ -125,29 +116,22 @@ function PaymentForm({
         return;
       }
 
-      // 3. Create account (skipped on retry if already created)
-      if (!isAccountCreated) {
-        await signUp({
-          email: accountData.email,
-          password: accountData.password,
-          fullName: accountData.fullName,
-          cif: accountData.cif || undefined,
-          phone: accountData.phone || undefined,
-        });
-        onAccountCreated();
-      }
-
-      // 4. Subscribe — backend attaches payment method + creates subscription
-      const res = await post(endpoints.billing.subscribe, {
+      // 3. Atomically create account + subscribe — DB records only created after Stripe confirms
+      const result = await registerAndSubscribe({
+        email: accountData.email,
+        password: accountData.password,
+        fullName: accountData.fullName,
+        cif: accountData.cif || undefined,
+        phone: accountData.phone || undefined,
         paymentMethodId: paymentMethod.id,
         planId: plan.id,
         billingPeriod,
       });
 
-      // 5. Handle SCA/3DS if the subscription requires further authentication
-      if (res.data?.requiresAction && res.data?.clientSecret) {
+      // 4. Handle SCA/3DS if the subscription requires further authentication
+      if (result.requiresAction && result.clientSecret) {
         const { error: actionError } = await stripe.handleNextAction({
-          clientSecret: res.data.clientSecret,
+          clientSecret: result.clientSecret,
         });
         if (actionError) {
           setErrorMessage(actionError.message ?? 'Error al autenticar el pago');
@@ -156,8 +140,9 @@ function PaymentForm({
       }
 
       onSuccess();
-    } catch {
-      setErrorMessage('Error al activar la suscripción. Por favor, inténtalo de nuevo.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : null;
+      setErrorMessage(msg ?? 'Error al activar la suscripción. Por favor, inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -239,8 +224,13 @@ export function JwtSignUpView() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  // Persisted across PaymentForm remounts (back/forward) to avoid duplicate signUp
-  const [accountCreated, setAccountCreated] = useState(false);
+
+  const { data: discountRes } = useQuery<{ data: { active: boolean; percentOff?: number; durationInMonths?: number } }>({
+    queryKey: ['discount-info'],
+    queryFn: () => fetcher(endpoints.auth.discountInfo),
+    staleTime: 5 * 60 * 1000,
+  });
+  const discount = discountRes?.data?.active ? discountRes.data : null;
 
   const methods = useForm<SignUpSchemaType>({
     resolver: zodResolver(SignUpSchema),
@@ -356,6 +346,14 @@ export function JwtSignUpView() {
         sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
 
+      {discount && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          Oferta de bienvenida: <strong>{discount.percentOff}% de descuento</strong> durante los
+          primeros <strong>{discount.durationInMonths} meses</strong>. Se aplica automáticamente al
+          suscribirte.
+        </Alert>
+      )}
+
       <Stepper activeStep={step} sx={{ mb: 4 }}>
         {STEPS.map((label) => (
           <Step key={label}>
@@ -389,8 +387,6 @@ export function JwtSignUpView() {
             plan={selectedPlan}
             billingPeriod={billingPeriod}
             accountData={methods.getValues()}
-            isAccountCreated={accountCreated}
-            onAccountCreated={() => setAccountCreated(true)}
             onSuccess={handlePaymentSuccess}
             onBack={() => setStep(1)}
           />

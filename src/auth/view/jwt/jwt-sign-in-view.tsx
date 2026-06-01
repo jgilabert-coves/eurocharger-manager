@@ -91,7 +91,7 @@ export function JwtSignInView() {
       <Box sx={{ gap: 1.5, display: 'flex', flexDirection: 'column' }}>
         <Link
           component={RouterLink}
-          href="#"
+          href={paths.auth.jwt.forgotPassword}
           variant="body2"
           color="inherit"
           sx={{ alignSelf: 'flex-end' }}
@@ -139,6 +139,14 @@ export function JwtSignInView() {
     <>
       <FormHead
         title="Inicia sesión"
+        description={
+          <>
+            {`¿No tienes cuenta? `}
+            <Link component={RouterLink} href={paths.auth.jwt.signUp} variant="subtitle2">
+              Crear cuenta
+            </Link>
+          </>
+        }
         sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
 

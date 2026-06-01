@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableRow from '@mui/material/TableRow';
@@ -29,10 +28,8 @@ import { fDateTime } from 'src/utils/format-time';
 
 import { fetcher } from 'src/lib/axios';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
-import { ConnectorStatusChip } from '../chips/connector-status-chip';
 import { TransactionStatusChip } from '../chips/transaction-status-chip';
 
 function formatDuration(startDate: Date | string, endDate: Date | string | null): string {

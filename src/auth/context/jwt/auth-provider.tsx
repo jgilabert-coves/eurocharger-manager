@@ -8,7 +8,7 @@ import { AuthContext } from '../auth-context';
 import { setSession, isValidToken } from './utils';
 
 import type { ApiUserResponse } from './action';
-import type { AuthState, Role } from '../../types';
+import type { Role, AuthState } from '../../types';
 
 // ----------------------------------------------------------------------
 

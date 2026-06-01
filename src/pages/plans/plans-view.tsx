@@ -21,7 +21,7 @@ import TableContainer from '@mui/material/TableContainer';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { fetcher, patch, endpoints } from 'src/lib/axios';
+import { patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
