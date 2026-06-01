@@ -1,8 +1,8 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-import type { Client } from 'src/types/clients';
 import type { GeocodingFeature } from 'src/lib/geocoding';
 import type { MapRef, MapLayerMouseEvent } from 'react-map-gl';
+import type { Subscription } from 'src/types/billing';
 import type { BasicChargingStationInfo } from 'src/types/charging_stations';
 
 import Map, { Marker } from 'react-map-gl';
@@ -42,7 +42,6 @@ import {
 } from 'src/lib/geocoding';
 
 import { Iconify } from 'src/components/iconify';
-import { ClientSelect } from 'src/components/client/client-select';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
 import { useAuthContext } from 'src/auth/hooks/use-auth-context';
@@ -54,6 +53,9 @@ const STEPS_CLIENT = ['Estación', 'Cargador', 'Resumen'];
 
 type StationMode = 'existing' | 'new';
 type GroupMode = 'existing' | 'new';
+
+type Account = { id: number; business_name: string; };
+type AccountsResponse = { data: Account[]; total: number; };
 
 const SPAIN_PROVINCES = [
   'Álava',
@@ -160,8 +162,10 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
 
   const [step, setStep] = useState(0);
 
-  // Step 0 (Eurocharger only) – Client
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  // Step 0 (Eurocharger only) – Account + Group
+  const [selectedAccountId, setSelectedAccountId] = useState<number | ''>('');
+  const [selectedAccountName, setSelectedAccountName] = useState('');
+  const [accountSearch, setAccountSearch] = useState('');
 
   // Step 1 – Station
   const [stationMode, setStationMode] = useState<StationMode>('existing');
@@ -175,18 +179,30 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   const [mapOptions, setMapOptions] = useState<GeocodingFeature[]>([]);
   const [mapSearchLoading, setMapSearchLoading] = useState(false);
 
-  // Step 2 – Single charger
-  const [chargerName, setChargerName] = useState('');
-  const [chargerIsPrivate, setChargerIsPrivate] = useState(false);
+  // Group – set in step 0 for eurocharger, step 2 for others
   const [chargerGroupId, setChargerGroupId] = useState('');
   const [groupMode, setGroupMode] = useState<GroupMode>('existing');
   const [newGroupName, setNewGroupName] = useState('');
+
+  // Step 2 – Charger
+  const [chargerName, setChargerName] = useState('');
+  const [chargerIsPrivate, setChargerIsPrivate] = useState(false);
+  const [chargerHasCallCenter, setChargerHasCallCenter] = useState(false);
 
   // Submit
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const groupAccountId = isEurocharger ? (selectedClient?.id ?? 0) : (user?.account_id ?? 0);
+  const groupAccountId = isEurocharger ? (selectedAccountId as number) : (user?.account_id ?? 0);
+
+  // Accounts list for eurocharger
+  const { data: accountsData } = useQuery<AccountsResponse>({
+    queryKey: ['accounts-list'],
+    queryFn: () => fetcher([endpoints.accounts.list, { params: { pageSize: 1000 } }]),
+    enabled: isEurocharger && open,
+    staleTime: 5 * 60 * 1000,
+  });
+  const accounts: Account[] = accountsData?.data ?? [];
 
   const { data: groupsData, isLoading: groupsLoading } = useQuery<ChargerGroupsResponse>({
     queryKey: ['charger-groups', groupAccountId],
@@ -195,6 +211,15 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     staleTime: 2 * 60 * 1000,
   });
   const groups: ChargerGroup[] = groupsData?.data ?? [];
+
+  const { data: subscriptionData } = useQuery<{ data: Subscription }>({
+    queryKey: ['account-subscription', groupAccountId],
+    queryFn: () => fetcher(endpoints.accounts.subscription(groupAccountId)),
+    enabled: open && !!groupAccountId,
+    staleTime: 2 * 60 * 1000,
+  });
+  const callCenterItem = subscriptionData?.data?.items?.find((i) => i.type === 'call_center');
+  const callCenterUnitPrice = callCenterItem?.unit_price_cents;
 
   const { data: stations = [], isLoading: stationsLoading } = useQuery<BasicChargingStationInfo[]>({
     queryKey: ['locations', stationSearch],
@@ -209,10 +234,10 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   });
 
   useEffect(() => {
-    if (groups.length === 1 && chargerGroupId === '') {
+    if (!isEurocharger && groups.length === 1 && chargerGroupId === '') {
       setChargerGroupId(groups[0].id);
     }
-  }, [groups, chargerGroupId]);
+  }, [groups, chargerGroupId, isEurocharger]);
 
   // Debounced geocoding search for the map search bar
   useEffect(() => {
@@ -309,7 +334,9 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
 
   const handleClose = () => {
     setStep(0);
-    setSelectedClient(null);
+    setSelectedAccountId('');
+    setSelectedAccountName('');
+    setAccountSearch('');
     setStationMode('existing');
     setSelectedStation(null);
     setNewStation(DEFAULT_NEW_STATION);
@@ -318,6 +345,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     setMapOptions([]);
     setChargerName('');
     setChargerIsPrivate(false);
+    setChargerHasCallCenter(false);
     setChargerGroupId('');
     setGroupMode('existing');
     setNewGroupName('');
@@ -329,7 +357,11 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   const chargerStepIndex = isEurocharger ? 2 : 1;
 
   const canNext = (() => {
-    if (isEurocharger && step === 0) return selectedClient !== null;
+    if (isEurocharger && step === 0) {
+      if (!selectedAccountId) return false;
+      if (groupMode === 'new') return newGroupName.trim() !== '';
+      return chargerGroupId !== '';
+    }
     if (step === stationStepIndex) {
       if (stationMode === 'existing') return selectedStation !== null;
       const provinceOk = newStation.country !== 'España' || newStation.province !== '';
@@ -344,8 +376,11 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
       );
     }
     if (step === chargerStepIndex) {
-      if (groupMode === 'new') return chargerName.trim() !== '' && newGroupName.trim() !== '';
-      return chargerName.trim() !== '' && chargerGroupId !== '';
+      if (!isEurocharger) {
+        if (groupMode === 'new') return chargerName.trim() !== '' && newGroupName.trim() !== '';
+        return chargerName.trim() !== '' && chargerGroupId !== '';
+      }
+      return chargerName.trim() !== '';
     }
     return true;
   })();
@@ -385,6 +420,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         is_private: chargerIsPrivate,
         location_id: locationId,
         chargerGroupId: resolvedGroupId,
+        ...(chargerHasCallCenter && { has_call_center: true }),
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;
@@ -402,15 +438,147 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   const renderStep0 = () => (
     <Stack spacing={2}>
       <Typography variant="body2" color="text.secondary">
-        Selecciona el propietario al que pertenecerá el cargador o crea uno nuevo.
+        Selecciona la cuenta y el propietario al que pertenecerá el cargador.
       </Typography>
-      <ClientSelect
-        value={selectedClient}
-        onChange={(c) => {
-          setSelectedClient(c);
-          setChargerGroupId('');
-        }}
-      />
+
+      <Box>
+        <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+          Cuenta <span style={{ color: 'inherit' }}>*</span>
+        </Typography>
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="Buscar cuenta..."
+          value={accountSearch}
+          onChange={(e) => setAccountSearch(e.target.value)}
+          sx={{ mb: 1 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <Box
+          sx={{
+            maxHeight: 200,
+            overflowY: 'auto',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+          }}
+        >
+          {accounts
+            .filter((a) =>
+              a.business_name.toLowerCase().includes(accountSearch.toLowerCase())
+            )
+            .map((acc) => {
+              const isSelected = selectedAccountId === acc.id;
+              return (
+                <Box
+                  key={acc.id}
+                  onClick={() => {
+                    setSelectedAccountId(acc.id);
+                    setSelectedAccountName(acc.business_name);
+                    setChargerGroupId('');
+                    setGroupMode('existing');
+                    setNewGroupName('');
+                  }}
+                  sx={(t) => ({
+                    px: 1.5,
+                    py: 1,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    bgcolor: isSelected ? 'primary.lighter' : 'background.paper',
+                    borderBottom: `1px solid ${t.vars.palette.divider}`,
+                    '&:last-child': { borderBottom: 'none' },
+                    '&:hover': { bgcolor: isSelected ? 'primary.lighter' : 'action.hover' },
+                  })}
+                >
+                  <Typography variant="body2">{acc.business_name}</Typography>
+                  {isSelected && (
+                    <Iconify
+                      icon="eva:checkmark-circle-2-fill"
+                      width={18}
+                      sx={{ color: 'primary.main', flexShrink: 0 }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
+          {accounts.filter((a) =>
+            a.business_name.toLowerCase().includes(accountSearch.toLowerCase())
+          ).length === 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
+              No se encontraron cuentas.
+            </Typography>
+          )}
+        </Box>
+      </Box>
+
+      {!!selectedAccountId && (
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+            Propietario <span style={{ color: 'inherit' }}>*</span>
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+            <Button
+              size="small"
+              variant={groupMode === 'existing' ? 'contained' : 'outlined'}
+              onClick={() => setGroupMode('existing')}
+              sx={{ flex: 1 }}
+            >
+              Propietario existente
+            </Button>
+            <Button
+              size="small"
+              variant={groupMode === 'new' ? 'contained' : 'outlined'}
+              onClick={() => setGroupMode('new')}
+              sx={{ flex: 1 }}
+            >
+              Nuevo propietario
+            </Button>
+          </Stack>
+
+          {groupMode === 'existing' ? (
+            <TextField
+              select
+              size="small"
+              fullWidth
+              value={chargerGroupId}
+              onChange={(e) => setChargerGroupId(e.target.value)}
+              disabled={groupsLoading || groups.length === 0}
+              helperText={
+                groupsLoading
+                  ? 'Cargando propietarios...'
+                  : groups.length === 0
+                    ? 'No hay propietarios. Crea uno nuevo.'
+                    : undefined
+              }
+            >
+              {groups.map((g) => (
+                <MenuItem key={g.id} value={g.id}>
+                  {g.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          ) : (
+            <TextField
+              size="small"
+              fullWidth
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Ej. Ayuntamiento de X"
+              helperText="Se creará un nuevo propietario con este nombre"
+            />
+          )}
+        </Box>
+      )}
     </Stack>
   );
 
@@ -711,62 +879,77 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         label="Acceso privado"
       />
 
-      <Box>
-        <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
-          Propietario <span style={{ color: 'inherit' }}>*</span>
-        </Typography>
-        <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
-          <Button
-            size="small"
-            variant={groupMode === 'existing' ? 'contained' : 'outlined'}
-            onClick={() => setGroupMode('existing')}
-            sx={{ flex: 1 }}
-          >
-            Propietario existente
-          </Button>
-          <Button
-            size="small"
-            variant={groupMode === 'new' ? 'contained' : 'outlined'}
-            onClick={() => setGroupMode('new')}
-            sx={{ flex: 1 }}
-          >
-            Nuevo propietario
-          </Button>
-        </Stack>
+      {callCenterUnitPrice !== undefined && (
+        <FormControlLabel
+          control={
+            <Switch
+              checked={chargerHasCallCenter}
+              onChange={(e) => setChargerHasCallCenter(e.target.checked)}
+              size="small"
+            />
+          }
+          label={`Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`}
+        />
+      )}
 
-        {groupMode === 'existing' ? (
-          <TextField
-            select
-            size="small"
-            fullWidth
-            value={chargerGroupId}
-            onChange={(e) => setChargerGroupId(e.target.value)}
-            disabled={groupsLoading || groups.length === 0}
-            helperText={
-              groupsLoading
-                ? 'Cargando propietarios...'
-                : groups.length === 0
-                  ? 'No hay propietarios. Crea uno nuevo o ve a la sección Propietarios.'
-                  : undefined
-            }
-          >
-            {groups.map((g) => (
-              <MenuItem key={g.id} value={g.id}>
-                {g.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          <TextField
-            size="small"
-            fullWidth
-            value={newGroupName}
-            onChange={(e) => setNewGroupName(e.target.value)}
-            placeholder="Ej. Ayuntamiento de X"
-            helperText="Se creará un nuevo propietario con este nombre"
-          />
-        )}
-      </Box>
+      {!isEurocharger && (
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+            Propietario <span style={{ color: 'inherit' }}>*</span>
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+            <Button
+              size="small"
+              variant={groupMode === 'existing' ? 'contained' : 'outlined'}
+              onClick={() => setGroupMode('existing')}
+              sx={{ flex: 1 }}
+            >
+              Propietario existente
+            </Button>
+            <Button
+              size="small"
+              variant={groupMode === 'new' ? 'contained' : 'outlined'}
+              onClick={() => setGroupMode('new')}
+              sx={{ flex: 1 }}
+            >
+              Nuevo propietario
+            </Button>
+          </Stack>
+
+          {groupMode === 'existing' ? (
+            <TextField
+              select
+              size="small"
+              fullWidth
+              value={chargerGroupId}
+              onChange={(e) => setChargerGroupId(e.target.value)}
+              disabled={groupsLoading || groups.length === 0}
+              helperText={
+                groupsLoading
+                  ? 'Cargando propietarios...'
+                  : groups.length === 0
+                    ? 'No hay propietarios. Crea uno nuevo o ve a la sección Propietarios.'
+                    : undefined
+              }
+            >
+              {groups.map((g) => (
+                <MenuItem key={g.id} value={g.id}>
+                  {g.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          ) : (
+            <TextField
+              size="small"
+              fullWidth
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Ej. Ayuntamiento de X"
+              helperText="Se creará un nuevo propietario con este nombre"
+            />
+          )}
+        </Box>
+      )}
     </Stack>
   );
 
@@ -818,7 +1001,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
             >
               Empresa
             </Typography>
-            <Typography variant="subtitle2">{selectedClient?.business_name}</Typography>
+            <Typography variant="subtitle2">{selectedAccountName}</Typography>
           </Box>
         )}
 
@@ -887,9 +1070,16 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Stack direction="row" alignItems="center" spacing={1}>
               <Iconify icon="mdi:ev-station" width={16} sx={{ color: 'common.black' }} />
-              <Typography variant="caption" fontWeight={600}>
-                {chargerName}
-              </Typography>
+              <Stack spacing={0.25}>
+                <Typography variant="caption" fontWeight={600}>
+                  {chargerName}
+                </Typography>
+                {chargerHasCallCenter && (
+                  <Typography variant="caption" color="primary.main">
+                    + Call Center
+                  </Typography>
+                )}
+              </Stack>
             </Stack>
             <Typography variant="caption" color="text.secondary">
               {chargerIsPrivate ? 'Privado' : 'Público'}

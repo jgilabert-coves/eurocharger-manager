@@ -49,6 +49,8 @@ const STATUS_COLOR: Record<SubscriptionStatus, 'success' | 'warning' | 'error' |
   past_due: 'warning',
   canceled: 'error',
   paused: 'default',
+  incomplete: 'warning',
+  incomplete_expired: 'error',
 };
 
 const STATUS_LABEL: Record<SubscriptionStatus, string> = {
@@ -57,6 +59,8 @@ const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   past_due: 'Pago pendiente',
   canceled: 'Cancelada',
   paused: 'Pausada',
+  incomplete: 'Incompleta',
+  incomplete_expired: 'Expirada',
 };
 
 const INVOICE_STATUS_COLOR: Record<InvoiceStatus, 'success' | 'warning' | 'default' | 'error'> = {
@@ -80,6 +84,7 @@ const ITEM_LABEL: Record<string, string> = {
   chargers: 'Cargadores',
   guests: 'Usuarios invitados',
   sim: 'SIMs',
+  call_center: 'Call Center',
 };
 
 // ----------------------------------------------------------------------
@@ -180,6 +185,7 @@ export default function SubscriptionView() {
   };
 
   const renderStatus = () => {
+    console.log(subscription);
     if (!subscription) return null;
     return (
       <Chip
@@ -359,14 +365,14 @@ export default function SubscriptionView() {
                 <Stack direction="row" alignItems="center" spacing={2}>
                   <Typography variant="h6">Estado</Typography>
                   {renderStatus()}
-                  {subscription.cancel_at_period_end && (
+                  {/*subscription.cancel_at_period_end && (
                     <Chip
                       label="Cancela al final del periodo"
                       color="warning"
                       size="small"
                       variant="outlined"
                     />
-                  )}
+                  )*/}
                 </Stack>
 
                 {renderPeriod()}
