@@ -17,7 +17,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { del, post, fetcher, endpoints } from 'src/lib/axios';
+import { post, del, patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -30,9 +30,19 @@ export type EditGuestGroupsDialogProps = {
   onClose: () => void;
 };
 
+type GuestState = {
+  groups: InvitationGroup[];
+  role: InvitationRole | null;
+};
+
 const PERMISSION_LABEL: Record<InvitationPermissionLevel, string> = {
   view: 'Lectura',
   operate: 'Operación',
+};
+
+const ROLE_LABEL: Record<InvitationRole, string> = {
+  saas_guest: 'Invitado',
+  saas_admin: 'Admin',
 };
 
 export function EditGuestGroupsDialog({
@@ -47,9 +57,14 @@ export function EditGuestGroupsDialog({
   const [addPermission, setAddPermission] = useState<InvitationPermissionLevel>('view');
   const [adding, setAdding] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [changingRole, setChangingRole] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: liveGroupsData, isFetching: loadingGroups, refetch: refetchGroups } = useQuery<{ data: InvitationGroup[] }>({
+  const {
+    data: guestData,
+    isFetching: loadingGuest,
+    refetch: refetchGuest,
+  } = useQuery<{ data: GuestState }>({
     queryKey: ['invitation-groups', invitation.id],
     queryFn: () => fetcher(endpoints.invitations.invitationGroups(accountId, invitation.id)),
     enabled: open,
@@ -63,13 +78,29 @@ export function EditGuestGroupsDialog({
     staleTime: 2 * 60 * 1000,
   });
 
-  const liveGroups: InvitationGroup[] = liveGroupsData?.data ?? [];
+  const liveGroups: InvitationGroup[] = guestData?.data?.groups ?? [];
+  const currentRole: InvitationRole = guestData?.data?.role ?? invitation.role_to_assign;
   const allGroups: ChargerGroup[] = allGroupsData?.data ?? [];
   const assignedGroupIds = liveGroups.map((g) => g.group_id);
   const unassignedGroups = allGroups.filter((g) => !assignedGroupIds.includes(g.id));
 
   const invalidateInvitations = () =>
     queryClient.invalidateQueries({ queryKey: ['invitations', accountId] });
+
+  const handleRoleChange = async (newRole: InvitationRole) => {
+    if (newRole === currentRole || changingRole) return;
+    try {
+      setChangingRole(true);
+      setError(null);
+      await patch(endpoints.invitations.invitationRole(accountId, invitation.id), { role: newRole });
+      await refetchGuest();
+      invalidateInvitations();
+    } catch (err: any) {
+      setError(err?.error ?? 'Error al cambiar el rol.');
+    } finally {
+      setChangingRole(false);
+    }
+  };
 
   const handleAdd = async () => {
     if (!addGroupId) return;
@@ -82,7 +113,7 @@ export function EditGuestGroupsDialog({
       });
       setAddGroupId('');
       setAddPermission('view');
-      await refetchGroups();
+      await refetchGuest();
       invalidateInvitations();
     } catch (err: any) {
       setError(err?.error ?? 'Error al añadir el propietario.');
@@ -96,7 +127,7 @@ export function EditGuestGroupsDialog({
       setRemoving(groupId);
       setError(null);
       await del(endpoints.invitations.invitationGroup(accountId, invitation.id, groupId));
-      await refetchGroups();
+      await refetchGuest();
       invalidateInvitations();
     } catch (err: any) {
       setError(err?.error ?? 'Error al eliminar el propietario.');
@@ -115,7 +146,7 @@ export function EditGuestGroupsDialog({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
-        Gestionar propietarios
+        Gestionar acceso
         <IconButton
           onClick={handleClose}
           size="small"
@@ -136,12 +167,34 @@ export function EditGuestGroupsDialog({
           </Alert>
         )}
 
+        {/* Role */}
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+          <TextField
+            select
+            size="small"
+            label="Rol"
+            fullWidth
+            value={currentRole}
+            onChange={(e) => handleRoleChange(e.target.value as InvitationRole)}
+            disabled={loadingGuest || changingRole}
+          >
+            {(Object.keys(ROLE_LABEL) as InvitationRole[]).map((r) => (
+              <MenuItem key={r} value={r}>
+                {ROLE_LABEL[r]}
+              </MenuItem>
+            ))}
+          </TextField>
+          {changingRole && <CircularProgress size={18} />}
+        </Stack>
+
+        <Divider sx={{ mb: 2 }} />
+
         {/* Current groups */}
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
           Propietarios actuales
         </Typography>
 
-        {loadingGroups ? (
+        {loadingGuest ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
             <CircularProgress size={22} />
           </Box>
@@ -211,7 +264,11 @@ export function EditGuestGroupsDialog({
                 onClick={handleAdd}
                 sx={{ minWidth: 48, px: 1 }}
               >
-                {adding ? <CircularProgress size={14} color="inherit" /> : <Iconify icon="mingcute:add-line" width={18} />}
+                {adding ? (
+                  <CircularProgress size={14} color="inherit" />
+                ) : (
+                  <Iconify icon="mingcute:add-line" width={18} />
+                )}
               </Button>
             </Box>
           </>

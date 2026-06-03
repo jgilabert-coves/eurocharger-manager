@@ -275,5 +275,6 @@ export const endpoints = {
     accept: '/invitations/accept',
     invitationGroups: (accountId: number, id: string) => `/accounts/${accountId}/invitations/${id}/groups`,
     invitationGroup: (accountId: number, id: string, groupId: string) => `/accounts/${accountId}/invitations/${id}/groups/${groupId}`,
+    invitationRole: (accountId: number, id: string) => `/accounts/${accountId}/invitations/${id}/role`,
   },
 };
