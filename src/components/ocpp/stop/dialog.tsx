@@ -53,9 +53,7 @@ export function StopTransactionDialog({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>Parar recarga</DialogTitle>
       <DialogContent>
-        <Typography variant="body2">
-          ¿Seguro que quieres parar la recarga en curso?
-        </Typography>
+        <Typography variant="body2">¿Seguro que quieres parar la recarga en curso?</Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>

@@ -39,6 +39,7 @@ export function AuthProvider({ children }: Props) {
               account_id: apiUser.account_id,
               account_name: apiUser.account_name ?? 'Eurocharger',
               membership_id: apiUser.membership_id ?? null,
+              subscription_status: apiUser.subscription_status ?? null,
               accessToken,
             },
             loading: false,

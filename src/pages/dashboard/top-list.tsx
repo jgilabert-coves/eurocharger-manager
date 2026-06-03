@@ -34,8 +34,18 @@ export function TopList({ title, isClient }: TopListProps) {
   const Icon = isClient ? IcUsers : IcPlug;
 
   const items = isClient
-    ? ((res?.data as TopUser[]) ?? []).map((u) => ({ key: u.id, name: u.name, line1: `↻ ${u.totalCharges} recargas`, line2: `≈ ${u.totalSpent.toFixed(2)} €` }))
-    : ((res?.data as TopChargepoint[]) ?? []).map((cp) => ({ key: cp.id, name: cp.name, line1: `↻ ${cp.totalCharges} recargas`, line2: `≈ ${cp.totalRevenue.toFixed(2)} €` }));
+    ? ((res?.data as TopUser[]) ?? []).map((u) => ({
+        key: u.id,
+        name: u.name,
+        line1: `↻ ${u.totalCharges} recargas`,
+        line2: `≈ ${u.totalSpent.toFixed(2)} €`,
+      }))
+    : ((res?.data as TopChargepoint[]) ?? []).map((cp) => ({
+        key: cp.id,
+        name: cp.name,
+        line1: `↻ ${cp.totalCharges} recargas`,
+        line2: `≈ ${cp.totalRevenue.toFixed(2)} €`,
+      }));
 
   return (
     <Card sx={{ p: 3 }}>
@@ -45,7 +55,13 @@ export function TopList({ title, isClient }: TopListProps) {
 
       {isLoading
         ? Array.from({ length: 4 }).map((_, i) => (
-            <Stack key={i} direction="row" alignItems="center" spacing={1.5} sx={{ py: 1, borderBottom: `1px solid ${tk.skyLight}` }}>
+            <Stack
+              key={i}
+              direction="row"
+              alignItems="center"
+              spacing={1.5}
+              sx={{ py: 1, borderBottom: `1px solid ${tk.skyLight}` }}
+            >
               <Skeleton variant="circular" width={32} height={32} />
               <Box sx={{ flex: 1 }}>
                 <Skeleton variant="text" width={120} height={18} />
@@ -72,11 +88,17 @@ export function TopList({ title, isClient }: TopListProps) {
                 }}
               >
                 {isClient
-                  ? name.split(' ').map((w) => w[0]).join('').slice(0, 2)
+                  ? (name ?? '')
+                      .split(' ')
+                      .map((w) => w[0])
+                      .join('')
+                      .slice(0, 2)
                   : 'EC'}
               </Avatar>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: tk.inkDarkest }}>{name}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: tk.inkDarkest }}>
+                  {name}
+                </Typography>
                 <Typography variant="caption" sx={{ color: tk.inkLighter }}>
                   {line1} · {line2}
                 </Typography>

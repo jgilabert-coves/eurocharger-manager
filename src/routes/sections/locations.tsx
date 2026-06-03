@@ -40,15 +40,17 @@ export const locationsRoutes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: CONFIG.auth.skip
-          ? locationsLayout()
-          : <AuthGuard>{locationsLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? locationsLayout() : <AuthGuard>{locationsLayout()}</AuthGuard>,
       },
       {
         path: ':id',
-        element: CONFIG.auth.skip
-          ? <LocationDetailView />
-          : <AuthGuard><LocationDetailView /></AuthGuard>,
+        element: CONFIG.auth.skip ? (
+          <LocationDetailView />
+        ) : (
+          <AuthGuard>
+            <LocationDetailView />
+          </AuthGuard>
+        ),
       },
     ],
   },

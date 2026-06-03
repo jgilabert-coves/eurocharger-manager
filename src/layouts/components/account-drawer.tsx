@@ -164,9 +164,17 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
               {switchingId === profile.membership_id ? (
                 <CircularProgress size={16} />
               ) : profile.is_current ? (
-                <Iconify icon="eva:checkmark-circle-2-fill" width={18} sx={{ color: 'primary.main', flexShrink: 0 }} />
+                <Iconify
+                  icon="eva:checkmark-circle-2-fill"
+                  width={18}
+                  sx={{ color: 'primary.main', flexShrink: 0 }}
+                />
               ) : (
-                <Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+                <Iconify
+                  icon="eva:arrow-ios-forward-fill"
+                  width={18}
+                  sx={{ color: 'text.disabled', flexShrink: 0 }}
+                />
               )}
             </Box>
           ))}

@@ -283,12 +283,18 @@ function ConnectorCard({
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Box sx={{ color: 'text.primary', display: 'flex' }}>
                     <ConnectorTypeIcon
-                      name={connector.connectorTypeId ? CONNECTOR_TYPE_MAP[connector.connectorTypeId] : undefined}
+                      name={
+                        connector.connectorTypeId
+                          ? CONNECTOR_TYPE_MAP[connector.connectorTypeId]
+                          : undefined
+                      }
                       size={28}
                     />
                   </Box>
                   <Typography variant="subtitle2" fontWeight={700}>
-                    {connector.connectorTypeId ? (CONNECTOR_TYPE_MAP[connector.connectorTypeId] ?? 'Desconocido') : 'Sin asignar'}
+                    {connector.connectorTypeId
+                      ? (CONNECTOR_TYPE_MAP[connector.connectorTypeId] ?? 'Desconocido')
+                      : 'Sin asignar'}
                   </Typography>
                 </Stack>
               </Box>
@@ -525,7 +531,6 @@ export function ChargerSetupDialog({ open, chargepointId, onClose }: ChargerSetu
       setChargepoint(null);
       setEditState({ mode: 'idle' });
     }
-     
   }, [open, chargepointId]);
 
   const handleClose = () => {
@@ -595,10 +600,10 @@ export function ChargerSetupDialog({ open, chargepointId, onClose }: ChargerSetu
                       chargepointId={chargepoint.id}
                       onEdit={(c) => setEditState({ mode: 'edit', connectorId: c.id })}
                       onRemoveRate={() => {
-                        if (conn.rateId != null){ 
-                          del(endpoints.connectors.deassign(chargepoint.id, conn.id, conn.rateId)).then(() =>
-                            loadChargepoint(chargepoint.id)
-                          );
+                        if (conn.rateId != null) {
+                          del(
+                            endpoints.connectors.deassign(chargepoint.id, conn.id, conn.rateId)
+                          ).then(() => loadChargepoint(chargepoint.id));
                         }
                       }}
                       onRateAssigned={() => loadChargepoint(chargepoint.id)}

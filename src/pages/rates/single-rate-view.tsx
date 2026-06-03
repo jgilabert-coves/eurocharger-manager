@@ -104,7 +104,10 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               sx={{
                 p: 1.5,
                 borderRadius: 1,
-                bgcolor: stretch.inactivity_fee && stretch.inactivity_fee > 0 ? 'warning.lighter' : 'action.hover',
+                bgcolor:
+                  stretch.inactivity_fee && stretch.inactivity_fee > 0
+                    ? 'warning.lighter'
+                    : 'action.hover',
                 textAlign: 'center',
               }}
             >
@@ -114,9 +117,15 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                color={stretch.inactivity_fee && stretch.inactivity_fee > 0 ? 'warning.dark' : 'text.disabled'}
+                color={
+                  stretch.inactivity_fee && stretch.inactivity_fee > 0
+                    ? 'warning.dark'
+                    : 'text.disabled'
+                }
               >
-                {stretch.inactivity_fee && stretch.inactivity_fee > 0 ? `${stretch.inactivity_fee.toFixed(3)} €/min` : '—'}
+                {stretch.inactivity_fee && stretch.inactivity_fee > 0
+                  ? `${stretch.inactivity_fee.toFixed(3)} €/min`
+                  : '—'}
               </Typography>
             </Box>
           </Grid>
@@ -127,7 +136,8 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               sx={{
                 p: 1.5,
                 borderRadius: 1,
-                bgcolor: stretch.fixed_price && stretch.fixed_price > 0 ? 'info.lighter' : 'action.hover',
+                bgcolor:
+                  stretch.fixed_price && stretch.fixed_price > 0 ? 'info.lighter' : 'action.hover',
                 textAlign: 'center',
               }}
             >
@@ -137,9 +147,13 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                color={stretch.fixed_price && stretch.fixed_price > 0 ? 'info.dark' : 'text.disabled'}
+                color={
+                  stretch.fixed_price && stretch.fixed_price > 0 ? 'info.dark' : 'text.disabled'
+                }
               >
-                {stretch.fixed_price && stretch.fixed_price > 0 ? `${stretch.fixed_price.toFixed(3)} €` : '—'}
+                {stretch.fixed_price && stretch.fixed_price > 0
+                  ? `${stretch.fixed_price.toFixed(3)} €`
+                  : '—'}
               </Typography>
             </Box>
           </Grid>
@@ -149,7 +163,10 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               sx={{
                 p: 1.5,
                 borderRadius: 1,
-                bgcolor: stretch.parking_price && stretch.parking_price > 0 ? 'info.lighter' : 'action.hover',
+                bgcolor:
+                  stretch.parking_price && stretch.parking_price > 0
+                    ? 'info.lighter'
+                    : 'action.hover',
                 textAlign: 'center',
               }}
             >
@@ -159,9 +176,13 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
               <Typography
                 variant="h6"
                 fontWeight="bold"
-                color={stretch.parking_price && stretch.parking_price > 0 ? 'info.dark' : 'text.disabled'}
+                color={
+                  stretch.parking_price && stretch.parking_price > 0 ? 'info.dark' : 'text.disabled'
+                }
               >
-                {stretch.parking_price && stretch.parking_price > 0 ? `${stretch.parking_price.toFixed(3)} €/min` : '—'}
+                {stretch.parking_price && stretch.parking_price > 0
+                  ? `${stretch.parking_price.toFixed(3)} €/min`
+                  : '—'}
               </Typography>
             </Box>
           </Grid>
@@ -212,8 +233,9 @@ export default function SingleRateView() {
                   size="small"
                 />
                 {rate?.clientName && <Chip label={rate.clientName} color="warning" size="small" />}
-                {rate?.operatorName && <Chip label={`${rate.operatorName}`} color="primary" size="small" />}
-                
+                {rate?.operatorName && (
+                  <Chip label={`${rate.operatorName}`} color="primary" size="small" />
+                )}
               </Stack>
               <Typography variant="body2" color="text.secondary">
                 Tarifa #{rate?.id} · Creada el{' '}
@@ -223,7 +245,7 @@ export default function SingleRateView() {
 
             <Grid container spacing={3}>
               {/* ── Stretches ── */}
-              <Grid size={{ xs: 12}}>
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="h6" sx={{ mb: 2 }}>
                   Tramos
                 </Typography>
@@ -241,7 +263,6 @@ export default function SingleRateView() {
                   <Typography color="text.secondary">No hay tramos definidos.</Typography>
                 )}
               </Grid>
-
             </Grid>
           </>
         )}

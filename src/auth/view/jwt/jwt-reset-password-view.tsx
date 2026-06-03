@@ -80,10 +80,7 @@ export function JwtResetPasswordView() {
   if (done) {
     return (
       <>
-        <FormHead
-          title="Contraseña actualizada"
-          sx={{ textAlign: { xs: 'center', md: 'left' } }}
-        />
+        <FormHead title="Contraseña actualizada" sx={{ textAlign: { xs: 'center', md: 'left' } }} />
         <Alert severity="success" sx={{ mb: 3 }}>
           Tu contraseña se ha actualizado correctamente.
         </Alert>

@@ -1,4 +1,3 @@
-
 export type Incident = {
   id: number;
   type: string;

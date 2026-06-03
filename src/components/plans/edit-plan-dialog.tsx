@@ -24,11 +24,11 @@ import { patch, endpoints } from 'src/lib/axios';
 type ItemKey = 'base' | 'chargers' | 'sim' | 'call_center' | 'guests';
 
 const ITEM_LABELS: Record<ItemKey, string> = {
-  base:        'Base',
-  chargers:    'Cargadores',
-  sim:         'SIM',
+  base: 'Base',
+  chargers: 'Cargadores',
+  sim: 'SIM',
   call_center: 'Call Center',
-  guests:      'Invitados',
+  guests: 'Invitados',
 };
 
 interface FormState {
@@ -60,11 +60,11 @@ function planToForm(plan: Plan): FormState {
     isDefault: Boolean(plan.isDefault),
     trialDays: String(plan.trialDays),
     maxGuests: plan.maxGuests != null ? String(plan.maxGuests) : '',
-    base:        centsToEuros(plan.items.base.monthly?.priceCents),
-    chargers:    centsToEuros(plan.items.chargers.monthly?.priceCents),
-    sim:         centsToEuros(plan.items.sim.monthly?.priceCents),
+    base: centsToEuros(plan.items.base.monthly?.priceCents),
+    chargers: centsToEuros(plan.items.chargers.monthly?.priceCents),
+    sim: centsToEuros(plan.items.sim.monthly?.priceCents),
     call_center: centsToEuros(plan.items.call_center?.monthly?.priceCents),
-    guests:      centsToEuros(plan.items.guests.monthly?.priceCents),
+    guests: centsToEuros(plan.items.guests.monthly?.priceCents),
   };
 }
 
@@ -193,8 +193,8 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
             </Typography>
             <Divider sx={{ mb: 1 }} />
             <Alert severity="info" sx={{ mb: 2 }}>
-              Al modificar un precio, Stripe archiva el anterior y crea uno nuevo. Las
-              suscripciones activas mantienen el precio anterior hasta que cambien de plan.
+              Al modificar un precio, Stripe archiva el anterior y crea uno nuevo. Las suscripciones
+              activas mantienen el precio anterior hasta que cambien de plan.
             </Alert>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {(['base', 'chargers', 'sim', 'call_center', 'guests'] as ItemKey[]).map((item) => (

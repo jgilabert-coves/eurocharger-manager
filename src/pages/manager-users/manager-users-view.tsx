@@ -19,6 +19,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -64,13 +66,21 @@ export default function ManagerUsersView() {
   const [orderBy, setOrderBy] = useState('id');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [createOpen, setCreateOpen] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery);
 
   const { data, isFetching, refetch } = useQuery<ManagerUsersResponse>({
-    queryKey: ['manager-users', page, pageSize, searchQuery, orderBy, order],
+    queryKey: ['manager-users', page, pageSize, debouncedSearch, orderBy, order],
     queryFn: () =>
       fetcher([
         endpoints.managerUsers.list,
-        { params: { page, pageSize, searchQuery, sortQuery: `${orderBy}=${order}` } },
+        {
+          params: {
+            page,
+            pageSize,
+            searchQuery: debouncedSearch,
+            sortQuery: `${orderBy}=${order}`,
+          },
+        },
       ]),
   });
 
@@ -265,7 +275,6 @@ export default function ManagerUsersView() {
                           {dateToString(user.created_at)}
                         </Typography>
                       </TableCell>
-
                     </TableRow>
                   ))
                 )}

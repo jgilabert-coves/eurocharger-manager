@@ -14,18 +14,21 @@ import { fetcher, endpoints } from 'src/lib/axios';
 
 import { useAuthContext } from 'src/auth/hooks';
 
-
 // ----------------------------------------------------------------------
 
 type SubscriptionResponse = { status_code: number; data: Subscription; error: string | null };
 
 const INACTIVE_STATUSES: SubscriptionStatus[] = ['past_due', 'canceled', 'paused'];
 
-const BANNER_CONFIG: Record<string, { severity: 'warning' | 'error'; title: string; message: string }> = {
+const BANNER_CONFIG: Record<
+  string,
+  { severity: 'warning' | 'error'; title: string; message: string }
+> = {
   past_due: {
     severity: 'warning',
     title: 'Pago pendiente',
-    message: 'Hay un problema con tu método de pago. Actualiza tu suscripción para evitar interrupciones.',
+    message:
+      'Hay un problema con tu método de pago. Actualiza tu suscripción para evitar interrupciones.',
   },
   canceled: {
     severity: 'error',

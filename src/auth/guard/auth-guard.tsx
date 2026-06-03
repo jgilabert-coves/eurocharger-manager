@@ -8,6 +8,7 @@ import { CONFIG } from 'src/global-config';
 import { SplashScreen } from 'src/components/loading-screen';
 
 import { useAuthContext } from '../hooks';
+import { SubscriptionGuard } from './subscription-guard';
 
 // ----------------------------------------------------------------------
 
@@ -64,5 +65,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <SplashScreen />;
   }
 
-  return <>{children}</>;
+  // Skip subscription check on the resubscribe/expired pages themselves to avoid redirect loops
+  const isSubscriptionPage =
+    pathname === paths.auth.jwt.resubscribe ||
+    pathname === paths.auth.jwt.subscriptionExpired ||
+    pathname === paths.auth.jwt.paymentSetup;
+
+  if (isSubscriptionPage) return <>{children}</>;
+
+  return <SubscriptionGuard>{children}</SubscriptionGuard>;
 }

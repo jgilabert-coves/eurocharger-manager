@@ -18,7 +18,6 @@ import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
-
 const DEFAULT_FORM: CreateClientPayload = {
   name: '',
   email: null,
@@ -50,31 +49,32 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     if (mode !== 'search') return () => {};
     let cancelled = false;
     setLoading(true);
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetcher([
-          endpoints.clients.list,
-          { params: { page: 0, pageSize: 20, searchQuery: search } },
-        ]);
-        if (!cancelled) setClients(res?.data ?? []);
-      } catch {
-        if (!cancelled) setClients([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }, search ? 300 : 0);
+    const timer = setTimeout(
+      async () => {
+        try {
+          const res = await fetcher([
+            endpoints.clients.list,
+            { params: { page: 0, pageSize: 20, searchQuery: search } },
+          ]);
+          if (!cancelled) setClients(res?.data ?? []);
+        } catch {
+          if (!cancelled) setClients([]);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      },
+      search ? 300 : 0
+    );
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
   }, [mode, search]);
 
-  const set = (field: keyof CreateClientPayload) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((p) => ({ ...p, [field]: e.target.value }));
+  const set = (field: keyof CreateClientPayload) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((p) => ({ ...p, [field]: e.target.value }));
 
-  const canCreate =
-    form.name.trim() !== ''
+  const canCreate = form.name.trim() !== '';
 
   const handleCreate = async () => {
     try {
@@ -272,11 +272,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
       ) : (
         <Stack spacing={0.5} sx={{ maxHeight: 240, overflowY: 'auto' }}>
           {clients.length === 0 ? (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ py: 2, textAlign: 'center' }}
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
               No se han encontrado clientes
             </Typography>
           ) : (
@@ -309,7 +305,6 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
           )}
         </Stack>
       )}
-
     </Stack>
   );
 }

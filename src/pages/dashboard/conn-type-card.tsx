@@ -56,18 +56,51 @@ export function ConnTypeCard() {
 
               return (
                 <Box key={currentType} sx={{ bgcolor: style.bg, borderRadius: 2, p: 2 }}>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: p.grey[900] }}>{currentType}</Typography>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mb: 1 }}
+                  >
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: p.grey[900] }}>
+                      {currentType}
+                    </Typography>
                     <Typography variant="subtitle2" sx={{ color: p.grey[900] }}>
                       {inUse}
-                      <Typography component="span" variant="body2" sx={{ color: p.grey[500] }}>/{total}</Typography>
+                      <Typography component="span" variant="body2" sx={{ color: p.grey[500] }}>
+                        /{total}
+                      </Typography>
                     </Typography>
                   </Stack>
-                  <Typography variant="caption" sx={{ color: p.grey[500], display: 'block', mb: 1 }}>{style.desc}</Typography>
-                  <Box sx={{ height: 5, bgcolor: p.common.white, borderRadius: '10px', overflow: 'hidden' }}>
-                    <Box sx={{ width: `${pctVal}%`, height: '100%', bgcolor: style.color, borderRadius: '10px' }} />
+                  <Typography
+                    variant="caption"
+                    sx={{ color: p.grey[500], display: 'block', mb: 1 }}
+                  >
+                    {style.desc}
+                  </Typography>
+                  <Box
+                    sx={{
+                      height: 5,
+                      bgcolor: p.common.white,
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: `${pctVal}%`,
+                        height: '100%',
+                        bgcolor: style.color,
+                        borderRadius: '10px',
+                      }}
+                    />
                   </Box>
-                  <Typography variant="caption" sx={{ color: style.color, fontWeight: 600, mt: 0.5, display: 'block' }}>{pctVal}% en uso</Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: style.color, fontWeight: 600, mt: 0.5, display: 'block' }}
+                  >
+                    {pctVal}% en uso
+                  </Typography>
                 </Box>
               );
             })}

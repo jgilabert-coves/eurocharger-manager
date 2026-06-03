@@ -31,6 +31,8 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fToNow, fDateTime } from 'src/utils/format-time';
 
 import { fetcher, endpoints } from 'src/lib/axios';
@@ -41,6 +43,8 @@ import { AlarmCard } from 'src/components/cards/alarm-card';
 import { ResetDialog } from 'src/components/ocpp/reset/dialog';
 import { UnlockDialog } from 'src/components/ocpp/unlock/dialog';
 import { AvailabilityDialog } from 'src/components/ocpp/availability/dialog';
+
+import { useAbility } from 'src/auth/hooks/use-ability';
 
 import { type Alarm } from 'src/types/alarms';
 
@@ -76,9 +80,11 @@ export default function AlarmsView() {
   const [resetTarget, setResetTarget] = useState<SelectedConnector | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const debouncedSearch = useDebounce(searchQuery);
+  const { canOperate } = useAbility();
 
   const { data: res, isLoading } = useQuery({
-    queryKey: ['alarms', 'list', { page, pageSize, searchQuery, sorts }],
+    queryKey: ['alarms', 'list', { page, pageSize, search: debouncedSearch, sorts }],
     queryFn: () =>
       fetcher([
         endpoints.alarms.list,
@@ -86,7 +92,7 @@ export default function AlarmsView() {
           params: {
             page,
             pageSize,
-            searchQuery,
+            searchQuery: debouncedSearch,
             fixed: false,
             ...(sorts.length > 0 && {
               sortQuery: sorts.map((s) => `${s.field}=${s.order}`).join(','),
@@ -199,24 +205,36 @@ export default function AlarmsView() {
               <AlarmCard
                 key={alarm.id}
                 alarm={alarm}
-                onResolve={setResolveTarget}
-                onUnlock={(a) =>
-                  setUnlockTarget({
-                    chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                    connectorId: a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
-                  })
+                onResolve={canOperate() ? setResolveTarget : undefined}
+                onUnlock={
+                  canOperate()
+                    ? (a) =>
+                        setUnlockTarget({
+                          chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                          connectorId:
+                            a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                        })
+                    : undefined
                 }
-                onChangeAvailability={(a) =>
-                  setChangeAvailabilityTarget({
-                    chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                    connectorId: a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
-                  })
+                onChangeAvailability={
+                  canOperate()
+                    ? (a) =>
+                        setChangeAvailabilityTarget({
+                          chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                          connectorId:
+                            a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                        })
+                    : undefined
                 }
-                onReset={(a) =>
-                  setResetTarget({
-                    chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                    connectorId: a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
-                  })
+                onReset={
+                  canOperate()
+                    ? (a) =>
+                        setResetTarget({
+                          chargepointId: a.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                          connectorId:
+                            a.chargingStation?.chargepoints?.[0]?.connectors?.[0]?.ocppId ?? 0,
+                        })
+                    : undefined
                 }
               />
             ))
@@ -422,66 +440,70 @@ export default function AlarmsView() {
                         {/* Acciones */}
                         <TableCell align="right">
                           <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
-                            <Tooltip title="Marcar como resuelta">
-                              <IconButton
-                                size="small"
-                                color="success"
-                                onClick={() => setResolveTarget(alarm)}
-                              >
-                                <Iconify icon="eva:checkmark-circle-2-outline" width={18} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Desbloquear conector">
-                              <IconButton
-                                size="small"
-                                color="info"
-                                onClick={() =>
-                                  setUnlockTarget({
-                                    chargepointId:
-                                      alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                                    connectorId:
-                                      alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
-                                        ?.ocppId ?? 0,
-                                  })
-                                }
-                              >
-                                <Iconify icon="mdi:lock-open-outline" width={18} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Cambiar disponibilidad">
-                              <IconButton
-                                size="small"
-                                color="success"
-                                onClick={() =>
-                                  setChangeAvailabilityTarget({
-                                    chargepointId:
-                                      alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                                    connectorId:
-                                      alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
-                                        ?.ocppId ?? 0,
-                                  })
-                                }
-                              >
-                                <Iconify icon="mdi:toggle-switch-outline" width={18} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Reiniciar cargador">
-                              <IconButton
-                                size="small"
-                                color="warning"
-                                onClick={() =>
-                                  setResetTarget({
-                                    chargepointId:
-                                      alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
-                                    connectorId:
-                                      alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
-                                        ?.ocppId ?? 0,
-                                  })
-                                }
-                              >
-                                <Iconify icon="mdi:sync" width={18} />
-                              </IconButton>
-                            </Tooltip>
+                            {canOperate() && (
+                              <>
+                                <Tooltip title="Marcar como resuelta">
+                                  <IconButton
+                                    size="small"
+                                    color="success"
+                                    onClick={() => setResolveTarget(alarm)}
+                                  >
+                                    <Iconify icon="eva:checkmark-circle-2-outline" width={18} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Desbloquear conector">
+                                  <IconButton
+                                    size="small"
+                                    color="info"
+                                    onClick={() =>
+                                      setUnlockTarget({
+                                        chargepointId:
+                                          alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                                        connectorId:
+                                          alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
+                                            ?.ocppId ?? 0,
+                                      })
+                                    }
+                                  >
+                                    <Iconify icon="mdi:lock-open-outline" width={18} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Cambiar disponibilidad">
+                                  <IconButton
+                                    size="small"
+                                    color="success"
+                                    onClick={() =>
+                                      setChangeAvailabilityTarget({
+                                        chargepointId:
+                                          alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                                        connectorId:
+                                          alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
+                                            ?.ocppId ?? 0,
+                                      })
+                                    }
+                                  >
+                                    <Iconify icon="mdi:toggle-switch-outline" width={18} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Reiniciar cargador">
+                                  <IconButton
+                                    size="small"
+                                    color="warning"
+                                    onClick={() =>
+                                      setResetTarget({
+                                        chargepointId:
+                                          alarm.chargingStation?.chargepoints?.[0]?.id ?? 0,
+                                        connectorId:
+                                          alarm.chargingStation?.chargepoints?.[0]?.connectors?.[0]
+                                            ?.ocppId ?? 0,
+                                      })
+                                    }
+                                  >
+                                    <Iconify icon="mdi:sync" width={18} />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
                           </Stack>
                         </TableCell>
                       </TableRow>

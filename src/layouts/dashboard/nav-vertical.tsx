@@ -51,7 +51,12 @@ export function NavVertical({
       )}
 
       <Scrollbar fillContent>
-        <NavSectionVertical data={data} cssVars={cssVars} currentRole={currentRole} sx={{ px: 2, flex: '1 1 auto' }} />
+        <NavSectionVertical
+          data={data}
+          cssVars={cssVars}
+          currentRole={currentRole}
+          sx={{ px: 2, flex: '1 1 auto' }}
+        />
       </Scrollbar>
 
       {slots?.bottomArea}

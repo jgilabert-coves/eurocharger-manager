@@ -54,8 +54,8 @@ const STEPS_CLIENT = ['Estación', 'Cargador', 'Resumen'];
 type StationMode = 'existing' | 'new';
 type GroupMode = 'existing' | 'new';
 
-type Account = { id: number; business_name: string; };
-type AccountsResponse = { data: Account[]; total: number; };
+type Account = { id: number; business_name: string };
+type AccountsResponse = { data: Account[]; total: number };
 
 const SPAIN_PROVINCES = [
   'Álava',
@@ -472,9 +472,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
           }}
         >
           {accounts
-            .filter((a) =>
-              a.business_name.toLowerCase().includes(accountSearch.toLowerCase())
-            )
+            .filter((a) => a.business_name.toLowerCase().includes(accountSearch.toLowerCase()))
             .map((acc) => {
               const isSelected = selectedAccountId === acc.id;
               return (

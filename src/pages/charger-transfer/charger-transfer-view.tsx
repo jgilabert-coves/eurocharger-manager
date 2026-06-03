@@ -27,9 +27,9 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-type Account = { id: number; business_name: string; };
-type AccountsResponse = { data: Account[]; total: number; };
-type ChargepointsApiResponse = { data: Chargepoint[]; total: number; };
+type Account = { id: number; business_name: string };
+type AccountsResponse = { data: Account[]; total: number };
+type ChargepointsApiResponse = { data: Chargepoint[]; total: number };
 
 const STEPS = ['Cuenta origen', 'Cuenta destino', 'Confirmar traspaso'];
 
@@ -48,9 +48,7 @@ function AccountSearchList({
 }) {
   const [search, setSearch] = useState('');
   const filtered = accounts.filter(
-    (a) =>
-      a.id !== excludeId &&
-      a.business_name.toLowerCase().includes(search.toLowerCase())
+    (a) => a.id !== excludeId && a.business_name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -149,13 +147,17 @@ export default function ChargerTransferView() {
   });
   const accounts: Account[] = accountsData?.data ?? [];
 
-  const { data: fromChargepointsData, isLoading: chargersLoading } = useQuery<ChargepointsApiResponse>({
-    queryKey: ['chargepoints-by-account', fromAccount?.id],
-    queryFn: () =>
-      fetcher([endpoints.chargepoints.list, { params: { account_id: fromAccount!.id, pageSize: 1000 } }]),
-    enabled: !!fromAccount,
-    staleTime: 2 * 60 * 1000,
-  });
+  const { data: fromChargepointsData, isLoading: chargersLoading } =
+    useQuery<ChargepointsApiResponse>({
+      queryKey: ['chargepoints-by-account', fromAccount?.id],
+      queryFn: () =>
+        fetcher([
+          endpoints.chargepoints.list,
+          { params: { account_id: fromAccount!.id, pageSize: 1000 } },
+        ]),
+      enabled: !!fromAccount,
+      staleTime: 2 * 60 * 1000,
+    });
   const fromChargepoints: Chargepoint[] = fromChargepointsData?.data ?? [];
 
   const { data: toGroupsData, isLoading: groupsLoading } = useQuery<ChargerGroupsResponse>({
@@ -245,8 +247,7 @@ export default function ChargerTransferView() {
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             {transferredCount} cargador{transferredCount !== 1 ? 'es' : ''} traspasado
-            {transferredCount !== 1 ? 's' : ''} de{' '}
-            <strong>{fromAccount?.business_name}</strong> a{' '}
+            {transferredCount !== 1 ? 's' : ''} de <strong>{fromAccount?.business_name}</strong> a{' '}
             <strong>{toAccount?.business_name}</strong>. Las suscripciones han sido actualizadas.
           </Typography>
           <Button variant="contained" onClick={handleReset}>
@@ -284,11 +285,21 @@ export default function ChargerTransferView() {
 
         {fromAccount && (
           <Box>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 1 }}
+            >
               <Typography variant="subtitle2">
                 Cargadores a traspasar{' '}
                 {selectedChargerIds.length > 0 && (
-                  <Chip label={selectedChargerIds.length} size="small" color="primary" sx={{ ml: 0.5 }} />
+                  <Chip
+                    label={selectedChargerIds.length}
+                    size="small"
+                    color="primary"
+                    sx={{ ml: 0.5 }}
+                  />
                 )}
               </Typography>
               {fromChargepoints.length > 0 && (
@@ -439,13 +450,9 @@ export default function ChargerTransferView() {
     </Stack>
   );
 
-  const selectedChargers = fromChargepoints.filter((cp) =>
-    selectedChargerIds.includes(cp.id)
-  );
+  const selectedChargers = fromChargepoints.filter((cp) => selectedChargerIds.includes(cp.id));
   const destinationGroup =
-    groupMode === 'new'
-      ? newGroupName
-      : (toGroups.find((g) => g.id === toGroupId)?.name ?? '');
+    groupMode === 'new' ? newGroupName : (toGroups.find((g) => g.id === toGroupId)?.name ?? '');
 
   const renderStep2 = () => (
     <Stack spacing={2}>
@@ -456,7 +463,8 @@ export default function ChargerTransferView() {
       )}
 
       <Alert severity="warning" icon={<Iconify icon="solar:danger-triangle-bold" width={20} />}>
-        Esta operación es irreversible. Los cargadores y las suscripciones se actualizarán de inmediato.
+        Esta operación es irreversible. Los cargadores y las suscripciones se actualizarán de
+        inmediato.
       </Alert>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -468,7 +476,13 @@ export default function ChargerTransferView() {
             variant="caption"
             color="error.dark"
             fontWeight={700}
-            sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.65rem', display: 'block', mb: 0.5 }}
+            sx={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              fontSize: '0.65rem',
+              display: 'block',
+              mb: 0.5,
+            }}
           >
             Pierde
           </Typography>
@@ -490,7 +504,13 @@ export default function ChargerTransferView() {
             variant="caption"
             color="success.dark"
             fontWeight={700}
-            sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.65rem', display: 'block', mb: 0.5 }}
+            sx={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              fontSize: '0.65rem',
+              display: 'block',
+              mb: 0.5,
+            }}
           >
             Recibe
           </Typography>
@@ -506,7 +526,13 @@ export default function ChargerTransferView() {
           variant="caption"
           color="text.secondary"
           fontWeight={600}
-          sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.65rem', display: 'block', mb: 1 }}
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            fontSize: '0.65rem',
+            display: 'block',
+            mb: 1,
+          }}
         >
           Propietario destino
         </Typography>
@@ -518,7 +544,13 @@ export default function ChargerTransferView() {
           variant="caption"
           color="text.secondary"
           fontWeight={600}
-          sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.65rem', display: 'block', mb: 1 }}
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            fontSize: '0.65rem',
+            display: 'block',
+            mb: 1,
+          }}
         >
           Cargadores a traspasar ({selectedChargers.length})
         </Typography>
@@ -539,7 +571,8 @@ export default function ChargerTransferView() {
         Traspasar cargadores
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-        Transfiere cargadores entre cuentas. Las suscripciones de ambas cuentas se actualizarán automáticamente.
+        Transfiere cargadores entre cuentas. Las suscripciones de ambas cuentas se actualizarán
+        automáticamente.
       </Typography>
 
       <Stepper activeStep={step} sx={{ mb: 4 }}>
@@ -578,7 +611,9 @@ export default function ChargerTransferView() {
             color="error"
             disabled={transfer.isPending}
             onClick={() => transfer.mutate()}
-            startIcon={transfer.isPending ? <CircularProgress size={14} color="inherit" /> : undefined}
+            startIcon={
+              transfer.isPending ? <CircularProgress size={14} color="inherit" /> : undefined
+            }
           >
             {transfer.isPending ? 'Traspasando...' : 'Confirmar traspaso'}
           </Button>

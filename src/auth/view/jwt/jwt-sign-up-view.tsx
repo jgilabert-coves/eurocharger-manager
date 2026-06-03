@@ -225,7 +225,9 @@ export function JwtSignUpView() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { data: discountRes } = useQuery<{ data: { active: boolean; percentOff?: number; durationInMonths?: number } }>({
+  const { data: discountRes } = useQuery<{
+    data: { active: boolean; percentOff?: number; durationInMonths?: number };
+  }>({
     queryKey: ['discount-info'],
     queryFn: () => fetcher(endpoints.auth.discountInfo),
     staleTime: 5 * 60 * 1000,
@@ -374,14 +376,17 @@ export function JwtSignUpView() {
         </Form>
       )}
 
-      {step === 1 && (
-        <PlanSelector onConfirm={handlePlanConfirmed} confirmLoading={false} />
-      )}
+      {step === 1 && <PlanSelector onConfirm={handlePlanConfirmed} confirmLoading={false} />}
 
       {step === 2 && selectedPlan && (
         <Elements
           stripe={stripePromise}
-          options={{ mode: 'subscription', currency: 'eur', amount: planAmount, paymentMethodCreation: 'manual' }}
+          options={{
+            mode: 'subscription',
+            currency: 'eur',
+            amount: planAmount,
+            paymentMethodCreation: 'manual',
+          }}
         >
           <PaymentForm
             plan={selectedPlan}

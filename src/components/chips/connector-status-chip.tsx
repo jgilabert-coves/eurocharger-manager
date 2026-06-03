@@ -73,7 +73,7 @@ export function ConnectorStatusChip({
         variant={variant}
         sx={{
           ...(variant === 'outlined' && { color: 'text.primary', borderWidth: 1 }),
-          ...(variant === 'soft' && { color: 'text.primary', fontWeight: '600'}),
+          ...(variant === 'soft' && { color: 'text.primary', fontWeight: '600' }),
           ...sx,
         }}
       >

@@ -53,7 +53,12 @@ export function HeatmapCard() {
           {Array.from({ length: 7 }).map((_, ri) => [
             <Skeleton key={`l${ri}`} variant="text" width={28} sx={{ ml: 'auto' }} />,
             ...Array.from({ length: 7 }).map((__, ci) => (
-              <Skeleton key={`${ri}-${ci}`} variant="rounded" height={20} sx={{ borderRadius: 1 }} />
+              <Skeleton
+                key={`${ri}-${ci}`}
+                variant="rounded"
+                height={20}
+                sx={{ borderRadius: 1 }}
+              />
             )),
           ])}
         </Box>
@@ -73,12 +78,28 @@ export function HeatmapCard() {
             </Typography>
           ))}
           {data.map((row, ri) => [
-            <Typography key={`l${ri}`} variant="caption" sx={{ color: g[400], textAlign: 'right', pr: 0.5 }}>
+            <Typography
+              key={`l${ri}`}
+              variant="caption"
+              sx={{ color: g[400], textAlign: 'right', pr: 0.5 }}
+            >
               {hours[ri]}
             </Typography>,
             ...row.map((v, ci) => (
-              <Tooltip key={`${ri}-${ci}`} title={`${days[ci]} ${hours[ri]}: ${v} recargas`} arrow placement="top">
-                <Box sx={{ height: 20, borderRadius: 1, bgcolor: getColor(v, maxV), cursor: 'default' }} />
+              <Tooltip
+                key={`${ri}-${ci}`}
+                title={`${days[ci]} ${hours[ri]}: ${v} recargas`}
+                arrow
+                placement="top"
+              >
+                <Box
+                  sx={{
+                    height: 20,
+                    borderRadius: 1,
+                    bgcolor: getColor(v, maxV),
+                    cursor: 'default',
+                  }}
+                />
               </Tooltip>
             )),
           ])}

@@ -1,3 +1,5 @@
+import type { SubscriptionStatus } from 'src/types/billing';
+
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -34,6 +36,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import axiosInstance, { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { CreateSubscriptionDialog } from 'src/components/admin/create-subscription-dialog';
 
 import { CONFIG } from '../../global-config';
 
@@ -41,17 +44,7 @@ import { CONFIG } from '../../global-config';
 
 const metadata = { title: `Gestión de suscripciones | ${CONFIG.appName}` };
 
-type SubscriptionStatus =
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'canceled'
-  | 'paused'
-  | 'incomplete'
-  | 'incomplete_expired'
-  | 'unpaid';
-
-type SubscriptionItem = {
+type AdminSubscriptionItem = {
   id: string;
   type: 'base' | 'chargers' | 'guests' | 'sim' | 'call_center';
   quantity: number;
@@ -70,7 +63,7 @@ type AdminSubscription = {
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
-  items: SubscriptionItem[];
+  items: AdminSubscriptionItem[];
 };
 
 type StripeDiffItem = {
@@ -93,7 +86,7 @@ type StripeDiffResponse = {
   status_code: number;
   data: {
     has_stripe: boolean;
-    local_items?: SubscriptionItem[];
+    local_items?: AdminSubscriptionItem[];
     stripe_items?: StripeDiffItem[];
     diffs?: StripeDiffEntry[];
   };
@@ -155,7 +148,13 @@ export default function SubscriptionsAdminView() {
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [syncStatusId, setSyncStatusId] = useState<string | null>(null);
 
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
     open: false,
     message: '',
     severity: 'success',
@@ -179,7 +178,9 @@ export default function SubscriptionsAdminView() {
     setDiffOpen(true);
     setDiffLoading(true);
     try {
-      const res: StripeDiffResponse = await fetcher(endpoints.adminSubscriptions.stripeDiff(sub.id));
+      const res: StripeDiffResponse = await fetcher(
+        endpoints.adminSubscriptions.stripeDiff(sub.id)
+      );
       setDiffData(res.data);
     } catch {
       showSnackbar('Error al cargar el diff de Stripe', 'error');
@@ -264,13 +265,26 @@ export default function SubscriptionsAdminView() {
       </Helmet>
 
       <DashboardContent>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 4 }}>
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{ mb: 4 }}
+        >
           <Box>
             <Typography variant="h4">Gestión de suscripciones</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Administra y sincroniza las suscripciones de todas las cuentas
             </Typography>
           </Box>
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon="solar:add-circle-bold" width={20} />}
+            onClick={() => setCreateOpen(true)}
+          >
+            Nueva suscripción
+          </Button>
         </Stack>
 
         <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -284,7 +298,9 @@ export default function SubscriptionsAdminView() {
                   <TableCell>Periodo</TableCell>
                   <TableCell>Items</TableCell>
                   <TableCell>Advertencias</TableCell>
-                  <TableCell align="right" sx={{ pr: 3 }}>Acciones</TableCell>
+                  <TableCell align="right" sx={{ pr: 3 }}>
+                    Acciones
+                  </TableCell>
                 </TableRow>
               </TableHead>
 
@@ -307,10 +323,17 @@ export default function SubscriptionsAdminView() {
                   subscriptions.map((sub) => {
                     const activeItems = sub.items.filter((i) => i.quantity > 0);
                     const hasNullStripeItem = activeItems.some((i) => i.stripe_item_id === null);
-                    const isWarningStatus = ['past_due', 'incomplete', 'incomplete_expired'].includes(sub.status);
+                    const isWarningStatus = [
+                      'past_due',
+                      'incomplete',
+                      'incomplete_expired',
+                    ].includes(sub.status);
 
                     return (
-                      <TableRow key={sub.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                      <TableRow
+                        key={sub.id}
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                      >
                         <TableCell sx={{ pl: 3 }}>
                           <Typography variant="subtitle2">{sub.account_name}</Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -425,7 +448,7 @@ export default function SubscriptionsAdminView() {
                                 size="small"
                                 color="error"
                                 onClick={() => handleOpenCancel(sub)}
-                                disabled={sub.status === 'canceled'}
+                                disabled={sub.status === 'canceled' || sub.cancel_at_period_end}
                               >
                                 <Iconify icon="solar:trash-bin-trash-bold" width={18} />
                               </IconButton>
@@ -444,9 +467,7 @@ export default function SubscriptionsAdminView() {
 
       {/* Stripe Diff Dialog */}
       <Dialog open={diffOpen} onClose={() => setDiffOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          Diff Stripe — {diffSubscription?.account_name}
-        </DialogTitle>
+        <DialogTitle>Diff Stripe — {diffSubscription?.account_name}</DialogTitle>
         <DialogContent>
           {diffLoading && (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -460,33 +481,41 @@ export default function SubscriptionsAdminView() {
 
           {!diffLoading && diffData?.has_stripe && diffData.diffs && (
             <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Tipo</TableCell>
-                      <TableCell align="right">Cantidad local</TableCell>
-                      <TableCell align="right">Cantidad Stripe</TableCell>
-                      <TableCell align="center">Sincronizado</TableCell>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Tipo</TableCell>
+                    <TableCell align="right">Cantidad local</TableCell>
+                    <TableCell align="right">Cantidad Stripe</TableCell>
+                    <TableCell align="center">Sincronizado</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {diffData.diffs.map((diff, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>{ITEM_LABEL[diff.type] ?? diff.type}</TableCell>
+                      <TableCell align="right">{diff.local_quantity ?? '—'}</TableCell>
+                      <TableCell align="right">{diff.stripe_quantity ?? '—'}</TableCell>
+                      <TableCell align="center">
+                        {diff.in_sync ? (
+                          <Iconify
+                            icon="eva:checkmark-circle-2-fill"
+                            width={20}
+                            sx={{ color: 'success.main' }}
+                          />
+                        ) : (
+                          <Iconify
+                            icon="eva:close-circle-fill"
+                            width={20}
+                            sx={{ color: 'error.main' }}
+                          />
+                        )}
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {diffData.diffs.map((diff, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{ITEM_LABEL[diff.type] ?? diff.type}</TableCell>
-                        <TableCell align="right">{diff.local_quantity ?? '—'}</TableCell>
-                        <TableCell align="right">{diff.stripe_quantity ?? '—'}</TableCell>
-                        <TableCell align="center">
-                          {diff.in_sync ? (
-                            <Iconify icon="eva:checkmark-circle-2-fill" width={20} sx={{ color: 'success.main' }} />
-                          ) : (
-                            <Iconify icon="eva:close-circle-fill" width={20} sx={{ color: 'error.main' }} />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </DialogContent>
         <DialogActions>
@@ -509,8 +538,7 @@ export default function SubscriptionsAdminView() {
         <DialogTitle>¿Cancelar suscripción?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Vas a cancelar la suscripción de{' '}
-            <strong>{cancelSubscription?.account_name}</strong>.
+            Vas a cancelar la suscripción de <strong>{cancelSubscription?.account_name}</strong>.
           </DialogContentText>
           <FormGroup sx={{ mt: 2 }}>
             <FormControlLabel
@@ -534,10 +562,24 @@ export default function SubscriptionsAdminView() {
             onClick={handleConfirmCancel}
             disabled={canceling}
           >
-            {canceling ? 'Cancelando...' : cancelImmediately ? 'Cancelar ahora' : 'Cancelar al final del periodo'}
+            {canceling
+              ? 'Cancelando...'
+              : cancelImmediately
+                ? 'Cancelar ahora'
+                : 'Cancelar al final del periodo'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Create subscription dialog */}
+      <CreateSubscriptionDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
+          showSnackbar('Suscripción creada correctamente');
+        }}
+      />
 
       {/* Snackbar */}
       <Snackbar

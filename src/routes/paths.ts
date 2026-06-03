@@ -26,6 +26,8 @@ export const paths = {
       profileSelect: `${ROOTS.AUTH}/jwt/profile-select`,
       forgotPassword: `${ROOTS.AUTH}/jwt/forgot-password`,
       resetPassword: `${ROOTS.AUTH}/jwt/reset-password`,
+      resubscribe: `${ROOTS.AUTH}/jwt/resubscribe`,
+      subscriptionExpired: `${ROOTS.AUTH}/jwt/subscription-expired`,
     },
     firebase: {
       signIn: `${ROOTS.AUTH}/firebase/sign-in`,

@@ -163,7 +163,10 @@ function formatPeriodLabel(start: Date, end: Date): string {
   return `${dayS} ${monthS} ${s.getFullYear()} – ${dayE} ${monthE} ${e.getFullYear()}`;
 }
 
-function getPeriodType(start: Date, end: Date): { label: string; color: 'success' | 'info' | 'warning' } {
+function getPeriodType(
+  start: Date,
+  end: Date
+): { label: string; color: 'success' | 'info' | 'warning' } {
   const s = new Date(start);
   const e = new Date(end);
   const months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
@@ -235,7 +238,13 @@ export default function InvoicesView() {
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.07em', fontSize: '0.65rem', display: 'block' }}
+                    sx={{
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                      letterSpacing: '0.07em',
+                      fontSize: '0.65rem',
+                      display: 'block',
+                    }}
                   >
                     Total Facturas
                   </Typography>
@@ -266,7 +275,13 @@ export default function InvoicesView() {
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.07em', fontSize: '0.65rem', display: 'block' }}
+                    sx={{
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                      letterSpacing: '0.07em',
+                      fontSize: '0.65rem',
+                      display: 'block',
+                    }}
                   >
                     Total Ingresos
                   </Typography>
@@ -297,7 +312,13 @@ export default function InvoicesView() {
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.07em', fontSize: '0.65rem', display: 'block' }}
+                    sx={{
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                      letterSpacing: '0.07em',
+                      fontSize: '0.65rem',
+                      display: 'block',
+                    }}
                   >
                     Total Pagado
                   </Typography>
@@ -311,7 +332,11 @@ export default function InvoicesView() {
 
           {/* Date range filters */}
           <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Iconify icon="solar:calendar-bold" width={18} sx={{ color: 'text.disabled', mr: 0.5 }} />
+            <Iconify
+              icon="solar:calendar-bold"
+              width={18}
+              sx={{ color: 'text.disabled', mr: 0.5 }}
+            />
             {DATE_FILTER_OPTIONS.map(({ value, label }) => (
               <Button
                 key={value}

@@ -57,6 +57,7 @@ export type ApiUserResponse = {
   account_id: number | null;
   account_name: string | null;
   membership_id: string | null;
+  subscription_status: string | null;
   exp: number;
   iat: number;
 };
@@ -82,7 +83,10 @@ export type SignInResult =
 /** **************************************
  * Sign in
  *************************************** */
-export const signInWithPassword = async ({ email, password }: SignInParams): Promise<SignInResult> => {
+export const signInWithPassword = async ({
+  email,
+  password,
+}: SignInParams): Promise<SignInResult> => {
   try {
     const res = await axios.post(endpoints.auth.signIn, { email, password });
     const { status_code, data, error } = res.data;
@@ -156,7 +160,9 @@ export const switchProfile = async (membershipId: string): Promise<void> => {
 /** **************************************
  * Register and subscribe (atomic)
  *************************************** */
-export const registerAndSubscribe = async (params: RegisterAndSubscribeParams): Promise<RegisterAndSubscribeResult> => {
+export const registerAndSubscribe = async (
+  params: RegisterAndSubscribeParams
+): Promise<RegisterAndSubscribeResult> => {
   try {
     const res = await axios.post(endpoints.auth.registerAndSubscribe, {
       fullName: params.fullName,
@@ -194,7 +200,13 @@ export const registerAndSubscribe = async (params: RegisterAndSubscribeParams): 
 /** **************************************
  * Sign up
  *************************************** */
-export const signUp = async ({ email, password, fullName, cif, phone }: SignUpParams): Promise<SignUpResult> => {
+export const signUp = async ({
+  email,
+  password,
+  fullName,
+  cif,
+  phone,
+}: SignUpParams): Promise<SignUpResult> => {
   const params: Record<string, string> = { email, password, fullName };
   if (cif) params.cif = cif;
   if (phone) params.phone = phone;

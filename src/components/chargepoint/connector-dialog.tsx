@@ -166,7 +166,9 @@ export function ConnectorDialog({
           variant="contained"
           disabled={!canSubmit || loading}
           onClick={handleSubmit}
-          startIcon={loading ? <Box component={CircularProgress} size={14} color="inherit" /> : undefined}
+          startIcon={
+            loading ? <Box component={CircularProgress} size={14} color="inherit" /> : undefined
+          }
         >
           {isEdit ? 'Guardar' : 'Añadir'}
         </Button>

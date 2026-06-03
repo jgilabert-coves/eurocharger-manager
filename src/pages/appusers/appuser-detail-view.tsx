@@ -37,7 +37,6 @@ import { TransactionsTable } from 'src/components/transactions-table';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
 
-
 // ----------------------------------------------------------------------
 
 const metadata = { title: `Usuario | ${CONFIG.appName}` };
@@ -134,6 +133,7 @@ function formatAddress(user: AppUser): string {
 }
 
 function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => void }) {
+  const { isViewOnly } = useAbility();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
@@ -207,7 +207,7 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
     <SectionCard
       title="Datos personales"
       action={
-        !editing ? (
+        !editing && !isViewOnly() ? (
           <Button
             size="small"
             startIcon={<Iconify icon="mdi:pencil-outline" width={14} />}
@@ -316,7 +316,7 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
               value={countryId || null}
               onChange={(e) => {
                 setCountryId(Number(e.target.value));
-                setStateProvinceId(0);
+                setStateProvinceId(null);
               }}
             >
               <MenuItem value="">
@@ -412,6 +412,7 @@ function BillingSection({
   appUserId: number;
   onSaved: () => void;
 }) {
+  const { isViewOnly } = useAbility();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [vatId, setVatId] = useState('');
@@ -482,15 +483,15 @@ function BillingSection({
       title="Datos de facturación"
       action={
         !editing ? (
-          <Button
-            size="small"
-            startIcon={
-              <Iconify icon={billing ? 'mdi:pencil-outline' : 'mdi:plus'} width={14} />
-            }
-            onClick={() => setEditing(true)}
-          >
-            {billing ? 'Editar' : 'Añadir'}
-          </Button>
+          !isViewOnly() ? (
+            <Button
+              size="small"
+              startIcon={<Iconify icon={billing ? 'mdi:pencil-outline' : 'mdi:plus'} width={14} />}
+              onClick={() => setEditing(true)}
+            >
+              {billing ? 'Editar' : 'Añadir'}
+            </Button>
+          ) : null
         ) : undefined
       }
     >
@@ -747,14 +748,13 @@ export default function AppUserDetailView() {
   const { id } = useParams();
   const router = useRouter();
 
-  const [user, setUser] = useState<AppUser | undefined>();  
+  const [user, setUser] = useState<AppUser | undefined>();
   const [billing, setBilling] = useState<BillingDetails | undefined>();
   const [loading, setLoading] = useState(true);
 
   const loadUser = async () => {
     try {
       const response = await fetcher(endpoints.appUsers.single(Number(id)));
-      console.log(response);
       setUser(response.data ?? (response as unknown as AppUser));
     } catch (err) {
       console.error('Error fetching user:', err);
@@ -773,8 +773,7 @@ export default function AppUserDetailView() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await loadUser();
-      await loadBilling();
+      await Promise.all([loadUser(), loadBilling()]);
       setLoading(false);
     };
     load();

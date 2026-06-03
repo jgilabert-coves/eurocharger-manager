@@ -41,19 +41,22 @@ export function AppUserSearchSelect({
     let cancelled = false;
     setLoading(true);
 
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetcher([
-          endpoints.appUsers.list,
-          { params: { page: 0, pageSize: 10, searchQuery: search } },
-        ]);
-        if (!cancelled) setUsers(res?.data ?? []);
-      } catch {
-        if (!cancelled) setUsers([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }, search ? 300 : 0);
+    const timer = setTimeout(
+      async () => {
+        try {
+          const res = await fetcher([
+            endpoints.appUsers.list,
+            { params: { page: 0, pageSize: 10, searchQuery: search } },
+          ]);
+          if (!cancelled) setUsers(res?.data ?? []);
+        } catch {
+          if (!cancelled) setUsers([]);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      },
+      search ? 300 : 0
+    );
 
     return () => {
       cancelled = true;
@@ -111,10 +114,7 @@ export function AppUserSearchSelect({
             />
           )}
           <IconButton size="small" sx={{ color: 'text.secondary', p: 0.25 }}>
-            <Iconify
-              icon={open ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'}
-              width={18}
-            />
+            <Iconify icon={open ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
           </IconButton>
         </Stack>
       </Stack>

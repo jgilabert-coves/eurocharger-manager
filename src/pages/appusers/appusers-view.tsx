@@ -25,6 +25,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -61,13 +63,21 @@ export default function AppUsersView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [orderBy, setOrderBy] = useState('id');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const debouncedSearch = useDebounce(searchQuery);
 
   const { data, isFetching } = useQuery<AppUsersResponse>({
-    queryKey: ['appusers', page, pageSize, searchQuery, orderBy, order],
+    queryKey: ['appusers', page, pageSize, debouncedSearch, orderBy, order],
     queryFn: () =>
       fetcher([
         endpoints.appUsers.list,
-        { params: { page, pageSize, searchQuery, sortQuery: `${orderBy}=${order}` } },
+        {
+          params: {
+            page,
+            pageSize,
+            searchQuery: debouncedSearch,
+            sortQuery: `${orderBy}=${order}`,
+          },
+        },
       ]),
   });
 

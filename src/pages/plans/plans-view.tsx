@@ -36,9 +36,7 @@ const metadata = { title: `Planes | ${CONFIG.appName}` };
 
 function formatCents(cents: number | null | undefined): string {
   if (cents == null) return '—';
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
-    cents / 100
-  );
+  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 }
 
 // ----------------------------------------------------------------------
@@ -199,7 +197,12 @@ export default function PlansView() {
                       </TableCell>
 
                       <TableCell align="right" sx={{ pr: 3 }}>
-                        <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={0.5}>
+                        <Stack
+                          direction="row"
+                          justifyContent="flex-end"
+                          alignItems="center"
+                          spacing={0.5}
+                        >
                           <Tooltip title="Editar plan">
                             <IconButton size="small" onClick={() => setEditPlan(plan)}>
                               <Iconify icon="eva:edit-2-fill" width={18} />

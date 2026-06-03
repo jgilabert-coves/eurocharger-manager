@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card'; 
+import Card from '@mui/material/Card';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
@@ -38,9 +38,7 @@ type PlanCardProps = {
 
 function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
   const basePrice =
-    period === 'annual'
-      ? plan.items.base.annual?.priceCents
-      : plan.items.base.monthly?.priceCents;
+    period === 'annual' ? plan.items.base.annual?.priceCents : plan.items.base.monthly?.priceCents;
 
   const annualMonthlyEquiv =
     period === 'annual' && plan.items.base.annual

@@ -210,11 +210,7 @@ export function JwtPaymentSetupView() {
 
           {clientSecret ? (
             <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <PaymentForm
-                plan={selectedPlan}
-                billingPeriod={billingPeriod}
-                onBack={handleBack}
-              />
+              <PaymentForm plan={selectedPlan} billingPeriod={billingPeriod} onBack={handleBack} />
             </Elements>
           ) : (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

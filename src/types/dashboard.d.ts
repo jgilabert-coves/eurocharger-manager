@@ -1,4 +1,3 @@
-
 export type DashboardCardResponse = {
   status_code: number;
   data: string | null;
@@ -19,7 +18,6 @@ export type DashboardConnectorsResponse = {
   number: number;
   status: string;
 };
-
 
 export type DashboardChargingStats = {
   activeCharges: number;
@@ -67,7 +65,6 @@ export type StatsChartResponse = {
   periods: string[];
   data: Record<string, StatsPeriodData>;
 };
-
 
 /** Totals for connector statuses */
 export type ConnectorStatusTotals = {

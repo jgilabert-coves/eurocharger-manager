@@ -62,7 +62,10 @@ const DEFAULT_FORM: CreateManagerUserPayload = {
 };
 
 export function CreateManagerUserDialog({ open, onClose, onSuccess }: Props) {
-  const [form, setForm] = useState<CreateManagerUserPayload>({ ...DEFAULT_FORM, password: generatePassword() });
+  const [form, setForm] = useState<CreateManagerUserPayload>({
+    ...DEFAULT_FORM,
+    password: generatePassword(),
+  });
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -76,7 +79,7 @@ export function CreateManagerUserDialog({ open, onClose, onSuccess }: Props) {
     form.last_name.trim() !== '' &&
     form.email.trim() !== '' &&
     form.password.trim() !== '' &&
-    form.role !== '' as any;
+    form.role !== ('' as any);
 
   const handleRoleChange = (role: ManagerUserRole) => {
     setForm((f) => ({ ...f, role, client_id: role === 'eurocharger' ? null : f.client_id }));

@@ -16,8 +16,12 @@ export function MantenimientoCard() {
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1.5, mb: 2.5 }}>
         {MANT.map(({ label, v, delta, up }) => (
           <Box key={label} sx={{ textAlign: 'center' }}>
-            <Typography variant="caption" sx={{ color: tk.inkLighter, display: 'block', mb: 0.5 }}>{label}</Typography>
-            <Typography variant="h4" sx={{ color: tk.inkDarkest, mb: 0.5 }}>{v}</Typography>
+            <Typography variant="caption" sx={{ color: tk.inkLighter, display: 'block', mb: 0.5 }}>
+              {label}
+            </Typography>
+            <Typography variant="h4" sx={{ color: tk.inkDarkest, mb: 0.5 }}>
+              {v}
+            </Typography>
             <Typography
               variant="caption"
               sx={{

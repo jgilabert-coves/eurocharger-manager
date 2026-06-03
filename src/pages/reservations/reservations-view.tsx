@@ -22,6 +22,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fDateTime } from 'src/utils/format-time';
 
 import { fetcher, endpoints } from 'src/lib/axios';
@@ -57,6 +59,7 @@ export default function ReservationsView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [orderBy, setOrderBy] = useState('createdAt');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const debouncedSearch = useDebounce(searchQuery);
 
   const fetchReservations = useCallback(async () => {
     try {
@@ -66,7 +69,7 @@ export default function ReservationsView() {
           page,
           pageSize,
           sortQuery: `${orderBy}=${order}`,
-          searchQuery,
+          searchQuery: debouncedSearch,
         },
       };
       const result: ReservationsResponse = await fetcher([endpoints.reservations.list, queryArgs]);
@@ -77,7 +80,7 @@ export default function ReservationsView() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, searchQuery, orderBy, order]);
+  }, [page, pageSize, debouncedSearch, orderBy, order]);
 
   useEffect(() => {
     fetchReservations();

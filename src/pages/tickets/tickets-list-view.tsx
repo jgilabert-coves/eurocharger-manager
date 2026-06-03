@@ -35,6 +35,8 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fDateTime } from 'src/utils/format-time';
 
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -44,6 +46,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { AppUserSearchSelect } from 'src/components/app-users/app-user-search-select';
 import { StationSearchSelect } from 'src/components/chargepoint/station-search-select';
+
+import { useAbility } from 'src/auth/hooks/use-ability';
 
 import { CONFIG } from '../../global-config';
 
@@ -89,14 +93,20 @@ export default function TicketsListView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<TicketStatus | ''>('');
   const [typeFilter, setTypeFilter] = useState<TicketType | ''>('');
+  const debouncedSearch = useDebounce(searchQuery);
 
+  const { isViewOnly } = useAbility();
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedStation, setSelectedStation] = useState<ChargingStation | null>(null);
   const [selectedUser, setSelectedUser] = useState<AppUserDatatableItem | null>(null);
 
   const { data: res, isLoading } = useQuery<TicketsResponse>({
-    queryKey: ['tickets', 'list', { page, pageSize, searchQuery, statusFilter, typeFilter }],
+    queryKey: [
+      'tickets',
+      'list',
+      { page, pageSize, search: debouncedSearch, statusFilter, typeFilter },
+    ],
     queryFn: () =>
       fetcher([
         endpoints.tickets.list,
@@ -104,7 +114,7 @@ export default function TicketsListView() {
           params: {
             page,
             pageSize,
-            ...(searchQuery ? { searchQuery } : {}),
+            ...(debouncedSearch ? { searchQuery: debouncedSearch } : {}),
             ...(statusFilter ? { status: statusFilter } : {}),
             ...(typeFilter ? { type: typeFilter } : {}),
           },
@@ -158,13 +168,15 @@ export default function TicketsListView() {
       <DashboardContent>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
           <Typography variant="h4">Incidencias</Typography>
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-            onClick={() => setCreateOpen(true)}
-          >
-            Nuevo ticket
-          </Button>
+          {!isViewOnly() && (
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={() => setCreateOpen(true)}
+            >
+              Nuevo ticket
+            </Button>
+          )}
         </Stack>
 
         {/* Search */}

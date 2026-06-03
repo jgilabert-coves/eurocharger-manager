@@ -24,10 +24,7 @@ export const chargepointService = {
     return res;
   },
 
-  startTransaction: async (
-    chargepointId: number,
-    transactionData: OCPPStartTrasactionRequest
-  ) => {
+  startTransaction: async (chargepointId: number, transactionData: OCPPStartTrasactionRequest) => {
     const url = endpoints.chargepoints.single(chargepointId) + endpoints.ocpp.startTransaction;
     const payload = {
       ...transactionData,
@@ -80,5 +77,5 @@ export const chargepointService = {
     };
     const res: OCPPAuthorizationResponse = await post(url, payload);
     return res;
-  }
+  },
 };

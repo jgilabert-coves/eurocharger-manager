@@ -2,8 +2,8 @@ import type { AppUser } from 'src/types/appuser';
 import type { ChargingStation } from 'src/types/charging_stations';
 import type { ChargingStationsPrivilege } from 'src/types/privileges';
 
+import { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
@@ -31,6 +31,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
+
+import { useDebounce } from 'src/hooks/use-debounce';
 
 import { fDateTime } from 'src/utils/format-time';
 
@@ -65,15 +67,16 @@ export default function AuthorizationsListView() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const debouncedSearch = useDebounce(searchQuery);
 
   // Fetch privileges
   const { data: res, isLoading } = useQuery({
-    queryKey: ['privileges', page, rowsPerPage, searchQuery],
+    queryKey: ['privileges', page, rowsPerPage, debouncedSearch],
     queryFn: () =>
       fetcher([
         endpoints.privileges.list,
         {
-          params: { page, pageSize: rowsPerPage, searchQuery },
+          params: { page, pageSize: rowsPerPage, searchQuery: debouncedSearch },
         },
       ]) as Promise<PrivilegesResponse>,
   });
@@ -359,15 +362,9 @@ function AddPrivilegeDialog({
   isSubmitting,
 }: AddPrivilegeDialogProps) {
   const [userSearch, setUserSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebounce(userSearch);
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   const [selectedStationIds, setSelectedStationIds] = useState<number[]>([]);
-
-  // Debounce user search
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(userSearch), 300);
-    return () => clearTimeout(timer);
-  }, [userSearch]);
 
   // Search users from API
   const { data: usersRes, isFetching: searchingUsers } = useQuery({
@@ -398,7 +395,6 @@ function AddPrivilegeDialog({
     setSelectedUser(null);
     setSelectedStationIds([]);
     setUserSearch('');
-    setDebouncedSearch('');
   };
 
   const handleClose = () => {

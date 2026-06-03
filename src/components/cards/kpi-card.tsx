@@ -28,7 +28,16 @@ function resolvePalette(key: PaletteKey) {
   return themeConfig.palette[key];
 }
 
-export function KpiCard({ title, value, subtitle, delta, trend, icon, palette, href }: KpiCardProps) {
+export function KpiCard({
+  title,
+  value,
+  subtitle,
+  delta,
+  trend,
+  icon,
+  palette,
+  href,
+}: KpiCardProps) {
   const colors = resolvePalette(palette);
 
   return (
@@ -43,10 +52,8 @@ export function KpiCard({ title, value, subtitle, delta, trend, icon, palette, h
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="left" spacing={1}>
-        <Iconify icon={icon} width={24}/>
-        <Typography variant="h6">
-          {title}
-        </Typography>
+        <Iconify icon={icon} width={24} />
+        <Typography variant="h6">{title}</Typography>
       </Stack>
       <Typography variant="h4">{value}</Typography>
       <Stack direction="row" alignItems="center" spacing={1}>

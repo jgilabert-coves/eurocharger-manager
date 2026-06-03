@@ -21,6 +21,8 @@ const Jwt = {
   ProfileSelectPage: lazy(() => import('src/pages/auth/jwt/profile-select')),
   ForgotPasswordPage: lazy(() => import('src/pages/auth/jwt/forgot-password')),
   ResetPasswordPage: lazy(() => import('src/pages/auth/jwt/reset-password')),
+  ResubscribePage: lazy(() => import('src/pages/auth/jwt/resubscribe')),
+  SubscriptionExpiredPage: lazy(() => import('src/pages/auth/jwt/subscription-expired')),
 };
 
 const authJwt = {
@@ -86,6 +88,28 @@ const authJwt = {
             <Jwt.ResetPasswordPage />
           </AuthSplitLayout>
         </GuestGuard>
+      ),
+    },
+    {
+      path: 'resubscribe',
+      element: (
+        <AuthGuard>
+          <AuthSplitLayout
+            slotProps={{
+              section: { title: 'Reactiva tu suscripción' },
+            }}
+          >
+            <Jwt.ResubscribePage />
+          </AuthSplitLayout>
+        </AuthGuard>
+      ),
+    },
+    {
+      path: 'subscription-expired',
+      element: (
+        <AuthSplitLayout>
+          <Jwt.SubscriptionExpiredPage />
+        </AuthSplitLayout>
       ),
     },
   ],

@@ -70,7 +70,6 @@ export const navData: NavSectionProps['data'] = [
   {
     title: 'Cargadores',
     path: paths.chargingstations.list,
-
   },
   /**
    * Transactions — visible para todos los roles
@@ -104,7 +103,7 @@ export const navData: NavSectionProps['data'] = [
     path: paths.invoices.list,
     roles: ['eurocharger', 'saas_owner'],
   },
-  
+
   /**
    * Tarifas — visible solo para roles específicos.
    *

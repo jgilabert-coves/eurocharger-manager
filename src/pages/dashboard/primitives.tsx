@@ -27,7 +27,9 @@ export function CardHeader({
     <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <Icon sx={{ fontSize: 16, color: inkDarkest }} />
-        <Typography variant="subtitle2" sx={{ color: inkDarkest }}>{label}</Typography>
+        <Typography variant="subtitle2" sx={{ color: inkDarkest }}>
+          {label}
+        </Typography>
       </Stack>
       {action}
     </Stack>

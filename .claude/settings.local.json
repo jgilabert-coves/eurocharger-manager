@@ -13,7 +13,9 @@
       "Bash(yarn --ignore-engines tsc --noEmit)",
       "Bash(yarn tsc *)",
       "Bash(npx eslint *)",
-      "Bash(node_modules/.bin/tsc --noEmit)"
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(node --version && ls ~/.nvm/versions/node 2>/dev/null || echo \"no nvm versions\")",
+      "Read(//Users/jonaygilabertlopez/.nvm/versions/node/**)"
     ]
   }
 }

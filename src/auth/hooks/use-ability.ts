@@ -66,11 +66,7 @@ export function useAbility() {
    */
   const hasRole = useCallback(
     (role: Role): boolean => {
-
-      console.log("Comprobando rol ", role)
       if (!user) return false;
-      console.log(user.roles);
-      console.log(user.roles?.includes(role))
       return user.roles?.includes(role) ?? false;
     },
     [user]
@@ -88,9 +84,32 @@ export function useAbility() {
     [user]
   );
 
+  /**
+   * True si el usuario puede realizar acciones de escritura / operación.
+   * - eurocharger / saas_owner / saas_admin → siempre true
+   * - saas_guest con permission_level 'operate' → true
+   * - saas_guest con permission_level 'view' o sin nivel → false
+   */
+  const canOperate = useCallback((): boolean => {
+    if (!user) return false;
+    if (user.roles?.some((r) => ['eurocharger', 'saas_owner', 'saas_admin'].includes(r)))
+      return true;
+    return user.permission_level === 'operate';
+  }, [user]);
+
+  /**
+   * True si el usuario solo puede ver (sin acciones de escritura ni operación).
+   */
+  const isViewOnly = useCallback((): boolean => {
+    if (!user) return true;
+    if (user.roles?.some((r) => ['eurocharger', 'saas_owner', 'saas_admin'].includes(r)))
+      return false;
+    return user.permission_level !== 'operate';
+  }, [user]);
+
   // Memorizamos el objeto para evitar re-renders innecesarios
   return useMemo(
-    () => ({ can, canAny, canAll, hasRole, hasAnyRole }),
-    [can, canAny, canAll, hasRole, hasAnyRole]
+    () => ({ can, canAny, canAll, hasRole, hasAnyRole, canOperate, isViewOnly }),
+    [can, canAny, canAll, hasRole, hasAnyRole, canOperate, isViewOnly]
   );
 }

@@ -24,11 +24,11 @@ import { post, endpoints } from 'src/lib/axios';
 type ItemKey = 'base' | 'chargers' | 'sim' | 'call_center' | 'guests';
 
 const ITEM_LABELS: Record<ItemKey, string> = {
-  base:        'Base',
-  chargers:    'Cargadores',
-  sim:         'SIM',
+  base: 'Base',
+  chargers: 'Cargadores',
+  sim: 'SIM',
   call_center: 'Call Center',
-  guests:      'Invitados',
+  guests: 'Invitados',
 };
 
 interface FormState {
@@ -48,11 +48,11 @@ const DEFAULT_FORM: FormState = {
   isDefault: false,
   trialDays: '0',
   maxGuests: '',
-  base:        '',
-  chargers:    '',
-  sim:         '',
+  base: '',
+  chargers: '',
+  sim: '',
   call_center: '',
-  guests:      '',
+  guests: '',
 };
 
 function eurosToCents(value: string): number | undefined {

@@ -1,6 +1,12 @@
-import type { Invoice, Subscription, InvoiceStatus, SubscriptionStatus, SubscriptionDiscount } from 'src/types/billing';
+import type {
+  Invoice,
+  Subscription,
+  InvoiceStatus,
+  SubscriptionStatus,
+  SubscriptionDiscount,
+} from 'src/types/billing';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -89,10 +95,23 @@ const ITEM_LABEL: Record<string, string> = {
   call_center: 'Call Center',
 };
 
+const ITEM_ORDER: Record<string, number> = {
+  base: 0,
+  chargers: 1,
+  guests: 2,
+  sim: 3,
+  call_center: 4,
+};
+
 // ----------------------------------------------------------------------
 
 type SubscriptionResponse = { status_code: number; data: Subscription; error: string | null };
-type InvoicesResponse = { status_code: number; total: number; data: Invoice[]; error: string | null };
+type InvoicesResponse = {
+  status_code: number;
+  total: number;
+  data: Invoice[];
+  error: string | null;
+};
 
 export default function SubscriptionView() {
   const { user } = useAuthContext();
@@ -107,7 +126,11 @@ export default function SubscriptionView() {
 
   const accountId = user?.account_id;
 
-  const { data: res, isLoading, error } = useQuery<SubscriptionResponse>({
+  const {
+    data: res,
+    isLoading,
+    error,
+  } = useQuery<SubscriptionResponse>({
     queryKey: ['subscription', accountId],
     queryFn: () => fetcher(endpoints.accounts.subscription(accountId!)),
     enabled: !!accountId,
@@ -126,18 +149,19 @@ export default function SubscriptionView() {
   const estimatedCents =
     subscription?.items.reduce((sum, item) => sum + item.unit_price_cents * item.quantity, 0) ?? 0;
 
-  const activeDiscount = subscription?.discounts?.[0] ?? null;
-  const discountBaseAmountCents = (() => {
-    if (!activeDiscount) return 0;
-    if (activeDiscount.applies_to === 'total') return estimatedCents;
-    const matchedItem = subscription?.items.find((i) => i.type === activeDiscount.applies_to);
-    return matchedItem ? matchedItem.unit_price_cents * matchedItem.quantity : 0;
-  })();
-  const discountAmountCents = activeDiscount
-    ? activeDiscount.discount_type === 'percent'
-      ? Math.round(discountBaseAmountCents * activeDiscount.discount_value / 100)
-      : Math.min(activeDiscount.discount_value, discountBaseAmountCents)
-    : 0;
+  const discountAmountCents = (subscription?.discounts ?? []).reduce((total, d) => {
+    const baseCents =
+      d.applies_to === 'total'
+        ? estimatedCents
+        : (subscription?.items.find((i) => i.type === d.applies_to)?.unit_price_cents ?? 0) *
+          (subscription?.items.find((i) => i.type === d.applies_to)?.quantity ?? 0);
+    return (
+      total +
+      (d.discount_type === 'percent'
+        ? Math.round((baseCents * d.discount_value) / 100)
+        : Math.min(d.discount_value, baseCents))
+    );
+  }, 0);
   const discountedCents = estimatedCents - discountAmountCents;
 
   const handleCancelConfirm = async () => {
@@ -160,10 +184,9 @@ export default function SubscriptionView() {
 
   const fetchInvoiceBlob = async (invoice: Invoice): Promise<Blob> => {
     const token = sessionStorage.getItem(JWT_STORAGE_KEY);
-    const response = await fetch(
-      `${CONFIG.serverUrl}${endpoints.billing.invoicePdf(invoice.id)}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const response = await fetch(`${CONFIG.serverUrl}${endpoints.billing.invoicePdf(invoice.id)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (!response.ok) throw new Error();
     return response.blob();
   };
@@ -224,31 +247,32 @@ export default function SubscriptionView() {
     );
   };
 
-  const formatDiscount = (d: SubscriptionDiscount) => {
+  const calcDiscountCents = (d: SubscriptionDiscount, baseCents: number) =>
+    d.discount_type === 'percent'
+      ? Math.round((baseCents * d.discount_value) / 100)
+      : Math.min(d.discount_value, baseCents);
+
+  const formatDiscountLabel = (d: SubscriptionDiscount) => {
     const value =
       d.discount_type === 'percent'
         ? `${d.discount_value}%`
         : `${(d.discount_value / 100).toFixed(2)} €`;
-    if (d.duration === 'forever') return `${value} de descuento permanente`;
-    if (d.duration === 'once') return `${value} de descuento (una vez)`;
-    return `${value} de descuento los primeros ${d.duration_months} meses`;
-  };
-
-  const renderDiscounts = () => {
-    if (!subscription?.discounts?.length) return null;
-    return (
-      <Stack spacing={1}>
-        {subscription.discounts.map((d) => (
-          <Alert key={d.id} severity="success" icon={false} sx={{ py: 0.5 }}>
-            <strong>{d.coupon_name}</strong> — {formatDiscount(d)}
-          </Alert>
-        ))}
-      </Stack>
-    );
+    if (d.duration === 'forever') return `${d.coupon_name} (${value})`;
+    if (d.duration === 'once') return `${d.coupon_name} (${value}, una vez)`;
+    return `${d.coupon_name} (${value}, ${d.duration_months} meses)`;
   };
 
   const renderItems = () => {
     if (!subscription?.items?.length) return null;
+    const visibleItems = subscription.items
+      .filter((item) => item.unit_price_cents * item.quantity > 0)
+      .sort((a, b) => (ITEM_ORDER[a.type] ?? 99) - (ITEM_ORDER[b.type] ?? 99));
+    if (!visibleItems.length) return null;
+
+    const discounts = subscription.discounts ?? [];
+    const discountsFor = (type: string) => discounts.filter((d) => d.applies_to === type);
+    const totalDiscounts = discounts.filter((d) => d.applies_to === 'total');
+
     return (
       <TableContainer>
         <Table size="small">
@@ -261,16 +285,52 @@ export default function SubscriptionView() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {subscription.items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{ITEM_LABEL[item.type] ?? item.type}</TableCell>
-                <TableCell align="right">{item.quantity}</TableCell>
-                <TableCell align="right">{(item.unit_price_cents / 100).toFixed(2)} €</TableCell>
-                <TableCell align="right">
-                  {((item.unit_price_cents * item.quantity) / 100).toFixed(2)} €
-                </TableCell>
-              </TableRow>
+            {visibleItems.map((item) => (
+              <Fragment key={item.id}>
+                <TableRow>
+                  <TableCell>{ITEM_LABEL[item.type] ?? item.type}</TableCell>
+                  <TableCell align="right">{item.quantity}</TableCell>
+                  <TableCell align="right">{(item.unit_price_cents / 100).toFixed(2)} €</TableCell>
+                  <TableCell align="right">
+                    {((item.unit_price_cents * item.quantity) / 100).toFixed(2)} €
+                  </TableCell>
+                </TableRow>
+                {discountsFor(item.type).map((d) => {
+                  const amount = calcDiscountCents(d, item.unit_price_cents * item.quantity);
+                  return (
+                    <TableRow key={`d-${d.id}`} sx={{ bgcolor: 'success.lighter' }}>
+                      <TableCell colSpan={3} sx={{ py: 0.5, pl: 4, borderBottom: 'none' }}>
+                        <Typography variant="caption" color="success.dark">
+                          {formatDiscountLabel(d)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="right" sx={{ py: 0.5, borderBottom: 'none' }}>
+                        <Typography variant="caption" color="success.dark">
+                          -{(amount / 100).toFixed(2)} €
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </Fragment>
             ))}
+            {totalDiscounts.map((d) => {
+              const amount = calcDiscountCents(d, estimatedCents);
+              return (
+                <TableRow key={`d-${d.id}`} sx={{ bgcolor: 'success.lighter' }}>
+                  <TableCell colSpan={3} sx={{ py: 0.5, pl: 2, borderBottom: 'none' }}>
+                    <Typography variant="caption" color="success.dark">
+                      {formatDiscountLabel(d)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right" sx={{ py: 0.5, borderBottom: 'none' }}>
+                    <Typography variant="caption" color="success.dark">
+                      -{(amount / 100).toFixed(2)} €
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -396,9 +456,7 @@ export default function SubscriptionView() {
           <Typography variant="h4">Mi suscripción</Typography>
 
           {cancelSuccess && (
-            <Alert severity="info">
-              Tu suscripción se cancelará al final del periodo actual.
-            </Alert>
+            <Alert severity="info">Tu suscripción se cancelará al final del periodo actual.</Alert>
           )}
 
           {isLoading && (
@@ -417,16 +475,21 @@ export default function SubscriptionView() {
                 <Stack direction="row" alignItems="center" spacing={2}>
                   <Typography variant="h6">Estado</Typography>
                   {renderStatus()}
-                  {/* TODO: show cancellation banner when cancel_at_period_end is true */}
                 </Stack>
+
+                {!!subscription.cancel_at_period_end && !!subscription.current_period_end && (
+                  <Alert severity="warning" sx={{ mt: 1 }}>
+                    Tu suscripción se cancelará el{' '}
+                    <strong>{fDate(subscription.current_period_end)}</strong> y no se renovará. Si
+                    cambias de opinión, contacta con soporte.
+                  </Alert>
+                )}
 
                 {renderPeriod()}
 
                 <Divider />
 
                 <Typography variant="subtitle1">Detalle de la suscripción</Typography>
-
-                {renderDiscounts()}
 
                 {renderItems()}
 
@@ -436,21 +499,10 @@ export default function SubscriptionView() {
                   <Typography variant="subtitle1">Total estimado / mes</Typography>
                   <Stack alignItems="flex-end" spacing={0.25}>
                     <Typography variant="caption" color="text.secondary">
-                      Base: {(estimatedCents / 100).toFixed(2)} €
-                    </Typography>
-                    {discountAmountCents > 0 && (
-                      <Typography variant="caption" color="success.main">
-                        Descuento ({activeDiscount!.discount_type === 'percent'
-                          ? `${activeDiscount!.discount_value}%`
-                          : `${(activeDiscount!.discount_value / 100).toFixed(2)} €`}
-                        ): -{(discountAmountCents / 100).toFixed(2)} €
-                      </Typography>
-                    )}
-                    <Typography variant="caption" color="text.secondary">
-                      IVA 21%: {(discountedCents * 0.21 / 100).toFixed(2)} €
+                      IVA 21%: {((discountedCents * 0.21) / 100).toFixed(2)} €
                     </Typography>
                     <Typography variant="h5" color="primary">
-                      {(discountedCents * 1.21 / 100).toFixed(2)} €
+                      {((discountedCents * 1.21) / 100).toFixed(2)} €
                     </Typography>
                   </Stack>
                 </Stack>

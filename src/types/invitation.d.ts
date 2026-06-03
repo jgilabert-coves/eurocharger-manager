@@ -2,6 +2,12 @@ type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'revoked';
 type InvitationRole = 'saas_admin' | 'saas_guest';
 type InvitationPermissionLevel = 'view' | 'operate';
 
+type InvitationGroup = {
+  group_id: string;
+  group_name: string;
+  permission_level: InvitationPermissionLevel;
+};
+
 type InvitationValidateData = {
   email: string;
   role: InvitationRole;
@@ -19,8 +25,7 @@ type Invitation = {
   status: InvitationStatus;
   expires_at: string;
   accepted_at: string | null;
-  charger_group_id?: string | null;
-  permission_level?: InvitationPermissionLevel;
+  groups: InvitationGroup[];
 };
 
 type InvitationsResponse = {

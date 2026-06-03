@@ -1,18 +1,18 @@
 export type OCPPConfiguration = {
-    configuration_key: OCPPConfigurationItem[];
-}
+  configuration_key: OCPPConfigurationItem[];
+};
 
 export type OCPPConfigurationItem = {
-    key: string;
-    value: string;
-    readonly: boolean;
+  key: string;
+  value: string;
+  readonly: boolean;
 };
 
 export type OCPPConfigurationResponse = {
-    status_code: number;
-    data: OCPPConfiguration | null;
-    error: string | null;
-}
+  status_code: number;
+  data: OCPPConfiguration | null;
+  error: string | null;
+};
 
 export type OCPPStartTrasactionRequest = {
   connectorId: number;
@@ -21,7 +21,7 @@ export type OCPPStartTrasactionRequest = {
 
 export type OCPPAuthorizationResponse = {
   status_code: number;
-  data: { status: "Accepted" | "Rejected" };
+  data: { status: 'Accepted' | 'Rejected' };
   error: string | null;
 };
 
@@ -42,10 +42,10 @@ export type OCPPCancelReservationRequest = {
 
 export type OCPPChangeAvailabilityRequest = {
   connectorId: number;
-  availability: "Inoperative" | "Operative";
+  availability: 'Inoperative' | 'Operative';
 };
 
 export type OCPPTriggerMessageRequest = {
-    requestedMessage: "BootNotification" | "StatusNotification" | "Heartbeat";
-    connectorId?: number;
+  requestedMessage: 'BootNotification' | 'StatusNotification' | 'Heartbeat';
+  connectorId?: number;
 };

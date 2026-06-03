@@ -76,11 +76,7 @@ export function JwtForgotPasswordView() {
 
           <Form methods={methods} onSubmit={onSubmit}>
             <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-              <Field.Text
-                name="email"
-                label="Email"
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
+              <Field.Text name="email" label="Email" slotProps={{ inputLabel: { shrink: true } }} />
 
               <LoadingButton
                 fullWidth

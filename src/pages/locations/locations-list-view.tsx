@@ -1,7 +1,7 @@
 import type { BasicChargingStationInfo } from 'src/types/charging_stations';
 
+import { useState } from 'react';
 import { Link } from 'react-router';
-import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 
@@ -22,6 +22,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { paths } from 'src/routes/paths';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -41,12 +43,7 @@ export default function LocationsListView() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const debouncedSearch = useDebounce(searchQuery);
 
   const { data: res, isLoading } = useQuery<LocationsResponse>({
     queryKey: ['locations', 'list', { page, pageSize, search: debouncedSearch }],

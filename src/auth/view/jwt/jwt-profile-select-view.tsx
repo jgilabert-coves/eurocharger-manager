@@ -144,7 +144,11 @@ export function JwtProfileSelectView() {
                 {loadingId === profile.membership_id ? (
                   <CircularProgress size={20} />
                 ) : (
-                  <Iconify icon="eva:arrow-ios-forward-fill" width={20} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+                  <Iconify
+                    icon="eva:arrow-ios-forward-fill"
+                    width={20}
+                    sx={{ color: 'text.secondary', flexShrink: 0 }}
+                  />
                 )}
               </Button>
             ))}

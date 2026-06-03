@@ -57,7 +57,7 @@ export function AuthSplitLayout({
           {/** @slot Logo */}
           <Logo />
         </>
-      )
+      ),
     };
 
     return (

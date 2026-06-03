@@ -218,7 +218,9 @@ export default function LocationDetailView() {
                                 key={conn.id}
                                 size="small"
                                 variant="soft"
-                                color={CONNECTOR_STATUS_COLOR[conn.status?.toLowerCase()] ?? 'default'}
+                                color={
+                                  CONNECTOR_STATUS_COLOR[conn.status?.toLowerCase()] ?? 'default'
+                                }
                                 label={`${conn.power ?? '?'} kW - ${conn.status}`}
                                 icon={
                                   <ConnectorTypeIcon

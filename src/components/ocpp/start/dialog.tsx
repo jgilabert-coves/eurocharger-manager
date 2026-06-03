@@ -69,7 +69,9 @@ export function StartTransactionDialog({
       <DialogTitle>Iniciar recarga</DialogTitle>
       <DialogContent>
         {result ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2, gap: 1.5 }}>
+          <Box
+            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2, gap: 1.5 }}
+          >
             <Iconify
               icon={result === 'Accepted' ? 'eva:checkmark-circle-2-fill' : 'eva:close-circle-fill'}
               width={48}

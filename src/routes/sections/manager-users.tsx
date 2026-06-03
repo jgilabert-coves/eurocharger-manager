@@ -39,9 +39,11 @@ export const managerUsersRoutes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: CONFIG.auth.skip
-          ? managerUsersLayout()
-          : <AuthGuard>{managerUsersLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? (
+          managerUsersLayout()
+        ) : (
+          <AuthGuard>{managerUsersLayout()}</AuthGuard>
+        ),
       },
     ],
   },

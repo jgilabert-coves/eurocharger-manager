@@ -26,6 +26,8 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { paths } from 'src/routes/paths';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { put, del, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -35,8 +37,8 @@ import { useAbility } from 'src/auth/hooks/use-ability';
 
 // ----------------------------------------------------------------------
 
-type Account = { id: number; business_name: string; };
-type AccountsResponse = { data: Account[]; total: number; };
+type Account = { id: number; business_name: string };
+type AccountsResponse = { data: Account[]; total: number };
 
 type ChargepointsApiResponse = {
   data: Chargepoint[];
@@ -77,7 +79,10 @@ function CreateGroupDialog({
   const { data: accountChargepointsData } = useQuery<ChargepointsApiResponse>({
     queryKey: ['chargepoints-by-account', selectedAccountId],
     queryFn: () =>
-      fetcher([endpoints.chargepoints.list, { params: { account_id: selectedAccountId, pageSize: 1000 } }]),
+      fetcher([
+        endpoints.chargepoints.list,
+        { params: { account_id: selectedAccountId, pageSize: 1000 } },
+      ]),
     enabled: isEurocharger && !!selectedAccountId,
     staleTime: 2 * 60 * 1000,
   });
@@ -133,11 +138,19 @@ function CreateGroupDialog({
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         {isEurocharger && (
           <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 0.75, display: 'block' }}
+            >
               Cuenta <span style={{ color: 'inherit' }}>*</span>
             </Typography>
             <TextField
@@ -167,9 +180,7 @@ function CreateGroupDialog({
               }}
             >
               {accounts
-                .filter((a) =>
-                  a.business_name.toLowerCase().includes(accountSearch.toLowerCase())
-                )
+                .filter((a) => a.business_name.toLowerCase().includes(accountSearch.toLowerCase()))
                 .map((acc) => {
                   const isSelected = selectedAccountId === acc.id;
                   return (
@@ -317,7 +328,11 @@ function RenameDialog({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>Renombrar propietario</DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <TextField
           label="Nombre"
           size="small"
@@ -420,7 +435,11 @@ function AddChargersDialog({
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <Box
           sx={{
             maxHeight: 280,
@@ -476,7 +495,7 @@ function AddChargersDialog({
 
 export default function ChargerGroupsView() {
   const navigate = useNavigate();
-  const { hasRole } = useAbility();
+  const { hasRole, isViewOnly } = useAbility();
   const { user } = useAuthContext();
   const isEurocharger = hasRole('eurocharger');
   const accountId = user?.account_id ?? 0;
@@ -486,16 +505,20 @@ export default function ChargerGroupsView() {
   const [renameGroup, setRenameGroup] = useState<ChargerGroup | null>(null);
   const [addChargersGroup, setAddChargersGroup] = useState<ChargerGroup | null>(null);
   const [accountFilter, setAccountFilter] = useState('');
+  const debouncedAccountFilter = useDebounce(accountFilter);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
   const { data: groupsData, isLoading: groupsLoading } = useQuery<ChargerGroupsResponse>({
     queryKey: isEurocharger
-      ? ['charger-groups-all', page, pageSize, accountFilter]
+      ? ['charger-groups-all', page, pageSize, debouncedAccountFilter]
       : ['charger-groups', accountId],
     queryFn: () =>
       isEurocharger
-        ? fetcher([endpoints.chargerGroupsAll, { params: { page, pageSize, searchQuery: accountFilter } }])
+        ? fetcher([
+            endpoints.chargerGroupsAll,
+            { params: { page, pageSize, searchQuery: debouncedAccountFilter } },
+          ])
         : fetcher(endpoints.accounts.chargerGroups(accountId)),
     enabled: isEurocharger || !!accountId,
     staleTime: 2 * 60 * 1000,
@@ -524,13 +547,19 @@ export default function ChargerGroupsView() {
   });
 
   const removeCharger = useMutation({
-    mutationFn: ({ groupId, chargerId, acctId }: { groupId: string; chargerId: number; acctId: number }) =>
-      del(endpoints.accounts.chargerGroupCharger(acctId, groupId, chargerId)),
+    mutationFn: ({
+      groupId,
+      chargerId,
+      acctId,
+    }: {
+      groupId: string;
+      chargerId: number;
+      acctId: number;
+    }) => del(endpoints.accounts.chargerGroupCharger(acctId, groupId, chargerId)),
     onSuccess: invalidate,
   });
 
-  const getGroupAccountId = (group: ChargerGroup) =>
-    isEurocharger ? group.account_id : accountId;
+  const getGroupAccountId = (group: ChargerGroup) => (isEurocharger ? group.account_id : accountId);
 
   return (
     <Box sx={{ p: 3 }}>
@@ -545,13 +574,15 @@ export default function ChargerGroupsView() {
               : 'Organiza tus cargadores por propietario para asignar acceso a los invitados.'}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => setCreateOpen(true)}
-        >
-          Nuevo propietario
-        </Button>
+        {!isViewOnly() && (
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={() => setCreateOpen(true)}
+          >
+            Nuevo propietario
+          </Button>
+        )}
       </Stack>
 
       {isEurocharger && (
@@ -585,11 +616,15 @@ export default function ChargerGroupsView() {
 
       {!groupsLoading && groups.length === 0 && (
         <Card sx={{ p: 5, textAlign: 'center' }}>
-          <Iconify icon="solar:box-minimalistic-outline" width={48} sx={{ color: 'text.disabled', mb: 2 }} />
+          <Iconify
+            icon="solar:box-minimalistic-outline"
+            width={48}
+            sx={{ color: 'text.disabled', mb: 2 }}
+          />
           <Typography variant="h6" color="text.secondary">
             {isEurocharger ? 'No se encontraron propietarios' : 'Aún no tienes propietarios'}
           </Typography>
-          {!isEurocharger && (
+          {!isEurocharger && !isViewOnly() && (
             <>
               <Typography variant="body2" color="text.disabled" sx={{ mb: 3 }}>
                 Crea un propietario para organizar tus cargadores y asignar acceso a los invitados.
@@ -623,32 +658,30 @@ export default function ChargerGroupsView() {
                   {group.chargers.length} cargador{group.chargers.length !== 1 ? 'es' : ''}
                 </Typography>
               </Box>
-              <Stack direction="row" spacing={0.5}>
-                <IconButton
-                  size="small"
-                  title="Añadir cargadores"
-                  onClick={() => setAddChargersGroup(group)}
-                >
-                  <Iconify icon="mingcute:add-line" width={18} />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  title="Renombrar"
-                  onClick={() => setRenameGroup(group)}
-                >
-                  <Iconify icon="solar:pen-bold" width={18} />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  title="Eliminar propietario"
-                  color="error"
-                  onClick={() =>
-                    deleteGroup.mutate({ groupId: group.id, acctId: getGroupAccountId(group) })
-                  }
-                >
-                  <Iconify icon="solar:trash-bin-trash-bold" width={18} />
-                </IconButton>
-              </Stack>
+              {!isViewOnly() && (
+                <Stack direction="row" spacing={0.5}>
+                  <IconButton
+                    size="small"
+                    title="Añadir cargadores"
+                    onClick={() => setAddChargersGroup(group)}
+                  >
+                    <Iconify icon="mingcute:add-line" width={18} />
+                  </IconButton>
+                  <IconButton size="small" title="Renombrar" onClick={() => setRenameGroup(group)}>
+                    <Iconify icon="solar:pen-bold" width={18} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    title="Eliminar propietario"
+                    color="error"
+                    onClick={() =>
+                      deleteGroup.mutate({ groupId: group.id, acctId: getGroupAccountId(group) })
+                    }
+                  >
+                    <Iconify icon="solar:trash-bin-trash-bold" width={18} />
+                  </IconButton>
+                </Stack>
+              )}
             </Stack>
 
             {group.chargers.length > 0 && (
@@ -661,12 +694,15 @@ export default function ChargerGroupsView() {
                       size="small"
                       label={item.name}
                       onClick={() => navigate(paths.chargingstations.detail(item.id))}
-                      onDelete={() =>
-                        removeCharger.mutate({
-                          groupId: group.id,
-                          chargerId: Number(item.id),
-                          acctId: getGroupAccountId(group),
-                        })
+                      onDelete={
+                        !isViewOnly()
+                          ? () =>
+                              removeCharger.mutate({
+                                groupId: group.id,
+                                chargerId: Number(item.id),
+                                acctId: getGroupAccountId(group),
+                              })
+                          : undefined
                       }
                     />
                   ))}

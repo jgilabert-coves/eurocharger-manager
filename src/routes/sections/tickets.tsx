@@ -45,15 +45,19 @@ export const ticketsRoutes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: CONFIG.auth.skip
-          ? ticketsListLayout()
-          : <AuthGuard>{ticketsListLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? (
+          ticketsListLayout()
+        ) : (
+          <AuthGuard>{ticketsListLayout()}</AuthGuard>
+        ),
       },
       {
         path: ':id',
-        element: CONFIG.auth.skip
-          ? ticketDetailLayout()
-          : <AuthGuard>{ticketDetailLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? (
+          ticketDetailLayout()
+        ) : (
+          <AuthGuard>{ticketDetailLayout()}</AuthGuard>
+        ),
       },
     ],
   },

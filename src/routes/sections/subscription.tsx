@@ -39,9 +39,11 @@ export const subscriptionRoutes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: CONFIG.auth.skip
-          ? subscriptionLayout()
-          : <AuthGuard>{subscriptionLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? (
+          subscriptionLayout()
+        ) : (
+          <AuthGuard>{subscriptionLayout()}</AuthGuard>
+        ),
       },
     ],
   },

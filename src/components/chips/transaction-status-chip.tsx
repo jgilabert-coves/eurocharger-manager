@@ -5,7 +5,6 @@ import Tooltip from '@mui/material/Tooltip';
 
 import { Label } from 'src/components/label';
 
-
 // ----------------------------------------------------------------------
 
 const STATUS_COLORS: Record<string, LabelColor> = {
@@ -37,7 +36,7 @@ export function TransactionStatusChip({
   const color = STATUS_COLORS[key] ?? 'default';
 
   const hoverText = status ? STATUS_LABELS[status.toLowerCase()] : null;
-  const labelText = STATUS_LABELS[status.toLowerCase()] 
+  const labelText = STATUS_LABELS[status.toLowerCase()];
 
   return (
     <Tooltip title={hoverText ?? ''} disableHoverListener={!hoverText} arrow>
@@ -46,7 +45,7 @@ export function TransactionStatusChip({
         variant={variant}
         sx={{
           ...(variant === 'outlined' && { color: 'text.primary', borderWidth: 1 }),
-          ...(variant === 'soft' && { color: 'text.primary', fontWeight: '600'}),
+          ...(variant === 'soft' && { color: 'text.primary', fontWeight: '600' }),
           ...sx,
         }}
       >

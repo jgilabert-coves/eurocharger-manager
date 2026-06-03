@@ -31,11 +31,10 @@ export function UnlockDialog({
   onSuccess,
   onError,
 }: UnlockDialogProps) {
-
   const { mutate: unlockConnector, isPending } = useMutation({
     mutationFn: () =>
       post(endpoints.chargepoints.unlock(chargepointId), {
-        connectorId
+        connectorId,
       }),
     onSuccess: () => {
       onSuccess?.(`Conector ${connectorId} desbloqueado correctamente`);
@@ -53,7 +52,7 @@ export function UnlockDialog({
       <DialogTitle>Desbloquear conector</DialogTitle>
       <DialogContent>
         <Typography variant="body2">¿Confirmas que quieres desbloquear el conector?</Typography>
-    </DialogContent>
+      </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
           Cancelar

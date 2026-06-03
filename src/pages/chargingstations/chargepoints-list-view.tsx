@@ -24,6 +24,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { useRouter } from 'src/routes/hooks';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -64,6 +66,7 @@ export default function ChargingStationsView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [orderBy, setOrderBy] = useState('name');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+  const debouncedSearch = useDebounce(searchQuery);
 
   const fetchChargepoints = useCallback(async () => {
     try {
@@ -73,7 +76,7 @@ export default function ChargingStationsView() {
           roaming: 0,
           page,
           pageSize,
-          searchQuery,
+          searchQuery: debouncedSearch,
           sortQuery: `${orderBy}=${order}`,
         },
       };
@@ -85,7 +88,7 @@ export default function ChargingStationsView() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, searchQuery, orderBy, order]);
+  }, [page, pageSize, debouncedSearch, orderBy, order]);
 
   useEffect(() => {
     fetchChargepoints();

@@ -96,8 +96,9 @@ export default function AcceptInvitationView() {
             // New user — show registration form
             setPageState('form');
           } else {
-            setFormError(ACCEPT_ERRORS[raw] ?? 'Error al procesar la invitación.');
-            setPageState('form');
+            // Any other error (already member, already accepted, etc.) → error page
+            setPageState('error');
+            setErrorMessage(ACCEPT_ERRORS[raw] ?? 'Error al procesar la invitación.');
           }
         }
       })
@@ -130,7 +131,12 @@ export default function AcceptInvitationView() {
         return;
       }
 
-      const jwt: string = result?.token ?? res?.token;
+      const jwt: string | undefined = result?.token ?? res?.token;
+      if (!jwt) {
+        setFormError('Error al crear la cuenta. No se recibió token de acceso.');
+        setPageState('form');
+        return;
+      }
       await setSession(jwt);
       await checkUserSession?.();
       navigate(paths.dashboard.root, { replace: true });
@@ -141,8 +147,7 @@ export default function AcceptInvitationView() {
     }
   };
 
-  const canSubmit =
-    name.trim().length > 0 && surname.trim().length > 0 && password.length >= 6;
+  const canSubmit = name.trim().length > 0 && surname.trim().length > 0 && password.length >= 6;
 
   return (
     <Box
@@ -215,7 +220,11 @@ export default function AcceptInvitationView() {
                 justifyContent: 'center',
               }}
             >
-              <Iconify icon="eva:checkmark-circle-2-fill" width={44} sx={{ color: 'success.main' }} />
+              <Iconify
+                icon="eva:checkmark-circle-2-fill"
+                width={44}
+                sx={{ color: 'success.main' }}
+              />
             </Box>
             <Box>
               <Typography variant="h5" fontWeight={700} gutterBottom>

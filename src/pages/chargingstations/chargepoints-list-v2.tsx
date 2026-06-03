@@ -26,6 +26,8 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import { useRouter } from 'src/routes/hooks';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -34,6 +36,8 @@ import { Iconify } from 'src/components/iconify';
 import { ConnectorStatusChip } from 'src/components/chips/connector-status-chip';
 import { ChargerSetupDialog } from 'src/components/chargepoint/charger-setup-dialog';
 import { NewChargepointDialog } from 'src/components/chargepoint/new-chargepoint-dialog';
+
+import { useAbility } from 'src/auth/hooks/use-ability';
 
 import { CONFIG } from '../../global-config';
 
@@ -72,6 +76,8 @@ export default function ChargepointsListV2() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [setupChargepointId, setSetupChargepointId] = useState<number | null>(null);
+  const debouncedSearch = useDebounce(searchQuery);
+  const { isViewOnly } = useAbility();
 
   const fetchChargepoints = useCallback(async () => {
     try {
@@ -81,7 +87,7 @@ export default function ChargepointsListV2() {
           roaming: 0,
           page,
           pageSize,
-          searchQuery,
+          searchQuery: debouncedSearch,
           sortQuery: `${orderBy}=${order}`,
           ...(statusFilter !== 'ALL' && { status: statusFilter }),
         },
@@ -95,7 +101,7 @@ export default function ChargepointsListV2() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, searchQuery, orderBy, order, statusFilter]);
+  }, [page, pageSize, debouncedSearch, orderBy, order, statusFilter]);
 
   useEffect(() => {
     fetchChargepoints();
@@ -136,13 +142,15 @@ export default function ChargepointsListV2() {
               </Typography>
             )}
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" width={18} />}
-            onClick={() => setNewDialogOpen(true)}
-          >
-            Nuevo cargador
-          </Button>
+          {!isViewOnly() && (
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" width={18} />}
+              onClick={() => setNewDialogOpen(true)}
+            >
+              Nuevo cargador
+            </Button>
+          )}
         </Stack>
 
         {/* Search + status filter */}

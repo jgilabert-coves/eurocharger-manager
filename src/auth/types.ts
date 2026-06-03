@@ -90,7 +90,8 @@ export type UserType = {
   roles: Role[];
   permissions: Permission[];
   account_id: number | null;
-  account_name: string | 'Eurocharger'
+  account_name: string | 'Eurocharger';
+  permission_level?: 'view' | 'operate' | null;
   [key: string]: any; // Permite campos adicionales del backend
 } | null;
 

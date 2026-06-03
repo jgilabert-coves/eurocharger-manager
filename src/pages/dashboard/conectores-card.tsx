@@ -72,7 +72,6 @@ export function ConectoresCard() {
     <Card sx={{ p: 3 }}>
       <CardHeader icon={IcSignal} label="Información por tipos de conector" />
       <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${COLUMNS.length},1fr)`, gap: 0.5 }}>
-
         {/* Row 1: Icons + labels */}
         {COLUMNS.map(({ key, label, Icon }) => (
           <Box
@@ -80,14 +79,26 @@ export function ConectoresCard() {
             sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, pb: 1 }}
           >
             <Icon sx={{ fontSize: 20, color: tk.inkDark }} />
-            <Typography variant="caption" sx={{ color: tk.inkLighter, textAlign: 'center', lineHeight: 1.2 }}>
-              {isLoading ? <Skeleton width={40} /> : (metrics[key] ? label : '...')}
+            <Typography
+              variant="caption"
+              sx={{ color: tk.inkLighter, textAlign: 'center', lineHeight: 1.2 }}
+            >
+              {isLoading ? <Skeleton width={40} /> : metrics[key] ? label : '...'}
             </Typography>
           </Box>
         ))}
 
         {/* Section: Disponibilidad */}
-        <Box sx={{ gridColumn: '1/-1', bgcolor: tk.skyLighter, borderRadius: 1.5, p: '4px 10px', mb: 1, textAlign: 'center' }}>
+        <Box
+          sx={{
+            gridColumn: '1/-1',
+            bgcolor: tk.skyLighter,
+            borderRadius: 1.5,
+            p: '4px 10px',
+            mb: 1,
+            textAlign: 'center',
+          }}
+        >
           <Typography variant="caption" sx={{ fontWeight: 600, color: tk.inkLight }}>
             Disponibilidad
           </Typography>
@@ -96,13 +107,26 @@ export function ConectoresCard() {
         {COLUMNS.map(({ key }) => (
           <Box key={`${key}-av`} sx={{ textAlign: 'center', pb: 1 }}>
             <Typography variant="h6" sx={{ color: tk.inkDarkest }}>
-              {isLoading ? <Skeleton width={30} sx={{ mx: 'auto' }} /> : pct(metrics[key]?.available ?? 0, metrics[key]?.total ?? 0)}
+              {isLoading ? (
+                <Skeleton width={30} sx={{ mx: 'auto' }} />
+              ) : (
+                pct(metrics[key]?.available ?? 0, metrics[key]?.total ?? 0)
+              )}
             </Typography>
           </Box>
         ))}
 
         {/* Section: En uso */}
-        <Box sx={{ gridColumn: '1/-1', bgcolor: tk.skyLighter, borderRadius: 1.5, p: '4px 10px', mb: 1, textAlign: 'center' }}>
+        <Box
+          sx={{
+            gridColumn: '1/-1',
+            bgcolor: tk.skyLighter,
+            borderRadius: 1.5,
+            p: '4px 10px',
+            mb: 1,
+            textAlign: 'center',
+          }}
+        >
           <Typography variant="caption" sx={{ fontWeight: 600, color: tk.inkLight }}>
             En uso
           </Typography>
@@ -111,7 +135,11 @@ export function ConectoresCard() {
         {COLUMNS.map(({ key }) => (
           <Box key={`${key}-oc`} sx={{ textAlign: 'center', pb: 1 }}>
             <Typography variant="h6" sx={{ color: tk.inkDarkest }}>
-              {isLoading ? <Skeleton width={30} sx={{ mx: 'auto' }} /> : pct(metrics[key]?.inUse ?? 0, metrics[key]?.total ?? 0)}
+              {isLoading ? (
+                <Skeleton width={30} sx={{ mx: 'auto' }} />
+              ) : (
+                pct(metrics[key]?.inUse ?? 0, metrics[key]?.total ?? 0)
+              )}
             </Typography>
           </Box>
         ))}

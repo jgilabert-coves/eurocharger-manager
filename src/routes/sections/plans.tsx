@@ -39,9 +39,7 @@ export const plansRoutes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: CONFIG.auth.skip
-          ? plansLayout()
-          : <AuthGuard>{plansLayout()}</AuthGuard>,
+        element: CONFIG.auth.skip ? plansLayout() : <AuthGuard>{plansLayout()}</AuthGuard>,
       },
     ],
   },

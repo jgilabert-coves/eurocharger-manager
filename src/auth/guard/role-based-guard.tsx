@@ -56,13 +56,7 @@ export type RoleGuardProps = {
   hasContent?: boolean;
 };
 
-export function RoleGuard({
-  sx,
-  children,
-  roles,
-  permissions,
-  hasContent = true,
-}: RoleGuardProps) {
+export function RoleGuard({ sx, children, roles, permissions, hasContent = true }: RoleGuardProps) {
   const { hasAnyRole, canAny } = useAbility();
   const navigate = useNavigate();
 

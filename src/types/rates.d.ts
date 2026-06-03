@@ -29,13 +29,13 @@ export type Rate = {
 };
 
 export type DayKey =
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday";
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday';
 
 export type RateStretch = {
   id: number;

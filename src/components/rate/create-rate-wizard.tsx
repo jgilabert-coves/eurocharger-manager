@@ -77,8 +77,13 @@ const DEFAULT_STRETCH: StretchDraft = {
   fixedPrice: 0,
   parkingPrice: 0,
   daysOfWeek: {
-    monday: true, tuesday: true, wednesday: true, thursday: true,
-    friday: true, saturday: true, sunday: true,
+    monday: true,
+    tuesday: true,
+    wednesday: true,
+    thursday: true,
+    friday: true,
+    saturday: true,
+    sunday: true,
   },
 };
 
@@ -90,10 +95,18 @@ function formatPrice(value: number): string {
 // Step 0 – Method selection
 // ----------------------------------------------------------------------
 
-function MethodStep({ selected, onChange }: { selected: Method | null; onChange: (m: Method) => void }) {
+function MethodStep({
+  selected,
+  onChange,
+}: {
+  selected: Method | null;
+  onChange: (m: Method) => void;
+}) {
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>¿Cómo quieres crear las tarifas?</Typography>
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        ¿Cómo quieres crear las tarifas?
+      </Typography>
       <Grid container spacing={3}>
         {(['manual', 'excel'] as Method[]).map((m) => (
           <Grid key={m} size={{ xs: 12, sm: 6 }}>
@@ -101,7 +114,8 @@ function MethodStep({ selected, onChange }: { selected: Method | null; onChange:
               variant="outlined"
               onClick={() => onChange(m)}
               sx={{
-                cursor: 'pointer', borderWidth: 2,
+                cursor: 'pointer',
+                borderWidth: 2,
                 borderColor: selected === m ? 'primary.main' : 'divider',
                 bgcolor: selected === m ? 'primary.lighter' : 'background.paper',
                 transition: 'all .2s',
@@ -131,8 +145,16 @@ function MethodStep({ selected, onChange }: { selected: Method | null; onChange:
 // ----------------------------------------------------------------------
 
 function ManualBasicInfoStep({
-  clients, clientId, setClientId, operatorId, setOperatorId,
-  rateName, setRateName, rateType, setRateType, isHubject,
+  clients,
+  clientId,
+  setClientId,
+  operatorId,
+  setOperatorId,
+  rateName,
+  setRateName,
+  rateType,
+  setRateType,
+  isHubject,
 }: {
   clients: Client[];
   clientId: number | null;
@@ -159,11 +181,16 @@ function ManualBasicInfoStep({
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>Información básica</Typography>
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        Información básica
+      </Typography>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
-            select fullWidth label="Cliente" value={clientId ?? ''}
+            select
+            fullWidth
+            label="Cliente"
+            value={clientId ?? ''}
             onChange={(e) => {
               const val = e.target.value === '' ? null : Number(e.target.value);
               const client = clients.find((c) => c.id === val);
@@ -171,31 +198,54 @@ function ManualBasicInfoStep({
             }}
             helperText="Déjalo vacío para crear una tarifa Eurocharger"
           >
-            <MenuItem value=""><em>Sin cliente (Eurocharger)</em></MenuItem>
+            <MenuItem value="">
+              <em>Sin cliente (Eurocharger)</em>
+            </MenuItem>
             {clients.map((c) => (
-              <MenuItem key={c.id} value={c.id}>{c.business_name}</MenuItem>
+              <MenuItem key={c.id} value={c.id}>
+                {c.business_name}
+              </MenuItem>
             ))}
           </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField fullWidth label="Nombre de la tarifa" value={rateName}
-            onChange={(e) => setRateName(e.target.value)} />
+          <TextField
+            fullWidth
+            label="Nombre de la tarifa"
+            value={rateName}
+            onChange={(e) => setRateName(e.target.value)}
+          />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField select fullWidth label="Tipo de tarifa" value={rateType}
-            onChange={(e) => setRateType(Number(e.target.value))}>
+          <TextField
+            select
+            fullWidth
+            label="Tipo de tarifa"
+            value={rateType}
+            onChange={(e) => setRateType(Number(e.target.value))}
+          >
             <MenuItem value={1}>€/min</MenuItem>
             <MenuItem value={2}>€/kWh</MenuItem>
           </TextField>
         </Grid>
         {isHubject && (
           <Grid size={{ xs: 12, sm: 6 }}>
-            {opLoading ? <CircularProgress size={24} /> : (
-              <TextField select fullWidth label="Operador Hubject (CPO)"
+            {opLoading ? (
+              <CircularProgress size={24} />
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Operador Hubject (CPO)"
                 value={operatorId ?? ''}
-                onChange={(e) => setOperatorId(e.target.value === '' ? null : Number(e.target.value))}>
+                onChange={(e) =>
+                  setOperatorId(e.target.value === '' ? null : Number(e.target.value))
+                }
+              >
                 {operators.map((op) => (
-                  <MenuItem key={op.id} value={op.id}>{op.name}</MenuItem>
+                  <MenuItem key={op.id} value={op.id}>
+                    {op.name}
+                  </MenuItem>
                 ))}
               </TextField>
             )}
@@ -210,7 +260,10 @@ function ManualBasicInfoStep({
 // Step 2 (Manual) – Stretches
 // ----------------------------------------------------------------------
 
-function StretchesStep({ stretches, setStretches }: {
+function StretchesStep({
+  stretches,
+  setStretches,
+}: {
   stretches: StretchDraft[];
   setStretches: (s: StretchDraft[]) => void;
 }) {
@@ -221,7 +274,10 @@ function StretchesStep({ stretches, setStretches }: {
     setDraft((prev) => ({ ...prev, [key]: val }));
 
   const toggleDay = (day: keyof StretchDraft['daysOfWeek']) =>
-    setDraft((prev) => ({ ...prev, daysOfWeek: { ...prev.daysOfWeek, [day]: !prev.daysOfWeek[day] } }));
+    setDraft((prev) => ({
+      ...prev,
+      daysOfWeek: { ...prev.daysOfWeek, [day]: !prev.daysOfWeek[day] },
+    }));
 
   const addStretch = () => {
     setStretches([...stretches, draft]);
@@ -239,8 +295,12 @@ function StretchesStep({ stretches, setStretches }: {
           </Typography>
         </Box>
         {!showForm && (
-          <Button startIcon={<Iconify icon="eva:plus-fill" />} variant="contained"
-            size="small" onClick={() => setShowForm(true)}>
+          <Button
+            startIcon={<Iconify icon="eva:plus-fill" />}
+            variant="contained"
+            size="small"
+            onClick={() => setShowForm(true)}
+          >
             Añadir tramo
           </Button>
         )}
@@ -264,18 +324,27 @@ function StretchesStep({ stretches, setStretches }: {
             <TableBody>
               {stretches.map((s, i) => (
                 <TableRow key={i}>
-                  <TableCell>{s.startTime || '—'} → {s.endTime || '—'}</TableCell>
-                  <TableCell>{s.stretchStart} – {s.stretchEnd}</TableCell>
+                  <TableCell>
+                    {s.startTime || '—'} → {s.endTime || '—'}
+                  </TableCell>
+                  <TableCell>
+                    {s.stretchStart} – {s.stretchEnd}
+                  </TableCell>
                   <TableCell align="right">{formatPrice(s.price)} €/kWh</TableCell>
                   <TableCell align="right">{formatPrice(s.fixedPrice)} €</TableCell>
                   <TableCell align="right">{formatPrice(s.parkingPrice)} €/min</TableCell>
                   <TableCell align="right">{formatPrice(s.inactivityFee)} €/min</TableCell>
                   <TableCell>
-                    {DAYS.filter((d) => s.daysOfWeek[d.key]).map((d) => d.label).join(' ')}
+                    {DAYS.filter((d) => s.daysOfWeek[d.key])
+                      .map((d) => d.label)
+                      .join(' ')}
                   </TableCell>
                   <TableCell padding="none">
-                    <IconButton size="small" color="error"
-                      onClick={() => setStretches(stretches.filter((_, idx) => idx !== i))}>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => setStretches(stretches.filter((_, idx) => idx !== i))}
+                    >
                       <Iconify icon="eva:trash-2-outline" width={18} />
                     </IconButton>
                   </TableCell>
@@ -294,89 +363,160 @@ function StretchesStep({ stretches, setStretches }: {
 
       {showForm && (
         <Paper variant="outlined" sx={{ p: 3, mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 2 }}>Nuevo tramo</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 2 }}>
+            Nuevo tramo
+          </Typography>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField fullWidth label="Hora inicio" type="time" value={draft.startTime}
+              <TextField
+                fullWidth
+                label="Hora inicio"
+                type="time"
+                value={draft.startTime}
                 onChange={(e) => updateDraft('startTime', e.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }} />
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField fullWidth label="Hora fin" type="time" value={draft.endTime}
+              <TextField
+                fullWidth
+                label="Hora fin"
+                type="time"
+                value={draft.endTime}
                 onChange={(e) => updateDraft('endTime', e.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }} />
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField fullWidth label="Precio" type="number" value={draft.price}
+              <TextField
+                fullWidth
+                label="Precio"
+                type="number"
+                value={draft.price}
                 onChange={(e) => updateDraft('price', Number(e.target.value))}
-                slotProps={{ input: { endAdornment: (<>
-                  <InputAdornment position="end">€/kWh (sin IVA)</InputAdornment>
-                  <InputAdornment position="end">
-                    <Tooltip title="Precio para la energía suministrada." arrow>
-                      <IconButton size="small" tabIndex={-1} edge="end">
-                        <Iconify icon="eva:info-outline" width={18} />
-                      </IconButton>
-                    </Tooltip>
-                  </InputAdornment>
-                </>) } }} />
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <>
+                        <InputAdornment position="end">€/kWh (sin IVA)</InputAdornment>
+                        <InputAdornment position="end">
+                          <Tooltip title="Precio para la energía suministrada." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      </>
+                    ),
+                  },
+                }}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField fullWidth label="Precio fijo (conexión)" type="number" value={draft.fixedPrice}
+              <TextField
+                fullWidth
+                label="Precio fijo (conexión)"
+                type="number"
+                value={draft.fixedPrice}
                 onChange={(e) => updateDraft('fixedPrice', Number(e.target.value))}
-                slotProps={{ input: { endAdornment: (<>
-                  <InputAdornment position="end">€/recarga (sin IVA)</InputAdornment>
-                  <InputAdornment position="end">
-                    <Tooltip title="Importe fijo por iniciar la recarga." arrow>
-                      <IconButton size="small" tabIndex={-1} edge="end">
-                        <Iconify icon="eva:info-outline" width={18} />
-                      </IconButton>
-                    </Tooltip>
-                  </InputAdornment>
-                </>) } }} />
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <>
+                        <InputAdornment position="end">€/recarga (sin IVA)</InputAdornment>
+                        <InputAdornment position="end">
+                          <Tooltip title="Importe fijo por iniciar la recarga." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      </>
+                    ),
+                  },
+                }}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField fullWidth label="Parking" type="number" value={draft.parkingPrice}
+              <TextField
+                fullWidth
+                label="Parking"
+                type="number"
+                value={draft.parkingPrice}
                 onChange={(e) => updateDraft('parkingPrice', Number(e.target.value))}
-                slotProps={{ input: { endAdornment: (<>
-                  <InputAdornment position="end">€/min (sin IVA)</InputAdornment>
-                  <InputAdornment position="end">
-                    <Tooltip title="Importe por tiempo conectado con recarga." arrow>
-                      <IconButton size="small" tabIndex={-1} edge="end">
-                        <Iconify icon="eva:info-outline" width={18} />
-                      </IconButton>
-                    </Tooltip>
-                  </InputAdornment>
-                </>) } }} />
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <>
+                        <InputAdornment position="end">€/min (sin IVA)</InputAdornment>
+                        <InputAdornment position="end">
+                          <Tooltip title="Importe por tiempo conectado con recarga." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      </>
+                    ),
+                  },
+                }}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
-              <TextField fullWidth label="Inactividad" type="number" value={draft.inactivityFee}
+              <TextField
+                fullWidth
+                label="Inactividad"
+                type="number"
+                value={draft.inactivityFee}
                 onChange={(e) => updateDraft('inactivityFee', Number(e.target.value))}
-                slotProps={{ input: { endAdornment: (<>
-                  <InputAdornment position="end">€/min (sin IVA)</InputAdornment>
-                  <InputAdornment position="end">
-                    <Tooltip title="Importe por tiempo conectado sin recarga." arrow>
-                      <IconButton size="small" tabIndex={-1} edge="end">
-                        <Iconify icon="eva:info-outline" width={18} />
-                      </IconButton>
-                    </Tooltip>
-                  </InputAdornment>
-                </>) } }} />
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <>
+                        <InputAdornment position="end">€/min (sin IVA)</InputAdornment>
+                        <InputAdornment position="end">
+                          <Tooltip title="Importe por tiempo conectado sin recarga." arrow>
+                            <IconButton size="small" tabIndex={-1} edge="end">
+                              <Iconify icon="eva:info-outline" width={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      </>
+                    ),
+                  },
+                }}
+              />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>Días de la semana</Typography>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Días de la semana
+              </Typography>
               <FormGroup row>
                 {DAYS.map((d) => (
-                  <FormControlLabel key={d.key}
-                    control={<Checkbox size="small" checked={draft.daysOfWeek[d.key]}
-                      onChange={() => toggleDay(d.key)} />}
-                    label={d.label} />
+                  <FormControlLabel
+                    key={d.key}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={draft.daysOfWeek[d.key]}
+                        onChange={() => toggleDay(d.key)}
+                      />
+                    }
+                    label={d.label}
+                  />
                 ))}
               </FormGroup>
             </Grid>
             <Grid size={{ xs: 12 }}>
               <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                <Button variant="outlined" size="small"
-                  onClick={() => { setShowForm(false); setDraft(DEFAULT_STRETCH); }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    setShowForm(false);
+                    setDraft(DEFAULT_STRETCH);
+                  }}
+                >
                   Cancelar
                 </Button>
                 <Button variant="contained" size="small" onClick={addStretch}>
@@ -396,8 +536,15 @@ function StretchesStep({ stretches, setStretches }: {
 // ----------------------------------------------------------------------
 
 function StationsStep({
-  clientId, selectedIds, setSelectedIds, assignmentType, setAssignmentType,
-  minPower, setMinPower, maxPower, setMaxPower,
+  clientId,
+  selectedIds,
+  setSelectedIds,
+  assignmentType,
+  setAssignmentType,
+  minPower,
+  setMinPower,
+  maxPower,
+  setMaxPower,
 }: {
   clientId: number | null;
   selectedIds: number[];
@@ -433,19 +580,29 @@ function StationsStep({
     }
   }, [page, search, clientId, assignmentType]);
 
-  useEffect(() => { fetchStations(); }, [fetchStations]);
+  useEffect(() => {
+    fetchStations();
+  }, [fetchStations]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 1 }}>Asignación de cargadores</Typography>
+      <Typography variant="h6" sx={{ mb: 1 }}>
+        Asignación de cargadores
+      </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Elige cómo asignar los cargadores a esta tarifa.
       </Typography>
 
-      <ToggleButtonGroup value={assignmentType} exclusive
-        onChange={(_, val) => { if (val) setAssignmentType(val); }} sx={{ mb: 3 }}>
+      <ToggleButtonGroup
+        value={assignmentType}
+        exclusive
+        onChange={(_, val) => {
+          if (val) setAssignmentType(val);
+        }}
+        sx={{ mb: 3 }}
+      >
         <ToggleButton value="power">Por potencia (mín / máx)</ToggleButton>
         <ToggleButton value="chargers">Selección manual</ToggleButton>
       </ToggleButtonGroup>
@@ -453,14 +610,28 @@ function StationsStep({
       {assignmentType === 'power' && (
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth label="Potencia mínima" type="number" value={minPower}
+            <TextField
+              fullWidth
+              label="Potencia mínima"
+              type="number"
+              value={minPower}
               onChange={(e) => setMinPower(e.target.value === '' ? '' : Number(e.target.value))}
-              slotProps={{ input: { endAdornment: <InputAdornment position="end">kW</InputAdornment> } }} />
+              slotProps={{
+                input: { endAdornment: <InputAdornment position="end">kW</InputAdornment> },
+              }}
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth label="Potencia máxima" type="number" value={maxPower}
+            <TextField
+              fullWidth
+              label="Potencia máxima"
+              type="number"
+              value={maxPower}
               onChange={(e) => setMaxPower(e.target.value === '' ? '' : Number(e.target.value))}
-              slotProps={{ input: { endAdornment: <InputAdornment position="end">kW</InputAdornment> } }} />
+              slotProps={{
+                input: { endAdornment: <InputAdornment position="end">kW</InputAdornment> },
+              }}
+            />
           </Grid>
         </Grid>
       )}
@@ -470,50 +641,97 @@ function StationsStep({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Selecciona las estaciones a las que aplicará esta tarifa.
             {selectedIds.length > 0 && (
-              <Chip label={`${selectedIds.length} seleccionadas`} color="primary" size="small" sx={{ ml: 1 }} />
+              <Chip
+                label={`${selectedIds.length} seleccionadas`}
+                color="primary"
+                size="small"
+                sx={{ ml: 1 }}
+              />
             )}
           </Typography>
-          <TextField fullWidth size="small" placeholder="Buscar estación..." value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }} sx={{ mb: 2 }} />
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Buscar estación..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
+            sx={{ mb: 2 }}
+          />
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
           ) : (
             <Paper variant="outlined">
               <FormGroup>
                 {stations.map((s) => (
                   <Box key={s.id}>
-                    <FormControlLabel sx={{ px: 2, py: 0.5, width: '100%', m: 0 }}
+                    <FormControlLabel
+                      sx={{ px: 2, py: 0.5, width: '100%', m: 0 }}
                       control={
-                        <Checkbox size="small" checked={selectedIds.includes(s.id)}
+                        <Checkbox
+                          size="small"
+                          checked={selectedIds.includes(s.id)}
                           onChange={() => {
                             const next = selectedIds.includes(s.id)
                               ? selectedIds.filter((x) => x !== s.id)
                               : [...selectedIds, s.id];
                             setSelectedIds(next);
-                          }} />
+                          }}
+                        />
                       }
                       label={
                         <Box>
-                          <Typography variant="body2" fontWeight="medium">{s.name}</Typography>
-                          <Typography variant="caption" color="text.secondary">{s.address}</Typography>
+                          <Typography variant="body2" fontWeight="medium">
+                            {s.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {s.address}
+                          </Typography>
                         </Box>
-                      } />
+                      }
+                    />
                     <Divider />
                   </Box>
                 ))}
               </FormGroup>
               {stations.length === 0 && (
-                <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ p: 2, textAlign: 'center' }}
+                >
                   No se han encontrado estaciones.
                 </Typography>
               )}
             </Paper>
           )}
           {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1, mt: 1 }}>
-              <Button size="small" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Anterior</Button>
-              <Typography variant="caption">{page + 1} / {totalPages}</Typography>
-              <Button size="small" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}>Siguiente</Button>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: 1,
+                mt: 1,
+              }}
+            >
+              <Button size="small" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                Anterior
+              </Button>
+              <Typography variant="caption">
+                {page + 1} / {totalPages}
+              </Typography>
+              <Button
+                size="small"
+                disabled={page + 1 >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Siguiente
+              </Button>
             </Box>
           )}
         </Box>
@@ -527,7 +745,14 @@ function StationsStep({
 // ----------------------------------------------------------------------
 
 function ExcelClientStep({
-  clients, clientId, setClientId, commission, setCommission, isHubject, operatorId, setOperatorId,
+  clients,
+  clientId,
+  setClientId,
+  commission,
+  setCommission,
+  isHubject,
+  operatorId,
+  setOperatorId,
 }: {
   clients: Client[];
   clientId: number | null;
@@ -542,7 +767,10 @@ function ExcelClientStep({
   const [opLoading, setOpLoading] = useState(false);
 
   useEffect(() => {
-    if (!isHubject) { setOperators([]); return; }
+    if (!isHubject) {
+      setOperators([]);
+      return;
+    }
     setOpLoading(true);
     fetcher(endpoints.operators.list)
       .then((res: { data: Operator[] }) => setOperators(res.data ?? []))
@@ -552,27 +780,60 @@ function ExcelClientStep({
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>Cliente y comisión</Typography>
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        Cliente y comisión
+      </Typography>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField select fullWidth label="Cliente" value={clientId ?? ''}
+          <TextField
+            select
+            fullWidth
+            label="Cliente"
+            value={clientId ?? ''}
             onChange={(e) => setClientId(e.target.value === '' ? null : Number(e.target.value))}
-            helperText="Déjalo vacío para tarifas Eurocharger">
-            <MenuItem value=""><em>Sin cliente (Eurocharger)</em></MenuItem>
-            {clients.map((c) => <MenuItem key={c.id} value={c.id}>{c.business_name}</MenuItem>)}
+            helperText="Déjalo vacío para tarifas Eurocharger"
+          >
+            <MenuItem value="">
+              <em>Sin cliente (Eurocharger)</em>
+            </MenuItem>
+            {clients.map((c) => (
+              <MenuItem key={c.id} value={c.id}>
+                {c.business_name}
+              </MenuItem>
+            ))}
           </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField fullWidth label="Comisión" type="number" value={commission}
+          <TextField
+            fullWidth
+            label="Comisión"
+            type="number"
+            value={commission}
             onChange={(e) => setCommission(Number(e.target.value))}
-            slotProps={{ input: { endAdornment: <InputAdornment position="end">%</InputAdornment> } }} />
+            slotProps={{
+              input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
+            }}
+          />
         </Grid>
         {isHubject && (
           <Grid size={{ xs: 12, sm: 6 }}>
-            {opLoading ? <CircularProgress size={24} /> : (
-              <TextField select fullWidth label="Operador Hubject (CPO)" value={operatorId ?? ''}
-                onChange={(e) => setOperatorId(e.target.value === '' ? null : Number(e.target.value))}>
-                {operators.map((op) => <MenuItem key={op.id} value={op.id}>{op.name}</MenuItem>)}
+            {opLoading ? (
+              <CircularProgress size={24} />
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Operador Hubject (CPO)"
+                value={operatorId ?? ''}
+                onChange={(e) =>
+                  setOperatorId(e.target.value === '' ? null : Number(e.target.value))
+                }
+              >
+                {operators.map((op) => (
+                  <MenuItem key={op.id} value={op.id}>
+                    {op.name}
+                  </MenuItem>
+                ))}
               </TextField>
             )}
           </Grid>
@@ -587,7 +848,13 @@ function ExcelClientStep({
 // ----------------------------------------------------------------------
 
 function ExcelFileStep({
-  assignmentMethod, setAssignmentMethod, file, setFile, preview, previewLoading, onRequestPreview,
+  assignmentMethod,
+  setAssignmentMethod,
+  file,
+  setFile,
+  preview,
+  previewLoading,
+  onRequestPreview,
 }: {
   assignmentMethod: AssignmentMethod | null;
   setAssignmentMethod: (m: AssignmentMethod) => void;
@@ -605,28 +872,51 @@ function ExcelFileStep({
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>Método de asignación y archivo</Typography>
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Asignar tarifas por:</Typography>
-      <ToggleButtonGroup value={assignmentMethod} exclusive
-        onChange={(_, val) => { if (val) { setAssignmentMethod(val); if (file) onRequestPreview(file, val); } }}
-        sx={{ mb: 3 }}>
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        Método de asignación y archivo
+      </Typography>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        Asignar tarifas por:
+      </Typography>
+      <ToggleButtonGroup
+        value={assignmentMethod}
+        exclusive
+        onChange={(_, val) => {
+          if (val) {
+            setAssignmentMethod(val);
+            if (file) onRequestPreview(file, val);
+          }
+        }}
+        sx={{ mb: 3 }}
+      >
         <ToggleButton value="power">Potencia</ToggleButton>
         <ToggleButton value="excel">Excel</ToggleButton>
       </ToggleButtonGroup>
       <Box
         sx={{
-          border: '2px dashed', borderColor: file ? 'primary.main' : 'divider',
-          borderRadius: 2, p: 4, textAlign: 'center',
+          border: '2px dashed',
+          borderColor: file ? 'primary.main' : 'divider',
+          borderRadius: 2,
+          p: 4,
+          textAlign: 'center',
           bgcolor: file ? 'primary.lighter' : 'background.neutral',
-          cursor: 'pointer', transition: 'all .2s',
+          cursor: 'pointer',
+          transition: 'all .2s',
         }}
         onClick={() => document.getElementById('excel-upload')?.click()}
       >
-        <input id="excel-upload" type="file" accept=".xlsx,.xls,.csv"
-          style={{ display: 'none' }} onChange={handleFileChange} />
+        <input
+          id="excel-upload"
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
         {file ? (
           <>
-            <Typography variant="body1" fontWeight="bold">📄 {file.name}</Typography>
+            <Typography variant="body1" fontWeight="bold">
+              📄 {file.name}
+            </Typography>
             <Typography variant="caption" color="text.secondary">
               {(file.size / 1024).toFixed(1)} KB · Haz clic para cambiar
             </Typography>
@@ -636,7 +926,9 @@ function ExcelFileStep({
             <Typography variant="body1" color="text.secondary">
               Arrastra o haz clic para subir el fichero Excel
             </Typography>
-            <Typography variant="caption" color="text.secondary">.xlsx · .xls · .csv</Typography>
+            <Typography variant="caption" color="text.secondary">
+              .xlsx · .xls · .csv
+            </Typography>
           </>
         )}
       </Box>
@@ -660,7 +952,11 @@ function ExcelFileStep({
 // ----------------------------------------------------------------------
 
 function SummaryStep({
-  method, drafts, clientName, commission, stretches,
+  method,
+  drafts,
+  clientName,
+  commission,
+  stretches,
 }: {
   method: Method;
   drafts: RateDraft[];
@@ -670,34 +966,52 @@ function SummaryStep({
 }) {
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 1 }}>Resumen</Typography>
+      <Typography variant="h6" sx={{ mb: 1 }}>
+        Resumen
+      </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Revisa los datos antes de confirmar.
       </Typography>
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
-            <Typography variant="caption" color="text.secondary" display="block">Método</Typography>
-            <Typography variant="body1" fontWeight="bold">{method === 'manual' ? 'Manual' : 'Excel'}</Typography>
+            <Typography variant="caption" color="text.secondary" display="block">
+              Método
+            </Typography>
+            <Typography variant="body1" fontWeight="bold">
+              {method === 'manual' ? 'Manual' : 'Excel'}
+            </Typography>
           </Box>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
-            <Typography variant="caption" color="text.secondary" display="block">Cliente</Typography>
-            <Typography variant="body1" fontWeight="bold">{clientName || 'Eurocharger'}</Typography>
+            <Typography variant="caption" color="text.secondary" display="block">
+              Cliente
+            </Typography>
+            <Typography variant="body1" fontWeight="bold">
+              {clientName || 'Eurocharger'}
+            </Typography>
           </Box>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
             {method === 'manual' ? (
               <>
-                <Typography variant="caption" color="text.secondary" display="block">Tramos configurados</Typography>
-                <Typography variant="body1" fontWeight="bold">{stretches?.length ?? 0}</Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Tramos configurados
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
+                  {stretches?.length ?? 0}
+                </Typography>
               </>
             ) : (
               <>
-                <Typography variant="caption" color="text.secondary" display="block">Comisión aplicada</Typography>
-                <Typography variant="body1" fontWeight="bold">{commission ?? 0}%</Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Comisión aplicada
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
+                  {commission ?? 0}%
+                </Typography>
               </>
             )}
           </Box>
@@ -706,27 +1020,40 @@ function SummaryStep({
 
       {method === 'manual' && stretches && stretches.length > 0 && (
         <>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Tramos</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Tramos
+          </Typography>
           <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Horario</TableCell><TableCell>Tramo kWh</TableCell>
-                  <TableCell align="right">Precio</TableCell><TableCell align="right">Conexión</TableCell>
-                  <TableCell align="right">Parking</TableCell><TableCell align="right">Inactividad</TableCell>
+                  <TableCell>Horario</TableCell>
+                  <TableCell>Tramo kWh</TableCell>
+                  <TableCell align="right">Precio</TableCell>
+                  <TableCell align="right">Conexión</TableCell>
+                  <TableCell align="right">Parking</TableCell>
+                  <TableCell align="right">Inactividad</TableCell>
                   <TableCell>Días</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {stretches.map((s, i) => (
                   <TableRow key={i}>
-                    <TableCell>{s.startTime || '—'} → {s.endTime || '—'}</TableCell>
-                    <TableCell>{s.stretchStart} – {s.stretchEnd}</TableCell>
+                    <TableCell>
+                      {s.startTime || '—'} → {s.endTime || '—'}
+                    </TableCell>
+                    <TableCell>
+                      {s.stretchStart} – {s.stretchEnd}
+                    </TableCell>
                     <TableCell align="right">{formatPrice(s.price)} €/kWh</TableCell>
                     <TableCell align="right">{formatPrice(s.fixedPrice)} €</TableCell>
                     <TableCell align="right">{formatPrice(s.parkingPrice)} €/min</TableCell>
                     <TableCell align="right">{formatPrice(s.inactivityFee)} €/min</TableCell>
-                    <TableCell>{DAYS.filter((d) => s.daysOfWeek[d.key]).map((d) => d.label).join(' ')}</TableCell>
+                    <TableCell>
+                      {DAYS.filter((d) => s.daysOfWeek[d.key])
+                        .map((d) => d.label)
+                        .join(' ')}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -758,7 +1085,9 @@ function SummaryStep({
                 <TableCell align="right">
                   <Chip label={`${formatPrice(d.finalPrice)} €`} color="primary" size="small" />
                 </TableCell>
-                <TableCell align="right">{d.inactivity > 0 ? `${formatPrice(d.inactivity)} €/min` : '—'}</TableCell>
+                <TableCell align="right">
+                  {d.inactivity > 0 ? `${formatPrice(d.inactivity)} €/min` : '—'}
+                </TableCell>
                 <TableCell align="right">{d.minPower} kW</TableCell>
                 <TableCell align="right">{d.maxPower} kW</TableCell>
               </TableRow>
@@ -781,7 +1110,12 @@ export type CreateRateWizardProps = {
   chargepointId?: number;
 };
 
-export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepointId }: CreateRateWizardProps) {
+export function CreateRateWizard({
+  onSuccess,
+  onCancel,
+  connectorId,
+  chargepointId,
+}: CreateRateWizardProps) {
   const isConnectorMode = connectorId != null && chargepointId != null;
 
   const [stepIndex, setStepIndex] = useState(0);
@@ -817,13 +1151,14 @@ export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepoint
   const activeClientId = method === 'excel' ? excelClientId : clientId;
   const activeClientName = clients.find((c) => c.id === activeClientId)?.business_name ?? '';
 
-  const steps = method === 'excel'
-    ? EXCEL_STEPS
-    : isConnectorMode
-      ? MANUAL_STEPS_CONNECTOR
-      : isHubject
-        ? MANUAL_STEPS_HUBJECT
-        : MANUAL_STEPS;
+  const steps =
+    method === 'excel'
+      ? EXCEL_STEPS
+      : isConnectorMode
+        ? MANUAL_STEPS_CONNECTOR
+        : isHubject
+          ? MANUAL_STEPS_HUBJECT
+          : MANUAL_STEPS;
 
   useEffect(() => {
     fetcher(endpoints.clients.list)
@@ -913,7 +1248,8 @@ export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepoint
       } else {
         const formData = new FormData();
         if (excelClientId) formData.append('clientId', String(excelClientId));
-        if (excelIsHubject && excelOperatorId) formData.append('operatorId', String(excelOperatorId));
+        if (excelIsHubject && excelOperatorId)
+          formData.append('operatorId', String(excelOperatorId));
         formData.append('commission', String(excelCommission));
         formData.append('assignmentMethod', assignmentMethod!);
         formData.append('file', excelFile!);
@@ -922,7 +1258,9 @@ export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepoint
       }
 
       if (isConnectorMode && newRateId) {
-        await put(endpoints.connectors.assign(chargepointId!, connectorId!), { rate_id: newRateId });
+        await put(endpoints.connectors.assign(chargepointId!, connectorId!), {
+          rate_id: newRateId,
+        });
       }
 
       onSuccess?.(newRateId);
@@ -941,26 +1279,43 @@ export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepoint
       if (stepIndex === 1) {
         return (
           <ManualBasicInfoStep
-            clients={clients} clientId={clientId} setClientId={setClientId}
-            operatorId={operatorId} setOperatorId={setOperatorId}
-            rateName={rateName} setRateName={setRateName}
-            rateType={rateType} setRateType={setRateType} isHubject={isHubject}
+            clients={clients}
+            clientId={clientId}
+            setClientId={setClientId}
+            operatorId={operatorId}
+            setOperatorId={setOperatorId}
+            rateName={rateName}
+            setRateName={setRateName}
+            rateType={rateType}
+            setRateType={setRateType}
+            isHubject={isHubject}
           />
         );
       }
-      if (stepIndex === 2) return <StretchesStep stretches={stretches} setStretches={setStretches} />;
+      if (stepIndex === 2)
+        return <StretchesStep stretches={stretches} setStretches={setStretches} />;
       if (!isConnectorMode && !isHubject && stepIndex === 3) {
         return (
           <StationsStep
-            clientId={clientId} selectedIds={selectedStationIds} setSelectedIds={setSelectedStationIds}
-            assignmentType={stationAssignmentType} setAssignmentType={setStationAssignmentType}
-            minPower={minPower} setMinPower={setMinPower} maxPower={maxPower} setMaxPower={setMaxPower}
+            clientId={clientId}
+            selectedIds={selectedStationIds}
+            setSelectedIds={setSelectedStationIds}
+            assignmentType={stationAssignmentType}
+            setAssignmentType={setStationAssignmentType}
+            minPower={minPower}
+            setMinPower={setMinPower}
+            maxPower={maxPower}
+            setMaxPower={setMaxPower}
           />
         );
       }
       return (
-        <SummaryStep method="manual" drafts={summaryDrafts}
-          clientName={activeClientName} stretches={stretches} />
+        <SummaryStep
+          method="manual"
+          drafts={summaryDrafts}
+          clientName={activeClientName}
+          stretches={stretches}
+        />
       );
     }
 
@@ -968,21 +1323,41 @@ export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepoint
       if (stepIndex === 1) {
         return (
           <ExcelClientStep
-            clients={clients} clientId={excelClientId}
-            setClientId={(id) => { setExcelClientId(id); if (id !== HUBJECT_CLIENT_ID) setExcelOperatorId(null); }}
-            commission={excelCommission} setCommission={setExcelCommission}
-            isHubject={excelIsHubject} operatorId={excelOperatorId} setOperatorId={setExcelOperatorId}
+            clients={clients}
+            clientId={excelClientId}
+            setClientId={(id) => {
+              setExcelClientId(id);
+              if (id !== HUBJECT_CLIENT_ID) setExcelOperatorId(null);
+            }}
+            commission={excelCommission}
+            setCommission={setExcelCommission}
+            isHubject={excelIsHubject}
+            operatorId={excelOperatorId}
+            setOperatorId={setExcelOperatorId}
           />
         );
       }
       if (stepIndex === 2) {
         return (
-          <ExcelFileStep assignmentMethod={assignmentMethod} setAssignmentMethod={setAssignmentMethod}
-            file={excelFile} setFile={setExcelFile} preview={excelPreview}
-            previewLoading={previewLoading} onRequestPreview={handleRequestPreview} />
+          <ExcelFileStep
+            assignmentMethod={assignmentMethod}
+            setAssignmentMethod={setAssignmentMethod}
+            file={excelFile}
+            setFile={setExcelFile}
+            preview={excelPreview}
+            previewLoading={previewLoading}
+            onRequestPreview={handleRequestPreview}
+          />
         );
       }
-      return <SummaryStep method="excel" drafts={summaryDrafts} clientName={activeClientName} commission={excelCommission} />;
+      return (
+        <SummaryStep
+          method="excel"
+          drafts={summaryDrafts}
+          clientName={activeClientName}
+          commission={excelCommission}
+        />
+      );
     }
 
     return null;
@@ -992,13 +1367,17 @@ export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepoint
     <Stack spacing={3}>
       <Stepper activeStep={stepIndex}>
         {steps.map((label) => (
-          <Step key={label}><StepLabel>{label}</StepLabel></Step>
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
         ))}
       </Stepper>
 
       <Box>
         {clientsLoading && stepIndex === 1 ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
         ) : (
           renderStepContent()
         )}
@@ -1007,7 +1386,10 @@ export function CreateRateWizard({ onSuccess, onCancel, connectorId, chargepoint
       {submitError && <Alert severity="error">{submitError}</Alert>}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button variant="outlined" onClick={stepIndex === 0 ? onCancel : () => setStepIndex((s) => s - 1)}>
+        <Button
+          variant="outlined"
+          onClick={stepIndex === 0 ? onCancel : () => setStepIndex((s) => s - 1)}
+        >
           {stepIndex === 0 ? 'Cancelar' : 'Atrás'}
         </Button>
         <Button

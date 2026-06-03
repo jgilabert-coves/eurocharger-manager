@@ -42,6 +42,8 @@ import { AvailabilityDialog } from 'src/components/ocpp/availability/dialog';
 import { ConnectorStatusChip } from 'src/components/chips/connector-status-chip';
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
 
+import { useAbility } from 'src/auth/hooks/use-ability';
+
 // ----------------------------------------------------------------------
 
 const STATUS_BG_COLOR: Record<string, string> = {
@@ -177,6 +179,7 @@ function ConnectorCard({
   const [selectedRateId, setSelectedRateId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const { canOperate, isViewOnly } = useAbility();
 
   useEffect(() => {
     if (!assignOpen) return () => {};
@@ -280,16 +283,18 @@ function ConnectorCard({
                 sx={{ flexShrink: 0 }}
               >
                 <Stack direction="row" spacing={0.5}>
-                  <IconButton
-                    size="small"
-                    title="Editar conector"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(connector);
-                    }}
-                  >
-                    <Iconify icon="mdi:pencil-outline" width={16} />
-                  </IconButton>
+                  {!isViewOnly() && (
+                    <IconButton
+                      size="small"
+                      title="Editar conector"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(connector);
+                      }}
+                    >
+                      <Iconify icon="mdi:pencil-outline" width={16} />
+                    </IconButton>
+                  )}
                 </Stack>
                 {connector.power != null && (
                   <Box
@@ -326,90 +331,98 @@ function ConnectorCard({
                   <Label color="success" variant="soft">
                     💶 {connector.rateName}
                   </Label>
-                  <IconButton
-                    size="small"
-                    title="Quitar tarifa"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveRate();
-                    }}
-                    sx={{ color: 'error.main' }}
-                  >
-                    <Iconify icon="mingcute:close-line" width={14} />
-                  </IconButton>
-                  <Button variant="soft" size="small" onClick={() => setAssignOpen((o) => !o)}>
-                    <Iconify icon="mdi:pencil" width={14} sx={{ mr: 0.5 }} />
-                    Cambiar
-                  </Button>
+                  {!isViewOnly() && (
+                    <>
+                      <IconButton
+                        size="small"
+                        title="Quitar tarifa"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveRate();
+                        }}
+                        sx={{ color: 'error.main' }}
+                      >
+                        <Iconify icon="mingcute:close-line" width={14} />
+                      </IconButton>
+                      <Button variant="soft" size="small" onClick={() => setAssignOpen((o) => !o)}>
+                        <Iconify icon="mdi:pencil" width={14} sx={{ mr: 0.5 }} />
+                        Cambiar
+                      </Button>
+                    </>
+                  )}
                 </Stack>
               ) : (
-                <Button variant="soft" size="small" onClick={() => setAssignOpen((o) => !o)}>
-                  <Iconify icon="mdi:plus" width={14} sx={{ mr: 0.5 }} />
-                  Asignar tarifa
-                </Button>
+                !isViewOnly() && (
+                  <Button variant="soft" size="small" onClick={() => setAssignOpen((o) => !o)}>
+                    <Iconify icon="mdi:plus" width={14} sx={{ mr: 0.5 }} />
+                    Asignar tarifa
+                  </Button>
+                )
               )}
 
-              <Stack direction="row" spacing={0.5}>
-                {STOP_STATUSES.has(connector.status?.toLowerCase() ?? '') ? (
-                  <Tooltip title="Parar recarga">
+              {canOperate() && (
+                <Stack direction="row" spacing={0.5}>
+                  {STOP_STATUSES.has(connector.status?.toLowerCase() ?? '') ? (
+                    <Tooltip title="Parar recarga">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAction({
+                            type: 'stop',
+                            connectorId: ocppConnectorId,
+                            transactionId: connector.transactionId,
+                          });
+                        }}
+                      >
+                        <Iconify icon="mdi:stop" width={16} />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="Iniciar recarga">
+                      <IconButton
+                        size="small"
+                        color="success"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAction({ type: 'start', connectorId: ocppConnectorId });
+                        }}
+                      >
+                        <Iconify icon="mdi:play" width={16} />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+
+                  <Tooltip title="Desbloquear conector">
                     <IconButton
                       size="small"
-                      color="error"
+                      color="info"
+                      title="Desbloquear conector"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onAction({
-                          type: 'stop',
-                          connectorId: ocppConnectorId,
-                          transactionId: connector.transactionId,
-                        });
+                        onAction({ type: 'unlock', connectorId: ocppConnectorId });
                       }}
                     >
-                      <Iconify icon="mdi:stop" width={16} />
+                      <Iconify icon="mdi:lock-open-outline" width={16} />
                     </IconButton>
                   </Tooltip>
-                ) : (
-                  <Tooltip title="Iniciar recarga">
+
+                  <Tooltip title="Cambiar disponibilidad">
                     <IconButton
                       size="small"
                       color="success"
+                      title="Cambiar disponibilidad"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onAction({ type: 'start', connectorId: ocppConnectorId });
+                        onAction({ type: 'availability', connectorId: ocppConnectorId });
                       }}
                     >
-                      <Iconify icon="mdi:play" width={16} />
+                      <Iconify icon="mdi:swap-horizontal" width={16} />
                     </IconButton>
                   </Tooltip>
-                )}
-
-                <Tooltip title="Desbloquear conector">
-                  <IconButton
-                    size="small"
-                    color="info"
-                    title="Desbloquear conector"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAction({ type: 'unlock', connectorId: ocppConnectorId });
-                    }}
-                  >
-                    <Iconify icon="mdi:lock-open-outline" width={16} />
-                  </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Cambiar disponibilidad">
-                  <IconButton
-                    size="small"
-                    color="success"
-                    title="Cambiar disponibilidad"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAction({ type: 'availability', connectorId: ocppConnectorId });
-                    }}
-                  >
-                    <Iconify icon="mdi:swap-horizontal" width={16} />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
+                </Stack>
+              )}
             </Stack>
 
             {/* Inline rate assignment panel */}
@@ -714,6 +727,7 @@ export default function ChargerDetailV2() {
   const [editState, setEditState] = useState<
     { mode: 'idle' } | { mode: 'add' } | { mode: 'edit'; connectorId: number }
   >({ mode: 'idle' });
+  const { canOperate, isViewOnly } = useAbility();
 
   const loadChargepoint = async () => {
     try {
@@ -819,15 +833,17 @@ export default function ChargerDetailV2() {
               )}
             </Box>
 
-            <Button
-              variant="contained"
-              size="small"
-              color="error"
-              startIcon={<Iconify icon="mdi:reload" />}
-              onClick={() => setResetOpen(true)}
-            >
-              Reiniciar
-            </Button>
+            {canOperate() && (
+              <Button
+                variant="contained"
+                size="small"
+                color="error"
+                startIcon={<Iconify icon="mdi:reload" />}
+                onClick={() => setResetOpen(true)}
+              >
+                Reiniciar
+              </Button>
+            )}
           </Stack>
 
           {/* ── Warning banner ──────────────────────────────────────────────── */}
@@ -915,7 +931,8 @@ export default function ChargerDetailV2() {
             title={`Conectores (${chargepoint.connectors.length})`}
             warning={missingConnectors}
             action={
-              editState.mode === 'idle' && (
+              editState.mode === 'idle' &&
+              !isViewOnly() && (
                 <Button
                   size="small"
                   variant="outlined"

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
@@ -26,6 +28,13 @@ export type CreateInvitationDialogProps = {
   onSuccess: () => void;
 };
 
+type GroupRow = {
+  groupId: string;
+  permissionLevel: InvitationPermissionLevel;
+};
+
+const EMPTY_GROUP: GroupRow = { groupId: '', permissionLevel: 'view' };
+
 export function CreateInvitationDialog({
   accountId,
   open,
@@ -34,8 +43,7 @@ export function CreateInvitationDialog({
 }: CreateInvitationDialogProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InvitationRole>('saas_guest');
-  const [chargerGroupId, setChargerGroupId] = useState<string>('');
-  const [permissionLevel, setPermissionLevel] = useState<InvitationPermissionLevel>('view');
+  const [groups, setGroups] = useState<GroupRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,29 +54,36 @@ export function CreateInvitationDialog({
     staleTime: 2 * 60 * 1000,
   });
 
-  const groups: ChargerGroup[] = groupsData?.data ?? [];
+  const availableGroups: ChargerGroup[] = groupsData?.data ?? [];
 
   const handleClose = () => {
     setEmail('');
     setRole('saas_guest');
-    setChargerGroupId('');
-    setPermissionLevel('view');
+    setGroups([]);
     setError(null);
     onClose();
   };
+
+  const addGroup = () => setGroups((prev) => [...prev, { ...EMPTY_GROUP }]);
+
+  const updateGroup = (index: number, patch: Partial<GroupRow>) =>
+    setGroups((prev) => prev.map((g, i) => (i === index ? { ...g, ...patch } : g)));
+
+  const removeGroup = (index: number) =>
+    setGroups((prev) => prev.filter((_, i) => i !== index));
+
+  const selectedGroupIds = groups.map((g) => g.groupId).filter(Boolean);
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
       setError(null);
-      const payload: Record<string, string> = {
+      const validGroups = groups.filter((g) => g.groupId);
+      await post(endpoints.invitations.create(accountId), {
         email: email.trim(),
         role,
-        permissionLevel,
-      };
-      if (chargerGroupId) payload.chargerGroupId = chargerGroupId;
-
-      await post(endpoints.invitations.create(accountId), payload);
+        ...(validGroups.length > 0 ? { groups: validGroups } : {}),
+      });
       onSuccess();
       handleClose();
     } catch (err: any) {
@@ -130,40 +145,71 @@ export function CreateInvitationDialog({
           <MenuItem value="saas_admin">Admin</MenuItem>
         </TextField>
 
-        <TextField
-          select
-          label="Propietario"
-          size="small"
-          fullWidth
-          value={chargerGroupId}
-          onChange={(e) => setChargerGroupId(e.target.value)}
-          helperText={
-            groups.length === 0
-              ? 'Sin propietarios aún. Crea uno en "Propietarios".'
-              : 'Opcional — sin grupo, el invitado no verá ningún cargador.'
-          }
-          sx={{ mb: 2 }}
-        >
-          <MenuItem value="">Sin grupo asignado</MenuItem>
-          {groups.map((g) => (
-            <MenuItem key={g.id} value={g.id}>
-              {g.name}
-            </MenuItem>
-          ))}
-        </TextField>
+        {/* Groups */}
+        {groups.length > 0 && (
+          <Box sx={{ mb: 1 }}>
+            <Divider sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                Propietarios asignados
+              </Typography>
+            </Divider>
+            {groups.map((g, i) => (
+              <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
+                <TextField
+                  select
+                  size="small"
+                  label="Propietario"
+                  value={g.groupId}
+                  onChange={(e) => updateGroup(i, { groupId: e.target.value })}
+                  sx={{ flex: 1 }}
+                >
+                  <MenuItem value="">Sin asignar</MenuItem>
+                  {availableGroups.map((ag) => (
+                    <MenuItem
+                      key={ag.id}
+                      value={ag.id}
+                      disabled={selectedGroupIds.includes(ag.id) && ag.id !== g.groupId}
+                    >
+                      {ag.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  size="small"
+                  label="Acceso"
+                  value={g.permissionLevel}
+                  onChange={(e) => updateGroup(i, { permissionLevel: e.target.value as InvitationPermissionLevel })}
+                  sx={{ width: 130 }}
+                >
+                  <MenuItem value="view">Lectura</MenuItem>
+                  <MenuItem value="operate">Operación</MenuItem>
+                </TextField>
+                <IconButton size="small" onClick={() => removeGroup(i)} sx={{ color: 'text.secondary' }}>
+                  <Iconify icon="mingcute:close-line" width={16} />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        )}
 
-        {chargerGroupId && (
-          <TextField
-            select
-            label="Nivel de acceso"
+        {availableGroups.length > 0 && (
+          <Button
             size="small"
-            fullWidth
-            value={permissionLevel}
-            onChange={(e) => setPermissionLevel(e.target.value as InvitationPermissionLevel)}
+            variant="text"
+            startIcon={<Iconify icon="mingcute:add-line" width={16} />}
+            onClick={addGroup}
+            disabled={groups.length >= availableGroups.length}
+            sx={{ mt: 0.5 }}
           >
-            <MenuItem value="view">Solo visualización</MenuItem>
-            <MenuItem value="operate">Visualización y operación</MenuItem>
-          </TextField>
+            Añadir propietario
+          </Button>
+        )}
+
+        {availableGroups.length === 0 && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            Sin propietarios aún. Crea uno en Propietarios.
+          </Typography>
         )}
       </DialogContent>
 

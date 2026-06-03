@@ -38,9 +38,7 @@ const flattenNavItems = (navItems: NavItem[], parentGroup?: string): OutputItem[
 
 export function flattenNavSections(navSections: NavSectionProps['data']): OutputItem[] {
   return navSections.flatMap((entry) =>
-    isNavGroup(entry)
-      ? flattenNavItems(entry.items, entry.subheader)
-      : flattenNavItems([entry])
+    isNavGroup(entry) ? flattenNavItems(entry.items, entry.subheader) : flattenNavItems([entry])
   );
 }
 

@@ -20,6 +20,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fDateTime } from 'src/utils/format-time';
 
 import { fetcher, endpoints } from 'src/lib/axios';
@@ -43,9 +45,10 @@ export default function IncidentsView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [orderBy, setOrderBy] = useState('date');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const debouncedSearch = useDebounce(searchQuery);
 
   const { data: res, isLoading } = useQuery({
-    queryKey: ['incidents', 'list', { page, pageSize, searchQuery, orderBy, order }],
+    queryKey: ['incidents', 'list', { page, pageSize, search: debouncedSearch, orderBy, order }],
     queryFn: () =>
       fetcher([
         endpoints.incidents.list,
@@ -53,7 +56,7 @@ export default function IncidentsView() {
           params: {
             page,
             pageSize,
-            searchQuery,
+            searchQuery: debouncedSearch,
             sortQuery: `${orderBy}=${order}`,
           },
         },

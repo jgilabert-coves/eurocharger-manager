@@ -3,7 +3,7 @@ import type { RouteObject } from 'react-router';
 import { Outlet } from 'react-router';
 import { lazy, Suspense } from 'react';
 
-import { SplashScreen , LoadingScreen } from 'src/components/loading-screen';
+import { SplashScreen, LoadingScreen } from 'src/components/loading-screen';
 
 import { usePathname } from '../hooks';
 import { CONFIG } from '../../global-config';

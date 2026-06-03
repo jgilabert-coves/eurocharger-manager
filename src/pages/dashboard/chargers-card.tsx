@@ -57,8 +57,15 @@ export function ChargersCard() {
 
           return (
             <Box key={key}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-                <Typography variant="body2" sx={{ color: inkDarkest }}>{label}</Typography>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 0.5 }}
+              >
+                <Typography variant="body2" sx={{ color: inkDarkest }}>
+                  {label}
+                </Typography>
                 {isLoading ? (
                   <Skeleton width={40} height={20} />
                 ) : (
@@ -74,7 +81,15 @@ export function ChargersCard() {
                 <Skeleton variant="rounded" height={6} sx={{ borderRadius: '10px' }} />
               ) : (
                 <Box sx={{ height: 6, bgcolor: bgBar, borderRadius: '10px', overflow: 'hidden' }}>
-                  <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: color, borderRadius: '10px', opacity: value === 0 ? 0.3 : 1 }} />
+                  <Box
+                    sx={{
+                      width: `${pct}%`,
+                      height: '100%',
+                      bgcolor: color,
+                      borderRadius: '10px',
+                      opacity: value === 0 ? 0.3 : 1,
+                    }}
+                  />
                 </Box>
               )}
             </Box>
@@ -86,15 +101,27 @@ export function ChargersCard() {
 
       <Stack spacing={1} sx={{ pt: 1.5 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="body2" sx={{ color: inkDarkest, fontWeight: 600 }}>Total conectores</Typography>
-          {isLoading ? <Skeleton width={30} /> : (
-            <Typography variant="h6" sx={{ color: inkDarkest }}>{total}</Typography>
+          <Typography variant="body2" sx={{ color: inkDarkest, fontWeight: 600 }}>
+            Total conectores
+          </Typography>
+          {isLoading ? (
+            <Skeleton width={30} />
+          ) : (
+            <Typography variant="h6" sx={{ color: inkDarkest }}>
+              {total}
+            </Typography>
           )}
         </Stack>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="body2" sx={{ color: inkLighter }}>Disponibilidad</Typography>
-          {isLoading ? <Skeleton width={40} /> : (
-            <Typography variant="h6" sx={{ color: p.primary.dark }}>{pctValue(metrics?.available ?? 0, total)}%</Typography>
+          <Typography variant="body2" sx={{ color: inkLighter }}>
+            Disponibilidad
+          </Typography>
+          {isLoading ? (
+            <Skeleton width={40} />
+          ) : (
+            <Typography variant="h6" sx={{ color: p.primary.dark }}>
+              {pctValue(metrics?.available ?? 0, total)}%
+            </Typography>
           )}
         </Stack>
         {isLoading ? (
