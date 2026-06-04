@@ -90,7 +90,9 @@ function SectionCard({
         bgcolor: warning ? 'warning.lighter' : 'background.paper',
       }}
     >
-      <CardContent>
+      <CardContent
+        sx={{ display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}
+      >
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
           <Stack direction="row" alignItems="center" spacing={0.75}>
             {warning && <Iconify icon="mdi:alert" width={16} sx={{ color: 'warning.main' }} />}
@@ -100,7 +102,7 @@ function SectionCard({
           </Stack>
           {action}
         </Stack>
-        {children}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>{children}</Box>
       </CardContent>
     </Card>
   );
@@ -921,10 +923,12 @@ export default function ChargerDetailV2() {
                   label="Endpoint"
                   value={'ws://' + chargepoint.endpointAddress + ':' + chargepoint.port}
                 />
-                <InfoRow label="Client CP ID" value={chargepoint.client_cp_id} mono />
+                {chargepoint.client_cp_id != null && (
+                  <InfoRow label="Client CP ID" value={chargepoint.client_cp_id} mono />
+                )}
                 <InfoRow label="Protocolo" value="OCPP 1.6J" />
                 {hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && (
-                  <Box sx={{ mt: 1.5 }}>
+                  <Box sx={{ mt: 'auto', pt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                       size="small"
                       variant="outlined"

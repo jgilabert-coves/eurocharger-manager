@@ -229,6 +229,7 @@ export const endpoints = {
     resetPassword: '/auth/reset-password',
     discountInfo: '/auth/discount-info',
   },
+  countries: '/countries',
   billing: {
     setupIntent: '/billing/setup-intent',
     subscribe: '/billing/subscribe',

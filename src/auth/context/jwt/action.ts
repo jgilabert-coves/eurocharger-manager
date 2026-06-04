@@ -26,7 +26,11 @@ export type RegisterAndSubscribeParams = {
   email: string;
   password: string;
   fullName: string;
-  cif?: string;
+  cif: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  countryId: number;
   phone?: string;
   paymentMethodId: string;
   planId: string;
@@ -169,6 +173,10 @@ export const registerAndSubscribe = async (
       email: params.email,
       password: params.password,
       cif: params.cif,
+      address: params.address,
+      city: params.city,
+      postalCode: params.postalCode,
+      countryId: params.countryId,
       phone: params.phone,
       paymentMethodId: params.paymentMethodId,
       planId: params.planId,
