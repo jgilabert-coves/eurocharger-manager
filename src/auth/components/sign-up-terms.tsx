@@ -21,13 +21,13 @@ export function SignUpTerms({ sx, ...other }: BoxProps) {
       ]}
       {...other}
     >
-      {'By signing up, I agree to '}
-      <Link underline="always" color="text.primary">
-        Terms of service
+      {'Al iniciar sesión, aceptas nuestros '}
+      <Link underline="always" color="text.primary" href="https://www.eurocharger.es/terminosycondiciones" target="_blank">
+        Términos y condiciones
       </Link>
-      {' and '}
-      <Link underline="always" color="text.primary">
-        Privacy policy
+      {' y nuestra '}
+      <Link underline="always" color="text.primary" href="https://www.eurocharger.es/privacidad" target="_blank">
+        Política de privacidad
       </Link>
       .
     </Box>
