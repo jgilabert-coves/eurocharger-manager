@@ -13,14 +13,14 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
+import { useTheme } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
+import InputAdornment from '@mui/material/InputAdornment';
 
-import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
