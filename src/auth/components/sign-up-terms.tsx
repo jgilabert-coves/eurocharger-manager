@@ -21,7 +21,7 @@ export function SignUpTerms({ sx, ...other }: BoxProps) {
       ]}
       {...other}
     >
-      {'Al iniciar sesión, aceptas nuestros '}
+      {'Al crear una cuenta, aceptas nuestros '}
       <Link underline="always" color="text.primary" href="https://www.eurocharger.es/terminosycondiciones" target="_blank">
         Términos y condiciones
       </Link>
