@@ -98,11 +98,12 @@ export const navData: NavSectionProps['data'] = [
     path: paths.privileges.list,
     roles: ['eurocharger', 'saas_owner'],
   },
-  {
-    title: 'Pagos',
-    path: paths.invoices.list,
-    roles: ['eurocharger', 'saas_owner'],
-  },
+  // Autofacturas pendiente de implementación backend — oculto temporalmente
+  // {
+  //   title: 'Pagos',
+  //   path: paths.invoices.list,
+  //   roles: ['eurocharger', 'saas_owner'],
+  // },
 
   /**
    * Tarifas — visible solo para roles específicos.
