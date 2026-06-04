@@ -747,6 +747,7 @@ function WalletCard({ user, onSaved }: { user: AppUser; onSaved: () => void }) {
 export default function AppUserDetailView() {
   const { id } = useParams();
   const router = useRouter();
+  const { hasRole } = useAbility();
 
   const [user, setUser] = useState<AppUser | undefined>();
   const [billing, setBilling] = useState<BillingDetails | undefined>();
@@ -860,7 +861,7 @@ export default function AppUserDetailView() {
               <Stack spacing={2}>
                 <BillingSection billing={billing} appUserId={user.id} onSaved={loadBilling} />
 
-                <WalletCard user={user} onSaved={loadUser} />
+                {hasRole('eurocharger') && <WalletCard user={user} onSaved={loadUser} />}
               </Stack>
             </Grid>
           </Grid>
