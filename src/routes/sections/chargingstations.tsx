@@ -11,6 +11,7 @@ import { LoadingScreen } from '../../components/loading-screen';
 
 const ChargingStationsPage = lazy(() => import('src/pages/chargingstations/chargepoints-list-v2'));
 const ChargingStationView = lazy(() => import('src/pages/chargingstations/charger-detail-v2'));
+const ChargerOcppConfig = lazy(() => import('src/pages/chargingstations/charger-ocpp-config'));
 
 function SuspenseOutlet() {
   const pathname = usePathname();
@@ -58,6 +59,14 @@ export const chargingStationsRoutes: RouteObject[] = [
           chargingStationsLayout()
         ) : (
           <AuthGuard>{chargingStationView()}</AuthGuard>
+        ),
+      },
+      {
+        path: ':id/ocpp-config',
+        element: CONFIG.auth.skip ? (
+          <RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}><ChargerOcppConfig /></RoleGuard>
+        ) : (
+          <AuthGuard><RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}><ChargerOcppConfig /></RoleGuard></AuthGuard>
         ),
       },
     ],

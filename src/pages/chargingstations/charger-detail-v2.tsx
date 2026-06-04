@@ -25,6 +25,7 @@ import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { useRouter } from 'src/routes/hooks';
+import { paths } from 'src/routes/paths';
 
 import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -727,7 +728,7 @@ export default function ChargerDetailV2() {
   const [editState, setEditState] = useState<
     { mode: 'idle' } | { mode: 'add' } | { mode: 'edit'; connectorId: number }
   >({ mode: 'idle' });
-  const { canOperate, isViewOnly } = useAbility();
+  const { canOperate, isViewOnly, hasAnyRole } = useAbility();
 
   const loadChargepoint = async () => {
     try {
@@ -922,6 +923,18 @@ export default function ChargerDetailV2() {
                 />
                 <InfoRow label="Client CP ID" value={chargepoint.client_cp_id} mono />
                 <InfoRow label="Protocolo" value="OCPP 1.6J" />
+                {hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && (
+                  <Box sx={{ mt: 1.5 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Iconify icon="mingcute:settings-3-line" width={16} />}
+                      onClick={() => router.push(paths.chargingstations.ocppConfig(String(chargepoint.id)))}
+                    >
+                      Ver configuración
+                    </Button>
+                  </Box>
+                )}
               </SectionCard>
             </Grid>
           </Grid>

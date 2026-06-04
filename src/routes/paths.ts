@@ -58,6 +58,7 @@ export const paths = {
     list: `/chargingstations`,
     empty: `/chargingstation`,
     detail: (id: string) => `/chargingstations/${id}`,
+    ocppConfig: (id: string) => `/chargingstations/${id}/ocpp-config`,
   },
   rates: {
     list: `/rates`,
