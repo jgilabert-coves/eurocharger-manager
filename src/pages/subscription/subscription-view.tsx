@@ -183,7 +183,7 @@ export default function SubscriptionView() {
   };
 
   const fetchInvoiceBlob = async (invoice: Invoice): Promise<Blob> => {
-    const token = sessionStorage.getItem(JWT_STORAGE_KEY);
+    const token = localStorage.getItem(JWT_STORAGE_KEY);
     const response = await fetch(`${CONFIG.serverUrl}${endpoints.billing.invoicePdf(invoice.id)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });

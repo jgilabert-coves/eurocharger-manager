@@ -22,8 +22,7 @@ axiosInstance.interceptors.request.use((config) => {
   // Ensure headers object exists
   config.headers = config.headers || {};
 
-  // Get the token from session storage
-  const token = sessionStorage.getItem(JWT_STORAGE_KEY);
+  const token = localStorage.getItem(JWT_STORAGE_KEY);
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
@@ -38,8 +37,7 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Clear session storage
-      sessionStorage.removeItem(JWT_STORAGE_KEY);
+      localStorage.removeItem(JWT_STORAGE_KEY);
       delete axiosInstance.defaults.headers.common.Authorization;
 
       // Redirect to login page
