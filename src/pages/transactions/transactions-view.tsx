@@ -105,7 +105,7 @@ export default function TransactionsView() {
             >
               <ToggleButton value="ALL">Todos</ToggleButton>
               <ToggleButton value="APP">EuroCharger</ToggleButton>
-              <ToggleButton value="HUBJECT">Solo Roaming</ToggleButton>
+              <ToggleButton value="HUBJECT">Roaming</ToggleButton>
               <ToggleButton value="OCPI">OCPI</ToggleButton>
             </ToggleButtonGroup>
           )}
