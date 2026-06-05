@@ -8,6 +8,8 @@ import ToggleButton from '@mui/material/ToggleButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -34,6 +36,7 @@ export default function TransactionsView() {
   );
 
   const showEndDate = statusFilter !== 'CARGANDO';
+  const debouncedSearch = useDebounce(searchQuery, 400);
 
   return (
     <>
@@ -88,7 +91,7 @@ export default function TransactionsView() {
           key={statusFilter}
           endpoint={endpoints.transactions.current}
           extraParams={extraParams}
-          searchQuery={searchQuery}
+          searchQuery={debouncedSearch}
           showEndDate={showEndDate}
           showStatus={false}
         />

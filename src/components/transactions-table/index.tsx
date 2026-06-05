@@ -3,7 +3,7 @@ import type { Transaction, TransactionsDataTableResponse } from 'src/types/trans
 
 import { round } from 'es-toolkit';
 import { Link } from 'react-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -23,6 +23,8 @@ import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { paths } from 'src/routes/paths';
+
+import { useDebounce } from 'src/hooks/use-debounce';
 
 import { fDateTime } from 'src/utils/format-time';
 
@@ -85,11 +87,21 @@ export function TransactionsTable({
   const [searchQueryInternal, setSearchQueryInternal] = useState('');
   const [orderBy, setOrderBy] = useState('date');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const abortRef = useRef<AbortController | null>(null);
 
   const isControlled = searchQueryProp !== undefined;
-  const searchQuery = isControlled ? searchQueryProp : searchQueryInternal;
+  const debouncedInternal = useDebounce(searchQueryInternal, 400);
+  const searchQuery = isControlled ? searchQueryProp : debouncedInternal;
+
+  useEffect(() => {
+    setPage(0);
+  }, [searchQuery]);
 
   const fetchTransactions = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       setLoading(true);
       const queryArgs: AxiosRequestConfig = {
@@ -100,14 +112,16 @@ export function TransactionsTable({
           searchQuery,
           ...extraParams,
         },
+        signal: controller.signal,
       };
       const result: TransactionsDataTableResponse = await fetcher([endpoint, queryArgs]);
       setRows(result.data);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.code === 'ERR_CANCELED') return;
       console.error('Error fetching transactions:', err);
       setRows([]);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [endpoint, extraParams, page, pageSize, searchQuery, orderBy, order]);
 
@@ -135,7 +149,6 @@ export function TransactionsTable({
             value={searchQueryInternal}
             onChange={(e) => {
               setSearchQueryInternal(e.target.value);
-              setPage(0);
             }}
             slotProps={{
               input: {

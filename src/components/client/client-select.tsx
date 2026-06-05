@@ -13,6 +13,8 @@ import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { COUNTRIES } from 'src/assets/data/countries';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
@@ -40,6 +42,7 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
   const [search, setSearch] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
+  const debouncedSearch = useDebounce(search, 300);
 
   const [form, setForm] = useState<CreateClientPayload>(DEFAULT_FORM);
   const [creating, setCreating] = useState(false);
@@ -49,27 +52,24 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     if (mode !== 'search') return () => {};
     let cancelled = false;
     setLoading(true);
-    const timer = setTimeout(
-      async () => {
-        try {
-          const res = await fetcher([
-            endpoints.clients.list,
-            { params: { page: 0, pageSize: 20, searchQuery: search } },
-          ]);
-          if (!cancelled) setClients(res?.data ?? []);
-        } catch {
-          if (!cancelled) setClients([]);
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
-      },
-      search ? 300 : 0
-    );
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
+
+    const doFetch = async () => {
+      try {
+        const res = await fetcher([
+          endpoints.clients.list,
+          { params: { page: 0, pageSize: 20, searchQuery: debouncedSearch } },
+        ]);
+        if (!cancelled) setClients(res?.data ?? []);
+      } catch {
+        if (!cancelled) setClients([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-  }, [mode, search]);
+
+    doFetch();
+    return () => { cancelled = true; };
+  }, [mode, debouncedSearch]);
 
   const set = (field: keyof CreateClientPayload) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((p) => ({ ...p, [field]: e.target.value }));

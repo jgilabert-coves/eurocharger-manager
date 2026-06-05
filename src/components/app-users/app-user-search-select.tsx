@@ -13,6 +13,8 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -34,6 +36,7 @@ export function AppUserSearchSelect({
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<AppUserDatatableItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
     if (!open) return () => {};
@@ -41,28 +44,23 @@ export function AppUserSearchSelect({
     let cancelled = false;
     setLoading(true);
 
-    const timer = setTimeout(
-      async () => {
-        try {
-          const res = await fetcher([
-            endpoints.appUsers.list,
-            { params: { page: 0, pageSize: 10, searchQuery: search } },
-          ]);
-          if (!cancelled) setUsers(res?.data ?? []);
-        } catch {
-          if (!cancelled) setUsers([]);
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
-      },
-      search ? 300 : 0
-    );
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
+    const doFetch = async () => {
+      try {
+        const res = await fetcher([
+          endpoints.appUsers.list,
+          { params: { page: 0, pageSize: 10, searchQuery: debouncedSearch } },
+        ]);
+        if (!cancelled) setUsers(res?.data ?? []);
+      } catch {
+        if (!cancelled) setUsers([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
-  }, [search, open]);
+
+    doFetch();
+    return () => { cancelled = true; };
+  }, [debouncedSearch, open]);
 
   return (
     <Box

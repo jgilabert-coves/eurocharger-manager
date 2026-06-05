@@ -17,7 +17,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { post, del, patch, fetcher, endpoints } from 'src/lib/axios';
+import { del, post, patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 

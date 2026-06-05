@@ -8,6 +8,8 @@ import IconButton from '@mui/material/IconButton';
 import { DataGrid, gridClasses } from '@mui/x-data-grid';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { useDebounce } from 'src/hooks/use-debounce';
+
 import { Form, Field } from 'src/components/hook-form';
 
 import { Iconify } from '../iconify';
@@ -55,17 +57,22 @@ export function DataTable<T extends { id: number | string }>({
   const methods = useForm({});
 
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const handleSearchKeyPress = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.currentTarget.value);
   };
 
   useEffect(() => {
+    setPaginationModel((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+  }, [debouncedSearch]);
+
+  useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         const { page, pageSize } = paginationModel;
-        const response = await fetchData(page, pageSize, searchQuery, queryOptions.sortModel);
+        const response = await fetchData(page, pageSize, debouncedSearch, queryOptions.sortModel);
         setRows(response.data);
         setTotalRows(response.total);
       } catch (err) {
@@ -76,7 +83,7 @@ export function DataTable<T extends { id: number | string }>({
       }
     };
     loadData();
-  }, [fetchData, paginationModel, queryOptions, searchQuery]);
+  }, [fetchData, paginationModel, queryOptions, debouncedSearch]);
 
   return (
     <Box className={`${className} flex-row`}>

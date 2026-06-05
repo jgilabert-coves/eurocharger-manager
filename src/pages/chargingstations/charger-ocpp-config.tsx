@@ -24,7 +24,7 @@ import { useRouter } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { fetcher, post, endpoints } from 'src/lib/axios';
+import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -37,7 +37,7 @@ function ConfigSkeleton() {
   return (
     <Stack spacing={1}>
       {Array.from({ length: 8 }).map((_, i) => (
-        // eslint-disable-next-line react/no-array-index-key
+         
         <Skeleton key={i} variant="rounded" height={52} />
       ))}
     </Stack>
