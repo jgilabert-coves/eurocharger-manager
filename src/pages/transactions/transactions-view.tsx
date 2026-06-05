@@ -16,6 +16,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { TransactionsTable } from 'src/components/transactions-table';
 
+import { useAbility } from 'src/auth/hooks/use-ability';
+
 import { CONFIG } from '../../global-config';
 
 // ----------------------------------------------------------------------
@@ -23,17 +25,22 @@ import { CONFIG } from '../../global-config';
 const metadata = { title: `Recargas | ${CONFIG.appName}` };
 
 type StatusFilter = 'CARGANDO' | 'FINALIZADO';
+type SourceFilter = 'APP' | 'HUBJECT' | 'OCPI';
 
 // ----------------------------------------------------------------------
 
 export default function TransactionsView() {
+  const { hasRole } = useAbility();
+  const isEurocharger = hasRole('eurocharger');
+
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('CARGANDO');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('APP');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const extraParams = useMemo(
-    (): Record<string, string> => (statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
-    [statusFilter]
-  );
+  const extraParams = useMemo((): Record<string, string> => ({
+    ...(statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
+    ...(isEurocharger ? { source: sourceFilter.toLowerCase() } : {}),
+  }), [statusFilter, sourceFilter, isEurocharger]);
 
   const showEndDate = statusFilter !== 'CARGANDO';
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -85,10 +92,26 @@ export default function TransactionsView() {
             <ToggleButton value="CARGANDO">En curso</ToggleButton>
             <ToggleButton value="FINALIZADO">Finalizadas</ToggleButton>
           </ToggleButtonGroup>
+
+          {isEurocharger && (
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={sourceFilter}
+              onChange={(_, val) => {
+                if (val) setSourceFilter(val);
+              }}
+              sx={{ flexWrap: 'wrap' }}
+            >
+              <ToggleButton value="APP">EuroCharger</ToggleButton>
+              <ToggleButton value="HUBJECT">Roaming (Hubject)</ToggleButton>
+              <ToggleButton value="OCPI">OCPI</ToggleButton>
+            </ToggleButtonGroup>
+          )}
         </Stack>
 
         <TransactionsTable
-          key={statusFilter}
+          key={`${statusFilter}-${sourceFilter}`}
           endpoint={endpoints.transactions.current}
           extraParams={extraParams}
           searchQuery={debouncedSearch}
