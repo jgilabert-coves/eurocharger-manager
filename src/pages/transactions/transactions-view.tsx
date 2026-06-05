@@ -25,7 +25,7 @@ import { CONFIG } from '../../global-config';
 const metadata = { title: `Recargas | ${CONFIG.appName}` };
 
 type StatusFilter = 'CARGANDO' | 'FINALIZADO';
-type SourceFilter = 'APP' | 'HUBJECT' | 'OCPI';
+type SourceFilter = 'ALL' | 'APP' | 'HUBJECT' | 'OCPI';
 
 // ----------------------------------------------------------------------
 
@@ -34,12 +34,12 @@ export default function TransactionsView() {
   const isEurocharger = hasRole('eurocharger');
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('CARGANDO');
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('APP');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   const extraParams = useMemo((): Record<string, string> => ({
     ...(statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
-    ...(isEurocharger ? { source: sourceFilter.toLowerCase() } : {}),
+    ...(isEurocharger && sourceFilter !== 'ALL' ? { source: sourceFilter.toLowerCase() } : {}),
   }), [statusFilter, sourceFilter, isEurocharger]);
 
   const showEndDate = statusFilter !== 'CARGANDO';
@@ -103,8 +103,9 @@ export default function TransactionsView() {
               }}
               sx={{ flexWrap: 'wrap' }}
             >
+              <ToggleButton value="ALL">Todos</ToggleButton>
               <ToggleButton value="APP">EuroCharger</ToggleButton>
-              <ToggleButton value="HUBJECT">Roaming (Hubject)</ToggleButton>
+              <ToggleButton value="HUBJECT">Solo Roaming</ToggleButton>
               <ToggleButton value="OCPI">OCPI</ToggleButton>
             </ToggleButtonGroup>
           )}
