@@ -14,6 +14,8 @@ import { fetcher, endpoints } from 'src/lib/axios';
 
 import { StatsChart } from 'src/components/cards/stats-chart';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import {
   type DashboardGrowthStats,
   type DashboardRevenueStats,
@@ -49,6 +51,15 @@ export default function DashboardV6Page() {
     queryFn: () => fetcher(endpoints.dashboard.alarms),
   });
 
+  const { user } = useAuthContext();
+  const isEurocharger = user?.roles?.includes('eurocharger') ?? false;
+
+  const { data: reservationsRes } = useQuery({
+    queryKey: ['dashboard', 'reservationsToday'],
+    queryFn: () => fetcher(endpoints.dashboard.reservationsToday),
+    enabled: isEurocharger,
+  });
+
   const activeCharges = chargesRes?.data as DashboardChargingStats | undefined;
   const revenueStats = revenueRes?.data as DashboardRevenueStats | undefined;
   const appUserGrowth = usersRes?.data as DashboardGrowthStats | undefined;
@@ -63,6 +74,21 @@ export default function DashboardV6Page() {
         <Typography variant="h4" sx={{ mb: 3 }}>
           Resumen general
         </Typography>
+
+        {/* KPI Card exclusivo eurocharger */}
+        {isEurocharger && (
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <KpiCard
+                title="Reservas cobradas hoy"
+                value={reservationsRes ? formatNumber(reservationsRes.data.total) : '...'}
+                subtitle="Reservas con cobro completado"
+                icon="solar:calendar-date-bold"
+                palette="info"
+              />
+            </Grid>
+          </Grid>
+        )}
 
         {/* KPI Cards — 4 columns */}
         <Grid container spacing={2} sx={{ mb: 3 }}>

@@ -126,6 +126,7 @@ export const endpoints = {
     activeCharges: '/dashboard/active-charges',
     heatmap: '/dashboard/heatmap',
     connectorCurrentTypes: '/dashboard/connectors/usage',
+    reservationsToday: '/dashboard/reservations/today',
   },
   transactions: {
     current: '/transactions',
