@@ -147,7 +147,6 @@ function InfoRow({
 
 const STOP_STATUSES = new Set([
   'charging',
-  'preparing',
   'finishing',
   'suspendedev',
   'suspendedevse',
