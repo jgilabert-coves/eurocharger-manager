@@ -93,6 +93,7 @@ export default function DashboardV6Page() {
                 }
                 icon="solar:calendar-date-bold"
                 palette="info"
+                href={paths.reservations.list}
               />
             </Grid>
           )}
