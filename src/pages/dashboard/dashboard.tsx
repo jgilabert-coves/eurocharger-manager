@@ -75,23 +75,27 @@ export default function DashboardV6Page() {
           Resumen general
         </Typography>
 
-        {/* KPI Card exclusivo eurocharger */}
-        {isEurocharger && (
-          <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid
+          container
+          spacing={2}
+          columns={{ xs: 12, md: isEurocharger ? 15 : 12 }}
+          sx={{ mb: 3 }}
+        >
+          {isEurocharger && (
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <KpiCard
-                title="Reservas cobradas hoy"
+                title="Reservas"
                 value={reservationsRes ? formatNumber(reservationsRes.data.total) : '...'}
-                subtitle="Reservas con cobro completado"
+                subtitle={
+                  reservationsRes
+                    ? `${formatNumber(reservationsRes.data.todayGrowth, { decimals: 0 })} respecto a ayer`
+                    : '...'
+                }
                 icon="solar:calendar-date-bold"
                 palette="info"
               />
             </Grid>
-          </Grid>
-        )}
-
-        {/* KPI Cards — 4 columns */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
+          )}
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <KpiCard
               title="Recargas activas"
