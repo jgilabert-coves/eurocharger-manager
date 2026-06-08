@@ -60,7 +60,7 @@ export const formatPatterns = {
   date: 'DD MMM YYYY', // 17 Apr 2022
   time: 'h:mm a', // 12:00 am
   split: {
-    dateTime: 'DD/MM/YYYY hh:mm', // 17/04/2022 12:00
+    dateTime: 'DD/MM/YYYY HH:mm', // 17/04/2022 14:00
     date: 'DD/MM/YYYY', // 17/04/2022
   },
   paramCase: {

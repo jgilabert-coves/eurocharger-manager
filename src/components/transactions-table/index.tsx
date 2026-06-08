@@ -32,6 +32,8 @@ import { fetcher } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
+import { useAbility } from 'src/auth/hooks/use-ability';
+
 import { TransactionStatusChip } from '../chips/transaction-status-chip';
 
 function formatDuration(startDate: Date | string, endDate: Date | string | null): string {
@@ -89,6 +91,9 @@ export function TransactionsTable({
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const abortRef = useRef<AbortController | null>(null);
 
+  const { hasRole } = useAbility();
+  const isEurocharger = hasRole('eurocharger');
+
   const isControlled = searchQueryProp !== undefined;
   const debouncedInternal = useDebounce(searchQueryInternal, 400);
   const searchQuery = isControlled ? searchQueryProp : debouncedInternal;
@@ -135,7 +140,7 @@ export function TransactionsTable({
     setOrderBy(field);
   };
 
-  const colSpan = (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0);
+  const colSpan = (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0) + (isEurocharger ? 1 : 0);
 
   return (
     <>
@@ -171,6 +176,7 @@ export function TransactionsTable({
           <Table>
             <TableHead>
               <TableRow>
+                {isEurocharger && <TableCell>ID</TableCell>}
                 <TableCell>
                   <TableSortLabel
                     active={orderBy === 'chargepoint'}
@@ -238,6 +244,15 @@ export function TransactionsTable({
                     key={tx.id}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 }, userSelect: 'none' }}
                   >
+                    {/* ID (solo Eurocharger) */}
+                    {isEurocharger && (
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {tx.id}
+                        </Typography>
+                      </TableCell>
+                    )}
+
                     {/* Cargador */}
                     <TableCell>
                       <Stack spacing={0.25}>

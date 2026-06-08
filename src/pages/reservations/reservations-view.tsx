@@ -31,6 +31,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 
+import { useAbility } from 'src/auth/hooks/use-ability';
+
 import { CONFIG } from '../../global-config';
 
 // ----------------------------------------------------------------------
@@ -51,6 +53,9 @@ type ReservationsResponse = {
 // ----------------------------------------------------------------------
 
 export default function ReservationsView() {
+  const { hasRole } = useAbility();
+  const isEurocharger = hasRole('eurocharger');
+
   const [rows, setRows] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -132,6 +137,7 @@ export default function ReservationsView() {
             <Table>
               <TableHead>
                 <TableRow>
+                  {isEurocharger && <TableCell>ID</TableCell>}
                   <TableCell>
                     <TableSortLabel
                       active={orderBy === 'status'}
@@ -174,13 +180,13 @@ export default function ReservationsView() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                    <TableCell colSpan={isEurocharger ? 6 : 5} align="center" sx={{ py: 8 }}>
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                    <TableCell colSpan={isEurocharger ? 6 : 5} align="center" sx={{ py: 8 }}>
                       <Typography variant="body2" color="text.secondary">
                         No se encontraron reservas
                       </Typography>
@@ -195,6 +201,15 @@ export default function ReservationsView() {
                         '&:last-child td, &:last-child th': { border: 0 },
                       }}
                     >
+                      {/* ID (solo Eurocharger) */}
+                      {isEurocharger && (
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {reservation.id}
+                          </Typography>
+                        </TableCell>
+                      )}
+
                       {/* Status */}
                       <TableCell>
                         <Chip
