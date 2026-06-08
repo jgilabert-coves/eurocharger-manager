@@ -159,6 +159,7 @@ export default function DashboardV6Page() {
             icon="solar:chart-bold"
             label="Estadísticas"
             endpoint={endpoints.dashboard.stats}
+            cacheKey={isEurocharger ? 'ec' : ''}
           />
         </Box>
 

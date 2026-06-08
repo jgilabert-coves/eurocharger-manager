@@ -46,11 +46,13 @@ export type StatsChartProps = {
   label: string;
   /** API endpoint base (e.g. "/dashboard/stats") — will append ?from=&to= */
   endpoint: string;
+  /** Extra string included in the internal cache key, e.g. to separate results by role */
+  cacheKey?: string;
 };
 
 const EMPTY: StatsPeriodData = { labels: ['—'], series: [] };
 
-export function StatsChart({ icon, label, endpoint }: StatsChartProps) {
+export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartProps) {
   const [sel, setSel] = useState(0);
   const [period, setPeriod] = useState<Period>('Semana');
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,7 @@ export function StatsChart({ icon, label, endpoint }: StatsChartProps) {
 
   const fetchByRange = useCallback(
     async (from: string, to: string) => {
-      const key = `${from}|${to}`;
+      const key = `${cacheKey}|${from}|${to}`;
 
       if (cache.current[key]) {
         setData(cache.current[key]);
@@ -85,7 +87,7 @@ export function StatsChart({ icon, label, endpoint }: StatsChartProps) {
         setLoading(false);
       }
     },
-    [endpoint]
+    [endpoint, cacheKey]
   );
 
   // Fetch when period changes (preset periods)
