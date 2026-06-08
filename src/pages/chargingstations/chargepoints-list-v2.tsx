@@ -2,6 +2,7 @@ import type { AxiosRequestConfig } from 'axios';
 import type { Chargepoint } from 'src/types/chargepoint';
 
 import { Helmet } from 'react-helmet-async';
+import { Link, useSearchParams } from 'react-router';
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -63,21 +64,39 @@ type ChargepointsResponse = {
 
 export default function ChargepointsListV2() {
   const router = useRouter();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = Number(searchParams.get('page') ?? '0');
+  const pageSize = Number(searchParams.get('pageSize') ?? '10');
+  const searchQuery = searchParams.get('search') ?? '';
+  const orderBy = searchParams.get('orderBy') ?? 'name';
+  const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
+  const statusFilter = searchParams.get('status') ?? 'ALL';
 
   const [rows, setRows] = useState<Chargepoint[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [orderBy, setOrderBy] = useState('name');
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-  const [statusFilter, setStatusFilter] = useState('ALL');
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [setupChargepointId, setSetupChargepointId] = useState<number | null>(null);
   const debouncedSearch = useDebounce(searchQuery);
   const { isViewOnly } = useAbility();
+
+  const updateParam = useCallback(
+    (updates: Record<string, string>, replace = false) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          Object.entries(updates).forEach(([k, v]) => {
+            if (v) next.set(k, v);
+            else next.delete(k);
+          });
+          return next;
+        },
+        { replace }
+      );
+    },
+    [setSearchParams]
+  );
 
   const fetchChargepoints = useCallback(async () => {
     try {
@@ -109,15 +128,11 @@ export default function ChargepointsListV2() {
 
   const handleSort = (field: string) => {
     const isAsc = orderBy === field && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(field);
+    updateParam({ order: isAsc ? 'desc' : 'asc', orderBy: field });
   };
 
   const handleStatusFilter = (_: React.MouseEvent, value: string | null) => {
-    if (value !== null) {
-      setStatusFilter(value);
-      setPage(0);
-    }
+    if (value !== null) updateParam({ status: value, page: '0' });
   };
 
   return (
@@ -163,10 +178,7 @@ export default function ChargepointsListV2() {
           <TextField
             placeholder="Buscar por nombre, dirección, ID..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(0);
-            }}
+            onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
             size="small"
             sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{
@@ -248,12 +260,15 @@ export default function ChargepointsListV2() {
                     return (
                       <TableRow
                         key={cp.id}
-                        hover
                         sx={{
                           cursor: 'pointer',
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
-                        onClick={() => router.push(`/chargingstations/${cp.id}`)}
+                        onClick={(e) => {
+                          if (e.ctrlKey || e.metaKey)
+                            window.open(`/chargingstations/${cp.id}`, '_blank');
+                          else router.push(`/chargingstations/${cp.id}`);
+                        }}
                       >
                         {/* Row number */}
                         <TableCell sx={{ pl: 3 }}>
@@ -317,8 +332,13 @@ export default function ChargepointsListV2() {
                         </TableCell>
 
                         {/* Arrow */}
-                        <TableCell>
-                          <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <IconButton
+                            component={Link}
+                            to={`/chargingstations/${cp.id}`}
+                            size="small"
+                            sx={{ color: 'text.secondary' }}
+                          >
                             <Iconify icon="eva:arrow-ios-forward-fill" width={20} />
                           </IconButton>
                         </TableCell>
@@ -334,12 +354,9 @@ export default function ChargepointsListV2() {
             component="div"
             count={total || -1}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={(_, newPage) => updateParam({ page: String(newPage) })}
             rowsPerPage={pageSize}
-            onRowsPerPageChange={(e) => {
-              setPageSize(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
+            onRowsPerPageChange={(e) => updateParam({ pageSize: e.target.value, page: '0' })}
             rowsPerPageOptions={[10, 20, 40]}
             labelRowsPerPage="Filas por página"
             labelDisplayedRows={({ from, to, count }) =>

@@ -1,16 +1,13 @@
 import type { GridColDef, GridSortModel, GridRowParams, GridValidRowModel } from '@mui/x-data-grid';
 
-import { useForm } from 'react-hook-form';
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
 import { DataGrid, gridClasses } from '@mui/x-data-grid';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { useDebounce } from 'src/hooks/use-debounce';
-
-import { Form, Field } from 'src/components/hook-form';
 
 import { Iconify } from '../iconify';
 
@@ -54,13 +51,11 @@ export function DataTable<T extends { id: number | string }>({
     setQueryOptions({ sortModel: [...sortModel] });
   }, []);
 
-  const methods = useForm({});
-
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  const handleSearchKeyPress = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.currentTarget.value);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
   };
 
   useEffect(() => {
@@ -87,33 +82,23 @@ export function DataTable<T extends { id: number | string }>({
 
   return (
     <Box className={`${className} flex-row`}>
-      <Box
-        sx={{
-          mb: 2,
-        }}
-      >
-        <Form methods={methods}>
-          <Field.Text
-            name="search"
-            label=""
-            placeholder="Buscar..."
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchKeyPress}
-            slotProps={{
-              inputLabel: { shrink: true },
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton edge="end" aria-label="toggle password visibility">
-                      <Iconify icon="eva:search-fill" width={20} height={20} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-        </Form>
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          placeholder="Buscar..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+          size="small"
+          sx={{ maxWidth: 400 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon="eva:search-fill" width={18} sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
       </Box>
 
       <DataGrid

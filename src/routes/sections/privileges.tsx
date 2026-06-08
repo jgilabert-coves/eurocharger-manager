@@ -27,7 +27,7 @@ const dashboardLayout = () => (
 );
 
 const privilegesLayout = () => (
-  <RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}>
+  <RoleGuard roles={['saas_owner', 'eurocharger']}>
     <PrivilegesPage />
   </RoleGuard>
 );

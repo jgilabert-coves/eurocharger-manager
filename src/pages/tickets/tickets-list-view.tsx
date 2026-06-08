@@ -2,9 +2,9 @@ import type { AppUserDatatableItem } from 'src/types/appuser';
 import type { ChargingStation } from 'src/types/charging_stations';
 import type { Ticket, TicketType, TicketStatus } from 'src/types/tickets';
 
-import { useState } from 'react';
-import { Link } from 'react-router';
 import { Helmet } from 'react-helmet-async';
+import { useState, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Card from '@mui/material/Card';
@@ -21,6 +21,7 @@ import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import FormControl from '@mui/material/FormControl';
 import DialogTitle from '@mui/material/DialogTitle';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -87,13 +88,31 @@ const EMPTY_FORM = {
 export default function TicketsListView() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | ''>('');
-  const [typeFilter, setTypeFilter] = useState<TicketType | ''>('');
+  const page = Number(searchParams.get('page') ?? '0');
+  const pageSize = Number(searchParams.get('pageSize') ?? '10');
+  const searchQuery = searchParams.get('search') ?? '';
+  const statusFilter = (searchParams.get('status') ?? '') as TicketStatus | '';
+  const typeFilter = (searchParams.get('type') ?? '') as TicketType | '';
   const debouncedSearch = useDebounce(searchQuery);
+
+  const updateParam = useCallback(
+    (updates: Record<string, string>, replace = false) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          Object.entries(updates).forEach(([k, v]) => {
+            if (v) next.set(k, v);
+            else next.delete(k);
+          });
+          return next;
+        },
+        { replace }
+      );
+    },
+    [setSearchParams]
+  );
 
   const { isViewOnly } = useAbility();
   const [createOpen, setCreateOpen] = useState(false);
@@ -189,10 +208,7 @@ export default function TicketsListView() {
           <TextField
             placeholder="Buscar por motivo, descripción, usuario..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(0);
-            }}
+            onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
             size="small"
             sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{
@@ -209,10 +225,7 @@ export default function TicketsListView() {
             exclusive
             size="small"
             value={statusFilter}
-            onChange={(_, val) => {
-              setStatusFilter(val ?? '');
-              setPage(0);
-            }}
+            onChange={(_, val) => updateParam({ status: val ?? '', page: '0' })}
           >
             <ToggleButton value="">Todos</ToggleButton>
             <ToggleButton value="PENDING">Pendientes</ToggleButton>
@@ -224,10 +237,7 @@ export default function TicketsListView() {
             exclusive
             size="small"
             value={typeFilter}
-            onChange={(_, val) => {
-              setTypeFilter(val ?? '');
-              setPage(0);
-            }}
+            onChange={(_, val) => updateParam({ type: val ?? '', page: '0' })}
           >
             <ToggleButton value="">Todos</ToggleButton>
             <ToggleButton value="APP">App</ToggleButton>
@@ -248,7 +258,7 @@ export default function TicketsListView() {
                   <TableCell>Creado</TableCell>
                   <TableCell>Motivo</TableCell>
                   <TableCell>Seguimiento</TableCell>
-                  <TableCell />
+                  <TableCell sx={{ width: 48 }} />
                 </TableRow>
               </TableHead>
 
@@ -269,8 +279,19 @@ export default function TicketsListView() {
                   </TableRow>
                 ) : (
                   rows.map((ticket) => (
-                    <TableRow key={ticket.id}>
-                      <TableCell>
+                    <TableRow
+                      key={ticket.id}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:last-child td, &:last-child th': { border: 0 },
+                      }}
+                      onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey)
+                          window.open(paths.tickets.detail(ticket.id), '_blank');
+                        else router.push(paths.tickets.detail(ticket.id));
+                      }}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Link
                           to={paths.tickets.detail(ticket.id)}
                           style={{ textDecoration: 'none' }}
@@ -328,7 +349,7 @@ export default function TicketsListView() {
                         </Select>
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         {ticket.chargingStation ? (
                           <Link
                             to={paths.locations.detail(String(ticket.chargingStation.id))}
@@ -356,14 +377,17 @@ export default function TicketsListView() {
                         )}
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         {ticket.appUser ? (
                           <Stack spacing={0}>
                             <Typography variant="body2">{ticket.appUser.name}</Typography>
                             <Typography
                               variant="caption"
                               color="text.secondary"
-                              onClick={() => router.push(paths.appUsers.detail(ticket.appUser!.id))}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(paths.appUsers.detail(ticket.appUser!.id));
+                              }}
                               sx={{
                                 cursor: 'pointer',
                                 userSelect: 'none',
@@ -396,16 +420,15 @@ export default function TicketsListView() {
                         </Typography>
                       </TableCell>
 
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          variant="outlined"
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <IconButton
                           component={Link}
                           to={paths.tickets.detail(ticket.id)}
-                          endIcon={<Iconify icon="eva:arrow-forward-fill" />}
+                          size="small"
+                          sx={{ color: 'text.secondary' }}
                         >
-                          Ver más
-                        </Button>
+                          <Iconify icon="eva:arrow-ios-forward-fill" width={20} />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))
@@ -418,12 +441,9 @@ export default function TicketsListView() {
             component="div"
             count={total}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={(_, newPage) => updateParam({ page: String(newPage) })}
             rowsPerPage={pageSize}
-            onRowsPerPageChange={(e) => {
-              setPageSize(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
+            onRowsPerPageChange={(e) => updateParam({ pageSize: e.target.value, page: '0' })}
             rowsPerPageOptions={[10, 20, 40]}
             labelRowsPerPage="Filas por página"
             slotProps={{

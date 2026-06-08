@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 
-import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
@@ -13,12 +13,13 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
+
+import { paths } from 'src/routes/paths';
 
 import { useDebounce } from 'src/hooks/use-debounce';
 
@@ -82,28 +83,27 @@ export default function IncidentsView() {
         </Typography>
 
         {/* Search */}
-        <Box sx={{ mb: 3 }}>
+        <Stack sx={{ mb: 3 }}>
           <TextField
-            fullWidth
             placeholder="Buscar por estación o usuario..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setPage(0);
             }}
+            size="small"
+            sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{
               input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton edge="end">
-                      <Iconify icon="eva:search-fill" width={20} height={20} />
-                    </IconButton>
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify icon="eva:search-fill" width={18} sx={{ color: 'text.disabled' }} />
                   </InputAdornment>
                 ),
               },
             }}
           />
-        </Box>
+        </Stack>
 
         {/* Table */}
         <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -154,7 +154,6 @@ export default function IncidentsView() {
                   rows.map((incident) => (
                     <TableRow
                       key={incident.id}
-                      hover
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
                       {/* Tipo */}
@@ -177,16 +176,28 @@ export default function IncidentsView() {
                       {/* Cargador */}
                       <TableCell>
                         <Stack spacing={0.25}>
-                          <Stack direction="row" alignItems="center" spacing={0.75}>
-                            <Iconify
-                              icon="mdi:ev-station"
-                              width={16}
-                              sx={{ color: 'common.black', flexShrink: 0 }}
-                            />
-                            <Typography variant="subtitle2">
-                              {incident.chargingStation?.name ?? '—'}
-                            </Typography>
-                          </Stack>
+                          {incident.chargingStation ? (
+                            <Link
+                              to={paths.chargingstations.detail(String(incident.chargingStation.id))}
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <Stack direction="row" alignItems="center" spacing={0.75}>
+                                <Iconify
+                                  icon="mdi:ev-station"
+                                  width={16}
+                                  sx={{ color: 'common.black', flexShrink: 0 }}
+                                />
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                >
+                                  {incident.chargingStation.name ?? '—'}
+                                </Typography>
+                              </Stack>
+                            </Link>
+                          ) : (
+                            <Typography variant="subtitle2">—</Typography>
+                          )}
                           {incident.client && (
                             <Stack
                               direction="row"

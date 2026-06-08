@@ -4,7 +4,6 @@ import type { Reservation } from 'src/types/reservation';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect, useCallback } from 'react';
 
-import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
@@ -15,7 +14,6 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -108,28 +106,27 @@ export default function ReservationsView() {
         </Typography>
 
         {/* Search */}
-        <Box sx={{ mb: 3 }}>
+        <Stack sx={{ mb: 3 }}>
           <TextField
-            fullWidth
             placeholder="Buscar por usuario, estación..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setPage(0);
             }}
+            size="small"
+            sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{
               input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton edge="end">
-                      <Iconify icon="eva:search-fill" width={20} height={20} />
-                    </IconButton>
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify icon="eva:search-fill" width={18} sx={{ color: 'text.disabled' }} />
                   </InputAdornment>
                 ),
               },
             }}
           />
-        </Box>
+        </Stack>
 
         {/* Table */}
         <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -196,7 +193,6 @@ export default function ReservationsView() {
                   rows.map((reservation) => (
                     <TableRow
                       key={reservation.id}
-                      hover
                       sx={{
                         '&:last-child td, &:last-child th': { border: 0 },
                       }}

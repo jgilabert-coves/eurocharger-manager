@@ -168,28 +168,27 @@ export default function AuthorizationsListView() {
         </Stack>
 
         {/* Search */}
-        <Box sx={{ mb: 3 }}>
+        <Stack sx={{ mb: 3 }}>
           <TextField
-            fullWidth
             placeholder="Buscar por usuario, estación, cliente..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setPage(0);
             }}
+            size="small"
+            sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{
               input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton edge="end">
-                      <Iconify icon="eva:search-fill" width={20} height={20} />
-                    </IconButton>
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify icon="eva:search-fill" width={18} sx={{ color: 'text.disabled' }} />
                   </InputAdornment>
                 ),
               },
             }}
           />
-        </Box>
+        </Stack>
 
         {/* Table */}
         <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -221,7 +220,7 @@ export default function AuthorizationsListView() {
                   </TableRow>
                 ) : (
                   grouped.map((group) => (
-                    <TableRow key={group.userId} hover>
+                    <TableRow key={group.userId}>
                       {/* User */}
                       <TableCell>
                         <Stack spacing={0.25}>

@@ -9,11 +9,13 @@ import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 
 import { paths } from 'src/routes/paths';
 
 import { fetcher, endpoints } from 'src/lib/axios';
 
+import { Iconify } from 'src/components/iconify';
 import { CreateRateDialog } from 'src/components/rate/create-rate-dialog';
 
 import { CONFIG } from '../../global-config';
@@ -40,6 +42,18 @@ const columns: GridColDef<RateItem>[] = [
     headerName: 'Conectores que aplica',
     flex: 1,
     editable: false,
+  },
+  {
+    field: '_arrow',
+    headerName: '',
+    width: 48,
+    sortable: false,
+    disableColumnMenu: true,
+    renderCell: () => (
+      <IconButton size="small" sx={{ color: 'text.secondary' }}>
+        <Iconify icon="eva:arrow-ios-forward-fill" width={20} />
+      </IconButton>
+    ),
   },
 ];
 

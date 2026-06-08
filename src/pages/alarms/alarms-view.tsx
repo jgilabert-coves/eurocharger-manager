@@ -149,28 +149,27 @@ export default function AlarmsView() {
         </Typography>
 
         {/* Search */}
-        <Box sx={{ mb: 3 }}>
+        <Stack sx={{ mb: 3 }}>
           <TextField
-            fullWidth
             placeholder="Buscar por estación..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setPage(0);
             }}
+            size="small"
+            sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{
               input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton edge="end">
-                      <Iconify icon="eva:search-fill" width={20} height={20} />
-                    </IconButton>
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify icon="eva:search-fill" width={18} sx={{ color: 'text.disabled' }} />
                   </InputAdornment>
                 ),
               },
             }}
           />
-        </Box>
+        </Stack>
 
         {/* Info - Error messages */}
         <Collapse in={!!errorMessage} unmountOnExit>
@@ -341,7 +340,6 @@ export default function AlarmsView() {
                     return (
                       <TableRow
                         key={alarm.id}
-                        hover
                         sx={{
                           '&:last-child td, &:last-child th': { border: 0 },
                           '& td': { verticalAlign: 'top', py: 1.5 },

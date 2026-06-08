@@ -181,7 +181,6 @@ export default function ChargingStationsView() {
                   rows.map((cp) => (
                     <TableRow
                       key={cp.id}
-                      hover
                       sx={{
                         cursor: 'pointer',
                         '&:last-child td, &:last-child th': { border: 0 },

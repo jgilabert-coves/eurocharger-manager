@@ -1,9 +1,9 @@
 import type { BasicChargingStationInfo } from 'src/types/charging_stations';
 
-import { useState } from 'react';
-import { Link } from 'react-router';
+import { useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
+import { Link, useSearchParams } from 'react-router';
 
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
@@ -15,12 +15,14 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
 
 import { useDebounce } from 'src/hooks/use-debounce';
 
@@ -40,10 +42,30 @@ type LocationsResponse = { data: BasicChargingStationInfo[]; total?: number };
 // ----------------------------------------------------------------------
 
 export default function LocationsListView() {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = Number(searchParams.get('page') ?? '0');
+  const pageSize = Number(searchParams.get('pageSize') ?? '10');
+  const searchQuery = searchParams.get('search') ?? '';
   const debouncedSearch = useDebounce(searchQuery);
+
+  const updateParam = useCallback(
+    (updates: Record<string, string>, replace = false) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          Object.entries(updates).forEach(([k, v]) => {
+            if (v) next.set(k, v);
+            else next.delete(k);
+          });
+          return next;
+        },
+        { replace }
+      );
+    },
+    [setSearchParams]
+  );
 
   const { data: res, isLoading } = useQuery<LocationsResponse>({
     queryKey: ['locations', 'list', { page, pageSize, search: debouncedSearch }],
@@ -56,11 +78,6 @@ export default function LocationsListView() {
 
   const rows = res?.data ?? [];
   const total = res?.total ?? -1;
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setPage(0);
-  };
 
   return (
     <>
@@ -79,7 +96,7 @@ export default function LocationsListView() {
               size="small"
               placeholder="Buscar por nombre, dirección…"
               value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
               sx={{ maxWidth: 360 }}
               slotProps={{
                 input: {
@@ -101,6 +118,7 @@ export default function LocationsListView() {
                   <TableCell>Nombre</TableCell>
                   <TableCell>Dirección</TableCell>
                   <TableCell>Cargadores</TableCell>
+                  <TableCell sx={{ width: 48 }} />
                 </TableRow>
               </TableHead>
 
@@ -121,35 +139,28 @@ export default function LocationsListView() {
                   </TableRow>
                 ) : (
                   rows.map((location) => (
-                    <TableRow key={location.id} sx={{ '&:last-child td': { border: 0 } }}>
+                    <TableRow
+                      key={location.id}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:last-child td': { border: 0 },
+                      }}
+                      onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey)
+                          window.open(paths.locations.detail(location.id), '_blank');
+                        else router.push(paths.locations.detail(location.id));
+                      }}
+                    >
                       <TableCell>
-                        <Link
-                          to={paths.locations.detail(location.id)}
-                          style={{ textDecoration: 'none' }}
-                        >
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ '&:hover': { textDecoration: 'underline' } }}
-                          >
-                            {location.id}
-                          </Typography>
-                        </Link>
+                        <Typography variant="body2" color="text.secondary">
+                          {location.id}
+                        </Typography>
                       </TableCell>
 
                       <TableCell>
-                        <Link
-                          to={paths.locations.detail(location.id)}
-                          style={{ textDecoration: 'none' }}
-                        >
-                          <Typography
-                            variant="body2"
-                            fontWeight={500}
-                            sx={{ '&:hover': { textDecoration: 'underline' } }}
-                          >
-                            {location.name}
-                          </Typography>
-                        </Link>
+                        <Typography variant="body2" fontWeight={500}>
+                          {location.name}
+                        </Typography>
                       </TableCell>
 
                       <TableCell>
@@ -173,6 +184,17 @@ export default function LocationsListView() {
                           }
                         />
                       </TableCell>
+
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <IconButton
+                          component={Link}
+                          to={paths.locations.detail(location.id)}
+                          size="small"
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          <Iconify icon="eva:arrow-ios-forward-fill" width={20} />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -184,12 +206,9 @@ export default function LocationsListView() {
             component="div"
             count={total}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={(_, newPage) => updateParam({ page: String(newPage) })}
             rowsPerPage={pageSize}
-            onRowsPerPageChange={(e) => {
-              setPageSize(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
+            onRowsPerPageChange={(e) => updateParam({ pageSize: e.target.value, page: '0' })}
             rowsPerPageOptions={[10, 20, 40]}
             labelRowsPerPage="Filas por página"
             slotProps={{

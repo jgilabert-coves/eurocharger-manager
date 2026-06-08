@@ -1,8 +1,9 @@
 import type { AppUserDatatableItem } from 'src/types/appuser';
 
-import { useState } from 'react';
+import { useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
+import { Link, useSearchParams } from 'react-router';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -16,6 +17,7 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -57,13 +59,31 @@ function dateToString(value?: Date | null): string {
 
 export default function AppUsersView() {
   const router = useRouter();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [orderBy, setOrderBy] = useState('id');
-  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const page = Number(searchParams.get('page') ?? '0');
+  const pageSize = Number(searchParams.get('pageSize') ?? '10');
+  const searchQuery = searchParams.get('search') ?? '';
+  const orderBy = searchParams.get('orderBy') ?? 'id';
+  const order = (searchParams.get('order') ?? 'desc') as 'asc' | 'desc';
   const debouncedSearch = useDebounce(searchQuery);
+
+  const updateParam = useCallback(
+    (updates: Record<string, string>, replace = false) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          Object.entries(updates).forEach(([k, v]) => {
+            if (v) next.set(k, v);
+            else next.delete(k);
+          });
+          return next;
+        },
+        { replace }
+      );
+    },
+    [setSearchParams]
+  );
 
   const { data, isFetching } = useQuery<AppUsersResponse>({
     queryKey: ['appusers', page, pageSize, debouncedSearch, orderBy, order],
@@ -86,8 +106,7 @@ export default function AppUsersView() {
 
   const handleSort = (field: string) => {
     const isAsc = orderBy === field && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(field);
+    updateParam({ order: isAsc ? 'desc' : 'asc', orderBy: field });
   };
 
   return (
@@ -114,10 +133,7 @@ export default function AppUsersView() {
           <TextField
             placeholder="Buscar por nombre, email..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(0);
-            }}
+            onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
             size="small"
             sx={{ maxWidth: 400 }}
             slotProps={{
@@ -178,19 +194,20 @@ export default function AppUsersView() {
                     </TableSortLabel>
                   </TableCell>
                   <TableCell sx={{ width: 100 }}>Estado</TableCell>
+                  <TableCell sx={{ width: 48 }} />
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {isFetching ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
+                    <TableCell colSpan={9} align="center" sx={{ py: 10 }}>
                       <CircularProgress size={32} />
                     </TableCell>
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
+                    <TableCell colSpan={9} align="center" sx={{ py: 10 }}>
                       <Stack alignItems="center" spacing={1.5}>
                         <Iconify
                           icon="eva:search-fill"
@@ -210,18 +227,23 @@ export default function AppUsersView() {
                     return (
                       <TableRow
                         key={user.id}
-                        hover
-                        onClick={() => router.push(paths.appUsers.detail(user.id))}
-                        sx={{
-                          cursor: 'pointer',
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                       >
                         {/* ID */}
                         <TableCell sx={{ pl: 3 }}>
-                          <Typography variant="caption" color="text.disabled">
-                            {user.id}
-                          </Typography>
+                          <Link
+                            to={paths.appUsers.detail(user.id)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              color: 'inherit',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            <Typography variant="caption" color="text.disabled">
+                              {user.id}
+                            </Typography>
+                          </Link>
                         </TableCell>
 
                         {/* Full name */}
@@ -313,6 +335,18 @@ export default function AppUsersView() {
                             {user.isActive === false ? 'Inactivo' : 'Activo'}
                           </Label>
                         </TableCell>
+
+                        {/* Arrow */}
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <IconButton
+                            component={Link}
+                            to={paths.appUsers.detail(user.id)}
+                            size="small"
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            <Iconify icon="eva:arrow-ios-forward-fill" width={20} />
+                          </IconButton>
+                        </TableCell>
                       </TableRow>
                     );
                   })
@@ -325,12 +359,9 @@ export default function AppUsersView() {
             component="div"
             count={total || -1}
             page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
+            onPageChange={(_, newPage) => updateParam({ page: String(newPage) })}
             rowsPerPage={pageSize}
-            onRowsPerPageChange={(e) => {
-              setPageSize(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
+            onRowsPerPageChange={(e) => updateParam({ pageSize: e.target.value, page: '0' })}
             rowsPerPageOptions={[10, 20, 50]}
             labelRowsPerPage="Filas por página"
             labelDisplayedRows={({ from, to, count }) =>
