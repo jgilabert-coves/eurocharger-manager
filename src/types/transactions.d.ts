@@ -17,6 +17,9 @@ export type Transaction = {
   rate?: Rate | null;
   //charge?: AppUserChargeHistory | null;
   meterValues?: MeterValue[];
+  hasReceipt?: boolean;
+  operatorId?: number | null;
+  failed?: boolean | null;
 };
 
 export type MeterValue = {

@@ -29,7 +29,7 @@ import { useDebounce } from 'src/hooks/use-debounce';
 
 import { fDateTime } from 'src/utils/format-time';
 
-import { fetcher } from 'src/lib/axios';
+import { post, patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -94,6 +94,7 @@ export function TransactionsTable({
 
   const { hasRole } = useAbility();
   const isEurocharger = hasRole('eurocharger');
+  const isAdmin = hasRole('saas_admin') || hasRole('saas_owner') || isEurocharger;
 
   const isControlled = searchQueryProp !== undefined;
   const debouncedInternal = useDebounce(searchQueryInternal, 400);
@@ -141,7 +142,7 @@ export function TransactionsTable({
     setOrderBy(field);
   };
 
-  const colSpan = (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0) + (isEurocharger ? 1 : 0);
+  const colSpan = (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0) + (isEurocharger ? 1 : 0) + (isAdmin ? 1 : 0);
 
   return (
     <>
@@ -221,6 +222,7 @@ export function TransactionsTable({
                 </TableCell>
                 <TableCell align={showStatus ? 'center' : 'left'}>Usuario</TableCell>
                 {showStatus && <TableCell>Estado</TableCell>}
+                {isAdmin && <TableCell align="center">Acciones</TableCell>}
               </TableRow>
             </TableHead>
 
@@ -420,6 +422,76 @@ export function TransactionsTable({
                     {showStatus && (
                       <TableCell>
                         <TransactionStatusChip status={tx.status} variant="soft" />
+                      </TableCell>
+                    )}
+
+                    {/* Acciones (solo admin/owner/eurocharger) */}
+                    {isAdmin && (
+                      <TableCell align="center">
+                        <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                          {/* Stop — visible solo si CARGANDO */}
+                          {tx.status === 'CARGANDO' && (
+                            <Tooltip title="Detener recarga">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await post(endpoints.transactions.stop(tx.id), {});
+                                    fetchTransactions();
+                                  } catch (err) {
+                                    console.error('Error stopping transaction:', err);
+                                  }
+                                }}
+                              >
+                                <Iconify icon="mingcute:stop-circle-line" width={18} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {/* Cancel — visible si no está en curso, no tiene recibo, no está fallida */}
+                          {!tx.failed && !tx.hasReceipt && tx.status !== 'CARGANDO' && (
+                            <Tooltip title="Cancelar recarga">
+                              <IconButton
+                                size="small"
+                                color="warning"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await patch(endpoints.transactions.cancel(tx.id), {});
+                                    fetchTransactions();
+                                  } catch (err) {
+                                    console.error('Error cancelling transaction:', err);
+                                  }
+                                }}
+                              >
+                                <Iconify icon="mingcute:close-circle-line" width={18} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {/* Charge — visible si tiene tarifa, no tiene recibo, no está en curso */}
+                          {tx.rate?.id != null && !tx.hasReceipt && tx.status !== 'CARGANDO' && (
+                            <Tooltip title="Cobrar recarga">
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await post(endpoints.transactions.charge(tx.id), {});
+                                    fetchTransactions();
+                                  } catch (err) {
+                                    console.error('Error charging transaction:', err);
+                                  }
+                                }}
+                              >
+                                <Iconify icon="mingcute:currency-euro-2-line" width={18} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Stack>
                       </TableCell>
                     )}
                   </TableRow>
