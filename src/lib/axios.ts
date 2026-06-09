@@ -167,6 +167,7 @@ export const endpoints = {
     create: '/chargingstations',
     transfer: '/chargingstations/transfer',
     single: (id: number) => `/chargingstations/${id}`,
+    update: (id: number) => `/chargingstations/${id}`,
     changeAvailability: (id: number) => `/chargingstations/${id}/ocpp/change-availability`,
     unlock: (id: number) => `/chargingstations/${id}/ocpp/unlock-connector`,
     reset: (id: number) => `/chargingstations/${id}/ocpp/reset`,

@@ -2,12 +2,14 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 import type { RateItem } from 'src/types/rates';
 import type { Connector } from 'src/types/connector';
+import type { Subscription } from 'src/types/billing';
 import type { Chargepoint, ChargingStationResponse } from 'src/types/chargepoint';
 
 import { useParams } from 'react-router';
 import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -15,6 +17,7 @@ import Grid from '@mui/material/Grid2';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import { Tooltip } from '@mui/material';
+import Switch from '@mui/material/Switch';
 import Dialog from '@mui/material/Dialog';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -28,6 +31,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import DialogContentText from '@mui/material/DialogContentText';
 
 import { paths } from 'src/routes/paths';
@@ -50,6 +54,7 @@ import { ConnectorStatusChip } from 'src/components/chips/connector-status-chip'
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
+import { useAuthContext } from 'src/auth/hooks/use-auth-context';
 
 // ----------------------------------------------------------------------
 
@@ -741,6 +746,7 @@ function ConnectorFormCard({
 export default function ChargerDetailV2() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuthContext();
 
   const [chargepoint, setChargepoint] = useState<Chargepoint | undefined>();
   const [loading, setLoading] = useState(true);
@@ -753,7 +759,27 @@ export default function ChargerDetailV2() {
   const [deleteConfirm, setDeleteConfirm] = useState<Connector | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const { canOperate, isViewOnly, hasAnyRole } = useAbility();
+  const { canOperate, isViewOnly, hasAnyRole, hasRole } = useAbility();
+
+  // ── Edit chargepoint state ──────────────────────────────────────────────────
+  const [editChargerOpen, setEditChargerOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editIsPrivate, setEditIsPrivate] = useState(false);
+  const [editHasCallCenter, setEditHasCallCenter] = useState(false);
+  const [editSimCard, setEditSimCard] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const accountId = user?.account_id ?? 0;
+
+  const { data: subscriptionData } = useQuery<{ data: Subscription }>({
+    queryKey: ['account-subscription', accountId],
+    queryFn: () => fetcher(endpoints.accounts.subscription(accountId)),
+    enabled: !!accountId,
+    staleTime: 2 * 60 * 1000,
+  });
+  const callCenterItem = subscriptionData?.data?.items?.find((i) => i.type === 'call_center');
+  const callCenterUnitPrice = callCenterItem?.unit_price_cents;
 
   const loadChargepoint = async () => {
     try {
@@ -763,6 +789,35 @@ export default function ChargerDetailV2() {
       setChargepoint(response.data);
     } catch (err) {
       console.error('Error fetching chargepoint:', err);
+    }
+  };
+
+  const openEditCharger = () => {
+    if (!chargepoint) return;
+    setEditName(chargepoint.name ?? '');
+    setEditIsPrivate(chargepoint.is_private ?? false);
+    setEditHasCallCenter(chargepoint.has_call_center ?? false);
+    setEditSimCard(chargepoint.sim_card != null ? String(chargepoint.sim_card) : '');
+    setEditError(null);
+    setEditChargerOpen(true);
+  };
+
+  const handleSaveCharger = async () => {
+    try {
+      setEditSaving(true);
+      setEditError(null);
+      await put(endpoints.chargepoints.update(Number(id)), {
+        name: editName.trim() || undefined,
+        is_private: editIsPrivate,
+        has_call_center: editHasCallCenter,
+        sim_card: editSimCard !== '' ? Number(editSimCard) : null,
+      });
+      setEditChargerOpen(false);
+      await loadChargepoint();
+    } catch {
+      setEditError('Error al guardar los cambios. Inténtalo de nuevo.');
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -896,7 +951,16 @@ export default function ChargerDetailV2() {
           {/* ── Información + OCPP ──────────────────────────────────────────── */}
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <SectionCard title="Información">
+              <SectionCard
+                title="Información"
+                action={
+                  !hasRole('saas_guest') ? (
+                    <IconButton size="small" title="Editar cargador" onClick={openEditCharger}>
+                      <Iconify icon="mdi:pencil-outline" width={16} />
+                    </IconButton>
+                  ) : undefined
+                }
+              >
                 <InfoRow label="Nombre" value={chargepoint.name} />
                 <InfoRow label="Dirección" value={chargepoint.address} />
                 {hasLocation && (
@@ -909,6 +973,15 @@ export default function ChargerDetailV2() {
                   <InfoRow label="ID cliente" value={chargepoint.client_id} />
                 )}
                 <InfoRow label="Acceso" value={chargepoint.is_private ? 'Privado' : 'Público'} />
+                {chargepoint.has_call_center != null && (
+                  <InfoRow
+                    label="Call Center"
+                    value={chargepoint.has_call_center ? 'Activo' : 'Inactivo'}
+                  />
+                )}
+                {chargepoint.sim_card != null && (
+                  <InfoRow label="SIM" value={chargepoint.sim_card} />
+                )}
 
                 {hasLocation && (
                   <Box sx={{ mt: 2, borderRadius: 1.5, overflow: 'hidden', height: 180 }}>
@@ -1154,6 +1227,72 @@ export default function ChargerDetailV2() {
           {deleteError}
         </Alert>
       </Snackbar>
+
+      {/* Edit chargepoint dialog */}
+      <Dialog
+        open={editChargerOpen}
+        onClose={() => !editSaving && setEditChargerOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Editar cargador</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            {editError && <Alert severity="error">{editError}</Alert>}
+            <TextField
+              label="Nombre"
+              size="small"
+              fullWidth
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={editIsPrivate}
+                  onChange={(e) => setEditIsPrivate(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Acceso privado"
+            />
+            {callCenterUnitPrice !== undefined && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={editHasCallCenter}
+                    onChange={(e) => setEditHasCallCenter(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label={`Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`}
+              />
+            )}
+            <TextField
+              label="SIM"
+              size="small"
+              fullWidth
+              type="number"
+              value={editSimCard}
+              onChange={(e) => setEditSimCard(e.target.value)}
+              placeholder="Número de SIM (opcional)"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditChargerOpen(false)} disabled={editSaving}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveCharger}
+            disabled={editSaving || editName.trim() === ''}
+            startIcon={editSaving ? <CircularProgress size={14} color="inherit" /> : undefined}
+          >
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

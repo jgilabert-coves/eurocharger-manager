@@ -20,5 +20,7 @@ export type Chargepoint = {
   address?: string;
   status?: string | null;
   is_private?: boolean;
+  has_call_center?: boolean | null;
+  sim_card?: number | null;
   connectors: Connector[];
 };
