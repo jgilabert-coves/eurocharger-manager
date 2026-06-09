@@ -126,6 +126,7 @@ const COUNTRIES = [
 ];
 
 type NewStationForm = {
+  internalName: string;
   address: string;
   city: string;
   postalCode: string;
@@ -136,6 +137,7 @@ type NewStationForm = {
 };
 
 const DEFAULT_NEW_STATION: NewStationForm = {
+  internalName: '',
   address: '',
   city: '',
   postalCode: '',
@@ -403,6 +405,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
       let locationId: number;
       if (stationMode === 'new') {
         const res = await post(endpoints.locations.create, {
+          ...(newStation.internalName.trim() && { internal_name: newStation.internalName.trim() }),
           address: newStation.address.trim(),
           city: newStation.city.trim(),
           postal_code: newStation.postalCode.trim(),
@@ -660,11 +663,15 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
                       })}
                     >
                       <Stack spacing={0.25}>
-                        <Typography variant="subtitle2">{s.name}</Typography>
-                        {s.address && (
-                          <Typography variant="caption" color="text.secondary">
-                            {s.address}
-                          </Typography>
+                        {s.internal_name ? (
+                          <>
+                            <Typography variant="subtitle2">{s.internal_name}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {s.address}
+                            </Typography>
+                          </>
+                        ) : (
+                          <Typography variant="subtitle2">{s.address}</Typography>
                         )}
                       </Stack>
                       {isSelected && (
@@ -683,6 +690,14 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         </>
       ) : (
         <>
+          <TextField
+            label="Nombre interno"
+            size="small"
+            fullWidth
+            value={newStation.internalName}
+            onChange={(e) => setNewStation((p) => ({ ...p, internalName: e.target.value }))}
+            placeholder="Ej. Parking Centro Norte"
+          />
           <TextField
             label="Dirección"
             required

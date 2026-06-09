@@ -36,6 +36,7 @@ export type ChargingStation = {
 export type BasicChargingStationInfo = {
   id: number;
   name: string;
+  internal_name?: string | null;
   address: string;
   city: string;
   state_province: string | null;
