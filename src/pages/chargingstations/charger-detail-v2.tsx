@@ -15,14 +15,20 @@ import Grid from '@mui/material/Grid2';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import { Tooltip } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
+import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
+import DialogContentText from '@mui/material/DialogContentText';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -163,6 +169,7 @@ function ConnectorCard({
   chargepointId,
   onAction,
   onEdit,
+  onDelete,
   onRemoveRate,
   onRateAssigned,
 }: {
@@ -170,6 +177,7 @@ function ConnectorCard({
   chargepointId: number;
   onAction: (state: DialogState) => void;
   onEdit: (connector: Connector) => void;
+  onDelete: (connector: Connector) => void;
   onRemoveRate: () => void;
   onRateAssigned: () => void;
 }) {
@@ -181,7 +189,7 @@ function ConnectorCard({
   const [selectedRateId, setSelectedRateId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const { canOperate, isViewOnly } = useAbility();
+  const { canOperate, isViewOnly, hasAnyRole } = useAbility();
 
   useEffect(() => {
     if (!assignOpen) return () => {};
@@ -295,6 +303,19 @@ function ConnectorCard({
                       }}
                     >
                       <Iconify icon="mdi:pencil-outline" width={16} />
+                    </IconButton>
+                  )}
+                  {hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && (
+                    <IconButton
+                      size="small"
+                      title="Eliminar conector"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(connector);
+                      }}
+                    >
+                      <Iconify icon="mingcute:trash-line" width={16} />
                     </IconButton>
                   )}
                 </Stack>
@@ -729,6 +750,9 @@ export default function ChargerDetailV2() {
   const [editState, setEditState] = useState<
     { mode: 'idle' } | { mode: 'add' } | { mode: 'edit'; connectorId: number }
   >({ mode: 'idle' });
+  const [deleteConfirm, setDeleteConfirm] = useState<Connector | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { canOperate, isViewOnly, hasAnyRole } = useAbility();
 
   const loadChargepoint = async () => {
@@ -748,6 +772,22 @@ export default function ChargerDetailV2() {
       setOcppConnected(response?.data?.connected ?? false);
     } catch {
       setOcppConnected(false);
+    }
+  };
+
+  const handleDeleteConnectorConfirm = async () => {
+    if (!deleteConfirm || !chargepoint) return;
+    try {
+      setDeleting(true);
+      await del(endpoints.connectors.delete(chargepoint.id, deleteConfirm.id));
+      setDeleteConfirm(null);
+      loadChargepoint();
+    } catch (err: any) {
+      const message = err?.error ?? 'Error al eliminar el conector. Inténtalo de nuevo.';
+      setDeleteError(message);
+      setDeleteConfirm(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -986,6 +1026,7 @@ export default function ChargerDetailV2() {
                       onEdit={(c) => {
                         setEditState({ mode: 'edit', connectorId: c.id });
                       }}
+                      onDelete={(c) => setDeleteConfirm(c)}
                       onRemoveRate={() => {
                         if (conn.rateId != null) {
                           del(
@@ -1077,6 +1118,42 @@ export default function ChargerDetailV2() {
         }}
         onClose={closeDialog}
       />
+
+      {/* Delete connector confirmation dialog */}
+      <Dialog open={deleteConfirm !== null} onClose={() => !deleting && setDeleteConfirm(null)}>
+        <DialogTitle>Eliminar conector</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {`¿Eliminar conector ${deleteConfirm?.name ?? deleteConfirm?.id}? Esta acción no se puede deshacer.`}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm(null)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDeleteConnectorConfirm}
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={14} color="inherit" /> : undefined}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error snackbar for delete failures (e.g. connector has transactions) */}
+      <Snackbar
+        open={deleteError !== null}
+        autoHideDuration={6000}
+        onClose={() => setDeleteError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setDeleteError(null)} sx={{ width: '100%' }}>
+          {deleteError}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

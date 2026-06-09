@@ -178,6 +178,8 @@ export const endpoints = {
     create: (chargepointId: number) => `/chargingstations/${chargepointId}/connectors`,
     update: (chargepointId: number, connectorId: number) =>
       `/chargingstations/${chargepointId}/connectors/${connectorId}`,
+    delete: (chargepointId: number, connectorId: number) =>
+      `/chargingstations/${chargepointId}/connectors/${connectorId}`,
     assign: (chargepointId: number, connectorId: number) =>
       `/chargingstations/${chargepointId}/connectors/${connectorId}/rate`,
     deassign: (chargepointId: number, connectorId: number, rateId: number) =>
