@@ -15,11 +15,13 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Select from '@mui/material/Select';
+import Tooltip from '@mui/material/Tooltip';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import InputLabel from '@mui/material/InputLabel';
+import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import FormControl from '@mui/material/FormControl';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -360,18 +362,34 @@ export default function TicketDetailView() {
                           </Typography>
                           <Stack alignItems="flex-end" spacing={0}>
                             <Typography variant="body2">{ticket.appUser.name}</Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              onClick={() => router.push(paths.appUsers.detail(ticket.appUser!.id))}
-                              sx={{
-                                cursor: 'pointer',
-                                userSelect: 'none',
-                                '&:hover': { textDecoration: 'underline' },
-                              }}
-                            >
-                              {ticket.appUser.email}
-                            </Typography>
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                onClick={() =>
+                                  router.push(paths.appUsers.detail(ticket.appUser!.id))
+                                }
+                                sx={{
+                                  cursor: 'pointer',
+                                  '&:hover': { textDecoration: 'underline' },
+                                }}
+                              >
+                                {ticket.appUser.email}
+                              </Typography>
+                              {ticket.appUser.email && (
+                                <Tooltip title="Copiar">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                      navigator.clipboard.writeText(ticket.appUser!.email)
+                                    }
+                                    sx={{ opacity: 0, '&:hover': { opacity: 1 } }}
+                                  >
+                                    <Iconify icon="mingcute:copy-2-line" width={14} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Stack>
                             <Typography variant="body2" color="text.secondary">
                               {ticket.appUser.telephone ?? '-'}
                             </Typography>

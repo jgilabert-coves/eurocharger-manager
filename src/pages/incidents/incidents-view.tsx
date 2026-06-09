@@ -7,12 +7,14 @@ import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -230,9 +232,24 @@ export default function IncidentsView() {
                         {incident.appUser ? (
                           <Stack spacing={0.25}>
                             <Typography variant="subtitle2">{incident.appUser.name}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {incident.appUser.email}
-                            </Typography>
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Typography variant="caption" color="text.secondary">
+                                {incident.appUser.email}
+                              </Typography>
+                              {incident.appUser.email && (
+                                <Tooltip title="Copiar">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                      navigator.clipboard.writeText(incident.appUser!.email)
+                                    }
+                                    sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
+                                  >
+                                    <Iconify icon="mingcute:copy-2-line" width={14} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Stack>
                           </Stack>
                         ) : (
                           <Typography variant="caption" color="text.disabled">

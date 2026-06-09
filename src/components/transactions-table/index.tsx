@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -242,7 +243,7 @@ export function TransactionsTable({
                 rows.map((tx) => (
                   <TableRow
                     key={tx.id}
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, userSelect: 'none' }}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   >
                     {/* ID (solo Eurocharger) */}
                     {isEurocharger && (
@@ -383,14 +384,30 @@ export function TransactionsTable({
                           ) : (
                             <Typography variant="subtitle2">{tx.appUser.name ?? '—'}</Typography>
                           )}
-                          <Link
-                            to={paths.appUsers.detail(tx.appUser.id)}
-                            style={{ textDecoration: 'none' }}
-                          >
-                            <Typography variant="body2" color="text.secondary">
-                              {tx.appUser.email ?? '—'}
-                            </Typography>
-                          </Link>
+                          <Stack direction="row" alignItems="center" spacing={0.5}>
+                            <Link
+                              to={paths.appUsers.detail(tx.appUser.id)}
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <Typography variant="body2" color="text.secondary">
+                                {tx.appUser.email ?? '—'}
+                              </Typography>
+                            </Link>
+                            {tx.appUser.email && (
+                              <Tooltip title="Copiar">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(tx.appUser!.email);
+                                  }}
+                                  sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
+                                >
+                                  <Iconify icon="mingcute:copy-2-line" width={14} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </Stack>
                         </Stack>
                       ) : (
                         <Typography variant="body2" color="text.disabled">

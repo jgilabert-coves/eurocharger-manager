@@ -13,6 +13,7 @@ import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Select from '@mui/material/Select';
+import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
@@ -381,21 +382,36 @@ export default function TicketsListView() {
                         {ticket.appUser ? (
                           <Stack spacing={0}>
                             <Typography variant="body2">{ticket.appUser.name}</Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(paths.appUsers.detail(ticket.appUser!.id));
-                              }}
-                              sx={{
-                                cursor: 'pointer',
-                                userSelect: 'none',
-                                '&:hover': { textDecoration: 'underline' },
-                              }}
-                            >
-                              {ticket.appUser.email}
-                            </Typography>
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(paths.appUsers.detail(ticket.appUser!.id));
+                                }}
+                                sx={{
+                                  cursor: 'pointer',
+                                  '&:hover': { textDecoration: 'underline' },
+                                }}
+                              >
+                                {ticket.appUser.email}
+                              </Typography>
+                              {ticket.appUser.email && (
+                                <Tooltip title="Copiar">
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(ticket.appUser!.email);
+                                    }}
+                                    sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
+                                  >
+                                    <Iconify icon="mingcute:copy-2-line" width={14} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Stack>
                           </Stack>
                         ) : (
                           <Typography variant="caption" color="text.disabled">
