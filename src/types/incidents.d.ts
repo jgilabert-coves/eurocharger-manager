@@ -13,6 +13,7 @@ export type Incident = {
     address: string;
   };
   appUser: {
+    id: number;
     name: string;
     email: string;
   } | null;

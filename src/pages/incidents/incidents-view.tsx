@@ -231,7 +231,30 @@ export default function IncidentsView() {
                       <TableCell>
                         {incident.appUser ? (
                           <Stack spacing={0.25}>
-                            <Typography variant="subtitle2">{incident.appUser.name}</Typography>
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <Link
+                                to={paths.appUsers.detail(incident.appUser.id)}
+                                style={{ textDecoration: 'none', color: 'inherit' }}
+                              >
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                >
+                                  {incident.appUser.name}
+                                </Typography>
+                              </Link>
+                              <Tooltip title="Copiar">
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    navigator.clipboard.writeText(incident.appUser!.name)
+                                  }
+                                  sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
+                                >
+                                  <Iconify icon="mingcute:copy-2-line" width={14} />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
                             <Stack direction="row" alignItems="center" spacing={0.5}>
                               <Typography variant="caption" color="text.secondary">
                                 {incident.appUser.email}
