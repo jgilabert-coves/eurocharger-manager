@@ -380,6 +380,7 @@ function AddChargersDialog({
   isEurocharger: boolean;
 }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [chargerSearch, setChargerSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -398,11 +399,21 @@ function AddChargersDialog({
   const available = allChargepoints.filter(
     (cp) => !group?.chargers.some((item) => Number(item.id) === cp.id)
   );
+  const filteredAvailable = available.filter((cp) =>
+    (cp.name ?? `Cargador #${cp.id}`).toLowerCase().includes(chargerSearch.toLowerCase())
+  );
 
   const targetAccountId = isEurocharger ? (group?.account_id ?? accountId) : accountId;
 
   const toggle = (id: number) =>
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const handleClose = () => {
+    setSelectedIds([]);
+    setChargerSearch('');
+    setError(null);
+    onClose();
+  };
 
   const handleAdd = async () => {
     if (!group || selectedIds.length === 0) return;
@@ -412,9 +423,8 @@ function AddChargersDialog({
       await post(endpoints.accounts.chargerGroupChargers(targetAccountId, group.id), {
         chargerIds: selectedIds,
       });
-      setSelectedIds([]);
+      handleClose();
       onSuccess();
-      onClose();
     } catch (err: any) {
       setError(err?.error ?? 'Error al añadir cargadores.');
     } finally {
@@ -423,11 +433,11 @@ function AddChargersDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
         Añadir cargadores a {group?.name}
         <IconButton
-          onClick={onClose}
+          onClick={handleClose}
           size="small"
           sx={{ position: 'absolute', top: 12, right: 12, color: 'text.secondary' }}
         >
@@ -440,6 +450,23 @@ function AddChargersDialog({
             {error}
           </Alert>
         )}
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="Buscar cargador..."
+          value={chargerSearch}
+          onChange={(e) => setChargerSearch(e.target.value)}
+          sx={{ mb: 1.5 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
         <Box
           sx={{
             maxHeight: 280,
@@ -456,8 +483,12 @@ function AddChargersDialog({
                 ? 'Cargando...'
                 : 'Todos los cargadores ya están en este propietario.'}
             </Typography>
+          ) : filteredAvailable.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
+              No se encontraron cargadores.
+            </Typography>
           ) : (
-            available.map((cp) => (
+            filteredAvailable.map((cp) => (
               <FormControlLabel
                 key={cp.id}
                 control={
@@ -475,7 +506,7 @@ function AddChargersDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button onClick={handleClose} disabled={loading}>
           Cancelar
         </Button>
         <Button
