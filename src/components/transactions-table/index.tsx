@@ -7,9 +7,11 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Tooltip from '@mui/material/Tooltip';
+import Snackbar from '@mui/material/Snackbar';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -84,6 +86,8 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
   const [rows, setRows] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -432,63 +436,96 @@ export function TransactionsTable({
                           {/* Stop — visible solo si CARGANDO */}
                           {tx.status === 'CARGANDO' && (
                             <Tooltip title="Detener recarga">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await post(endpoints.transactions.stop(tx.id), {});
-                                    fetchTransactions();
-                                  } catch (err) {
-                                    console.error('Error stopping transaction:', err);
-                                  }
-                                }}
-                              >
-                                <Iconify icon="mingcute:stop-circle-line" width={18} />
-                              </IconButton>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  disabled={loadingAction === `${tx.id}-stop`}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const key = `${tx.id}-stop`;
+                                    setLoadingAction(key);
+                                    try {
+                                      await post(endpoints.transactions.stop(tx.id), {});
+                                      fetchTransactions();
+                                    } catch (err: any) {
+                                      setActionError(err?.response?.data?.error || err?.message || 'Error al ejecutar la acción');
+                                    } finally {
+                                      setLoadingAction(null);
+                                    }
+                                  }}
+                                >
+                                  {loadingAction === `${tx.id}-stop` ? (
+                                    <CircularProgress size={18} color="inherit" />
+                                  ) : (
+                                    <Iconify icon="mingcute:stop-circle-line" width={18} />
+                                  )}
+                                </IconButton>
+                              </span>
                             </Tooltip>
                           )}
 
                           {/* Cancel — visible si no está en curso, no tiene recibo, no está fallida */}
                           {!tx.failed && !tx.hasReceipt && tx.status !== 'CARGANDO' && (
                             <Tooltip title="Cancelar recarga">
-                              <IconButton
-                                size="small"
-                                color="warning"
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await patch(endpoints.transactions.cancel(tx.id), {});
-                                    fetchTransactions();
-                                  } catch (err) {
-                                    console.error('Error cancelling transaction:', err);
-                                  }
-                                }}
-                              >
-                                <Iconify icon="mingcute:close-circle-line" width={18} />
-                              </IconButton>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color="warning"
+                                  disabled={loadingAction === `${tx.id}-cancel`}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const key = `${tx.id}-cancel`;
+                                    setLoadingAction(key);
+                                    try {
+                                      await patch(endpoints.transactions.cancel(tx.id), {});
+                                      fetchTransactions();
+                                    } catch (err: any) {
+                                      setActionError(err?.response?.data?.error || err?.message || 'Error al ejecutar la acción');
+                                    } finally {
+                                      setLoadingAction(null);
+                                    }
+                                  }}
+                                >
+                                  {loadingAction === `${tx.id}-cancel` ? (
+                                    <CircularProgress size={18} color="inherit" />
+                                  ) : (
+                                    <Iconify icon="mingcute:close-circle-line" width={18} />
+                                  )}
+                                </IconButton>
+                              </span>
                             </Tooltip>
                           )}
 
                           {/* Charge — visible si tiene tarifa, no tiene recibo, no está en curso */}
                           {tx.rate?.id != null && !tx.hasReceipt && tx.status !== 'CARGANDO' && (
                             <Tooltip title="Cobrar recarga">
-                              <IconButton
-                                size="small"
-                                color="success"
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await post(endpoints.transactions.charge(tx.id), {});
-                                    fetchTransactions();
-                                  } catch (err) {
-                                    console.error('Error charging transaction:', err);
-                                  }
-                                }}
-                              >
-                                <Iconify icon="mingcute:currency-euro-2-line" width={18} />
-                              </IconButton>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color="success"
+                                  disabled={loadingAction === `${tx.id}-charge`}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const key = `${tx.id}-charge`;
+                                    setLoadingAction(key);
+                                    try {
+                                      await post(endpoints.transactions.charge(tx.id), {});
+                                      fetchTransactions();
+                                    } catch (err: any) {
+                                      setActionError(err?.response?.data?.error || err?.message || 'Error al ejecutar la acción');
+                                    } finally {
+                                      setLoadingAction(null);
+                                    }
+                                  }}
+                                >
+                                  {loadingAction === `${tx.id}-charge` ? (
+                                    <CircularProgress size={18} color="inherit" />
+                                  ) : (
+                                    <Iconify icon="mingcute:currency-euro-2-line" width={18} />
+                                  )}
+                                </IconButton>
+                              </span>
                             </Tooltip>
                           )}
                         </Stack>
@@ -520,6 +557,17 @@ export function TransactionsTable({
           }}
         />
       </Card>
+
+      <Snackbar
+        open={actionError !== null}
+        autoHideDuration={6000}
+        onClose={() => setActionError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+          {actionError}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
