@@ -232,17 +232,21 @@ export default function IncidentsView() {
                         {incident.appUser ? (
                           <Stack spacing={0.25}>
                             <Stack direction="row" alignItems="center" spacing={0.5}>
-                              <Link
-                                to={paths.appUsers.detail(incident.appUser.id)}
-                                style={{ textDecoration: 'none', color: 'inherit' }}
-                              >
-                                <Typography
-                                  variant="subtitle2"
-                                  sx={{ '&:hover': { textDecoration: 'underline' } }}
+                              {incident.appUser.id ? (
+                                <Link
+                                  to={paths.appUsers.detail(incident.appUser.id)}
+                                  style={{ textDecoration: 'none', color: 'inherit' }}
                                 >
-                                  {incident.appUser.name}
-                                </Typography>
-                              </Link>
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                  >
+                                    {incident.appUser.name}
+                                  </Typography>
+                                </Link>
+                              ) : (
+                                <Typography variant="body2">{incident.appUser.name}</Typography>
+                              )}
                               <Tooltip title="Copiar">
                                 <IconButton
                                   size="small"
