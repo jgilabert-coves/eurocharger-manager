@@ -18,6 +18,7 @@ import Dialog from '@mui/material/Dialog';
 import Switch from '@mui/material/Switch';
 import Divider from '@mui/material/Divider';
 import Stepper from '@mui/material/Stepper';
+import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import StepLabel from '@mui/material/StepLabel';
 import TextField from '@mui/material/TextField';
@@ -246,18 +247,17 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
       return undefined;
     }
 
-    const latLon = parseLatLon(mapSearch);
-    if (latLon) {
-      handleLatLonSearch(latLon.lat, latLon.lng);
-      return undefined;
-    }
-
     const timer = setTimeout(async () => {
+      const latLon = parseLatLon(mapSearch);
+      if (latLon) {
+        await handleLatLonSearch(latLon.lat, latLon.lng);
+        return;
+      }
       setMapSearchLoading(true);
       const results = await geocodeQuery(mapSearch, CONFIG.mapboxApiKey);
       setMapOptions(results);
       setMapSearchLoading(false);
-    }, 300);
+    }, 400);
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -297,8 +297,6 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     setMapSearchLoading(false);
     if (results.length > 0) {
       applyGeocodingFeature(results[0]);
-      setMapSearch('');
-      setMapOptions([]);
     } else {
       mapRef.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 1200 });
       setNewStation((p) => ({
@@ -306,7 +304,19 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         latitude: lat.toFixed(6),
         longitude: lng.toFixed(6),
       }));
-      setMapSearch('');
+    }
+  }
+
+  async function handleGeocodeFromAddress() {
+    const query = [newStation.address, newStation.city, newStation.postalCode, newStation.country]
+      .filter(Boolean)
+      .join(', ');
+    if (!query.trim()) return;
+    const results = await geocodeQuery(query, CONFIG.mapboxApiKey);
+    if (results.length > 0) {
+      applyGeocodingFeature(results[0]);
+      const [lng, lat] = results[0].center;
+      setMapSearch(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     }
   }
 
@@ -681,6 +691,19 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
             value={newStation.address}
             onChange={(e) => setNewStation((p) => ({ ...p, address: e.target.value }))}
             placeholder="Ej. C/ Mayor, 2"
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Tooltip title="Localizar en mapa">
+                      <IconButton size="small" onClick={handleGeocodeFromAddress} edge="end">
+                        <Iconify icon="eva:pin-fill" width={16} />
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <TextField
@@ -794,7 +817,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               sx={{
                 borderRadius: 1.5,
                 overflow: 'hidden',
-                height: 220,
+                height: 300,
                 border: '1px solid',
                 borderColor: newStation.latitude ? 'primary.main' : 'divider',
                 cursor: 'crosshair',
@@ -813,6 +836,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
                     latitude: lat.toFixed(6),
                     longitude: lng.toFixed(6),
                   }));
+                  setMapSearch(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
                 }}
               >
                 {newStation.latitude && newStation.longitude && (
@@ -820,13 +844,15 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
                     longitude={parseFloat(newStation.longitude)}
                     latitude={parseFloat(newStation.latitude)}
                     draggable
-                    onDragEnd={(e) =>
+                    onDragEnd={(e) => {
+                      const { lat, lng } = e.lngLat;
                       setNewStation((p) => ({
                         ...p,
-                        latitude: e.lngLat.lat.toFixed(6),
-                        longitude: e.lngLat.lng.toFixed(6),
-                      }))
-                    }
+                        latitude: lat.toFixed(6),
+                        longitude: lng.toFixed(6),
+                      }));
+                      setMapSearch(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+                    }}
                     color="#2DE21D"
                   />
                 )}
@@ -1096,7 +1122,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
       onClose={handleClose}
       maxWidth="lg"
       fullWidth
-      PaperProps={{ sx: { height: 600 } }}
+      PaperProps={{ sx: { height: 720 } }}
     >
       <DialogTitle sx={{ pr: 6 }}>
         Nuevo cargador
