@@ -9,7 +9,7 @@ import { useParams } from 'react-router';
 import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -747,6 +747,7 @@ export default function ChargerDetailV2() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuthContext();
+  const queryClient = useQueryClient();
 
   const [chargepoint, setChargepoint] = useState<Chargepoint | undefined>();
   const [loading, setLoading] = useState(true);
@@ -814,6 +815,7 @@ export default function ChargerDetailV2() {
       });
       setEditChargerOpen(false);
       await loadChargepoint();
+      queryClient.invalidateQueries({ queryKey: ['account-subscription', accountId] });
     } catch {
       setEditError('Error al guardar los cambios. Inténtalo de nuevo.');
     } finally {
