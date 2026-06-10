@@ -7,11 +7,9 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Tooltip from '@mui/material/Tooltip';
-import Snackbar from '@mui/material/Snackbar';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -38,6 +36,9 @@ import { Iconify } from 'src/components/iconify';
 import { useAbility } from 'src/auth/hooks/use-ability';
 
 import { TransactionStatusChip } from '../chips/transaction-status-chip';
+import { ConfirmTransactionActionDialog } from './confirm-action-dialog';
+
+import type { TransactionAction } from './confirm-action-dialog';
 
 function formatDuration(startDate: Date | string, endDate: Date | string | null): string {
   const start = new Date(startDate).getTime();
@@ -50,8 +51,6 @@ function formatDuration(startDate: Date | string, endDate: Date | string | null)
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
 }
-
-// STATUS_COLOR / STATUS_LABEL removed (unused)
 
 // ----------------------------------------------------------------------
 
@@ -78,8 +77,10 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
   const [rows, setRows] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingAction, setLoadingAction] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    txId: number;
+    action: TransactionAction;
+  } | null>(null);
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -136,6 +137,12 @@ export function TransactionsTable({
     const isAsc = orderBy === field && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(field);
+  };
+
+  const getConfirmFn = (txId: number, action: TransactionAction) => async () => {
+    if (action === 'stop') await post(endpoints.transactions.stop(txId), {});
+    else if (action === 'cancel') await patch(endpoints.transactions.cancel(txId), {});
+    else await post(endpoints.transactions.charge(txId), {});
   };
 
   const colSpan =
@@ -389,7 +396,6 @@ export function TransactionsTable({
                                 {tx.appUser.email ?? '—'}
                               </Typography>
                             </Link>
-                            {/* Copiar email eliminado según petición del usuario */}
                           </Stack>
                         </Stack>
                       ) : (
@@ -422,66 +428,30 @@ export function TransactionsTable({
                                 <IconButton
                                   size="small"
                                   color="error"
-                                  disabled={loadingAction === `${tx.id}-stop`}
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    const key = `${tx.id}-stop`;
-                                    setLoadingAction(key);
-                                    try {
-                                      await post(endpoints.transactions.stop(tx.id), {});
-                                      fetchTransactions();
-                                    } catch (err: any) {
-                                      setActionError(
-                                        err?.response?.data?.error ||
-                                          err?.message ||
-                                          'Error al ejecutar la acción'
-                                      );
-                                    } finally {
-                                      setLoadingAction(null);
-                                    }
+                                    setPendingAction({ txId: tx.id, action: 'stop' });
                                   }}
                                 >
-                                  {loadingAction === `${tx.id}-stop` ? (
-                                    <CircularProgress size={18} color="inherit" />
-                                  ) : (
-                                    <Iconify icon="mingcute:stop-circle-line" width={18} />
-                                  )}
+                                  <Iconify icon="mingcute:stop-circle-line" width={18} />
                                 </IconButton>
                               </span>
                             </Tooltip>
                           )}
 
-                          {/* Cancel — visible si no está en curso, no tiene recibo, no está fallida */}
-                          {!tx.failed && !tx.hasReceipt && tx.status !== 'CARGANDO' && (
+                          {/* Cancel — visible si no tiene recibo y no está fallida */}
+                          {!tx.failed && !tx.hasReceipt && (
                             <Tooltip title="Cancelar recarga">
                               <span>
                                 <IconButton
                                   size="small"
                                   color="warning"
-                                  disabled={loadingAction === `${tx.id}-cancel`}
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    const key = `${tx.id}-cancel`;
-                                    setLoadingAction(key);
-                                    try {
-                                      await patch(endpoints.transactions.cancel(tx.id), {});
-                                      fetchTransactions();
-                                    } catch (err: any) {
-                                      setActionError(
-                                        err?.response?.data?.error ||
-                                          err?.message ||
-                                          'Error al ejecutar la acción'
-                                      );
-                                    } finally {
-                                      setLoadingAction(null);
-                                    }
+                                    setPendingAction({ txId: tx.id, action: 'cancel' });
                                   }}
                                 >
-                                  {loadingAction === `${tx.id}-cancel` ? (
-                                    <CircularProgress size={18} color="inherit" />
-                                  ) : (
-                                    <Iconify icon="mingcute:close-circle-line" width={18} />
-                                  )}
+                                  <Iconify icon="mingcute:close-circle-line" width={18} />
                                 </IconButton>
                               </span>
                             </Tooltip>
@@ -494,30 +464,12 @@ export function TransactionsTable({
                                 <IconButton
                                   size="small"
                                   color="success"
-                                  disabled={loadingAction === `${tx.id}-charge`}
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    const key = `${tx.id}-charge`;
-                                    setLoadingAction(key);
-                                    try {
-                                      await post(endpoints.transactions.charge(tx.id), {});
-                                      fetchTransactions();
-                                    } catch (err: any) {
-                                      setActionError(
-                                        err?.response?.data?.error ||
-                                          err?.message ||
-                                          'Error al ejecutar la acción'
-                                      );
-                                    } finally {
-                                      setLoadingAction(null);
-                                    }
+                                    setPendingAction({ txId: tx.id, action: 'charge' });
                                   }}
                                 >
-                                  {loadingAction === `${tx.id}-charge` ? (
-                                    <CircularProgress size={18} color="inherit" />
-                                  ) : (
-                                    <Iconify icon="mingcute:currency-euro-2-line" width={18} />
-                                  )}
+                                  <Iconify icon="mingcute:currency-euro-2-line" width={18} />
                                 </IconButton>
                               </span>
                             </Tooltip>
@@ -552,16 +504,15 @@ export function TransactionsTable({
         />
       </Card>
 
-      <Snackbar
-        open={actionError !== null}
-        autoHideDuration={6000}
-        onClose={() => setActionError(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
-          {actionError}
-        </Alert>
-      </Snackbar>
+      {pendingAction && (
+        <ConfirmTransactionActionDialog
+          open
+          action={pendingAction.action}
+          onConfirm={getConfirmFn(pendingAction.txId, pendingAction.action)}
+          onClose={() => setPendingAction(null)}
+          onSuccess={fetchTransactions}
+        />
+      )}
     </>
   );
 }
