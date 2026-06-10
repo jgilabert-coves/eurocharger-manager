@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import type { SelectedGroup } from 'src/components/chargepoint/group-dual-picker';
+
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -20,6 +20,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { del, post, patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { GroupDualPicker } from 'src/components/chargepoint/group-dual-picker';
 
 // ----------------------------------------------------------------------
 
@@ -35,11 +36,6 @@ type GuestState = {
   role: InvitationRole | null;
 };
 
-const PERMISSION_LABEL: Record<InvitationPermissionLevel, string> = {
-  view: 'Lectura',
-  operate: 'Operación',
-};
-
 const ROLE_LABEL: Record<InvitationRole, string> = {
   saas_guest: 'Invitado',
   saas_admin: 'Admin',
@@ -53,17 +49,14 @@ export function EditGuestGroupsDialog({
 }: EditGuestGroupsDialogProps) {
   const queryClient = useQueryClient();
 
-  const [addGroupId, setAddGroupId] = useState('');
-  const [addPermission, setAddPermission] = useState<InvitationPermissionLevel>('view');
-  const [adding, setAdding] = useState(false);
-  const [removing, setRemoving] = useState<string | null>(null);
+  const [localGroups, setLocalGroups] = useState<SelectedGroup[]>([]);
+  const [saving, setSaving] = useState(false);
   const [changingRole, setChangingRole] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const {
     data: guestData,
     isFetching: loadingGuest,
-    refetch: refetchGuest,
   } = useQuery<{ data: GuestState }>({
     queryKey: ['invitation-groups', invitation.id],
     queryFn: () => fetcher(endpoints.invitations.invitationGroups(accountId, invitation.id)),
@@ -78,11 +71,19 @@ export function EditGuestGroupsDialog({
     staleTime: 2 * 60 * 1000,
   });
 
-  const liveGroups: InvitationGroup[] = guestData?.data?.groups ?? [];
+  const serverGroups: InvitationGroup[] = guestData?.data?.groups ?? [];
   const currentRole: InvitationRole = guestData?.data?.role ?? invitation.role_to_assign;
   const allGroups: ChargerGroup[] = allGroupsData?.data ?? [];
-  const assignedGroupIds = liveGroups.map((g) => g.group_id);
-  const unassignedGroups = allGroups.filter((g) => !assignedGroupIds.includes(g.id));
+
+  // Sincronizar estado local cuando lleguen los datos del servidor
+  useEffect(() => {
+    if (guestData) {
+      setLocalGroups(
+        serverGroups.map((g) => ({ groupId: g.group_id, permissionLevel: g.permission_level }))
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guestData]);
 
   const invalidateInvitations = () =>
     queryClient.invalidateQueries({ queryKey: ['invitations', accountId] });
@@ -93,7 +94,7 @@ export function EditGuestGroupsDialog({
       setChangingRole(true);
       setError(null);
       await patch(endpoints.invitations.invitationRole(accountId, invitation.id), { role: newRole });
-      await refetchGuest();
+      await queryClient.invalidateQueries({ queryKey: ['invitation-groups', invitation.id] });
       invalidateInvitations();
     } catch (err: any) {
       setError(err?.error ?? 'Error al cambiar el rol.');
@@ -102,49 +103,58 @@ export function EditGuestGroupsDialog({
     }
   };
 
-  const handleAdd = async () => {
-    if (!addGroupId) return;
+  const handleSave = async () => {
     try {
-      setAdding(true);
+      setSaving(true);
       setError(null);
-      await post(endpoints.invitations.invitationGroups(accountId, invitation.id), {
-        groupId: addGroupId,
-        permissionLevel: addPermission,
-      });
-      setAddGroupId('');
-      setAddPermission('view');
-      await refetchGuest();
-      invalidateInvitations();
-    } catch (err: any) {
-      setError(err?.error ?? 'Error al añadir el propietario.');
-    } finally {
-      setAdding(false);
-    }
-  };
 
-  const handleRemove = async (groupId: string) => {
-    try {
-      setRemoving(groupId);
-      setError(null);
-      await del(endpoints.invitations.invitationGroup(accountId, invitation.id, groupId));
-      await refetchGuest();
+      const originalIds = serverGroups.map((g) => g.group_id);
+      const localIds = localGroups.map((g) => g.groupId);
+
+      const toRemove = serverGroups.filter((g) => !localIds.includes(g.group_id));
+      const toAdd = localGroups.filter((g) => !originalIds.includes(g.groupId));
+      // Permiso cambiado: quitar y volver a añadir
+      const toUpdatePermission = localGroups.filter((g) => {
+        const original = serverGroups.find((s) => s.group_id === g.groupId);
+        return original && original.permission_level !== g.permissionLevel;
+      });
+
+      await Promise.all([
+        ...toRemove.map((g) =>
+          del(endpoints.invitations.invitationGroup(accountId, invitation.id, g.group_id))
+        ),
+        ...toUpdatePermission.map(async (g) => {
+          await del(endpoints.invitations.invitationGroup(accountId, invitation.id, g.groupId));
+          await post(endpoints.invitations.invitationGroups(accountId, invitation.id), {
+            groupId: g.groupId,
+            permissionLevel: g.permissionLevel,
+          });
+        }),
+        ...toAdd.map((g) =>
+          post(endpoints.invitations.invitationGroups(accountId, invitation.id), {
+            groupId: g.groupId,
+            permissionLevel: g.permissionLevel,
+          })
+        ),
+      ]);
+
+      await queryClient.invalidateQueries({ queryKey: ['invitation-groups', invitation.id] });
       invalidateInvitations();
+      onClose();
     } catch (err: any) {
-      setError(err?.error ?? 'Error al eliminar el propietario.');
+      setError(err?.error ?? 'Error al guardar los cambios.');
     } finally {
-      setRemoving(null);
+      setSaving(false);
     }
   };
 
   const handleClose = () => {
-    setAddGroupId('');
-    setAddPermission('view');
     setError(null);
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
         Gestionar acceso
         <IconButton
@@ -167,7 +177,7 @@ export function EditGuestGroupsDialog({
           </Alert>
         )}
 
-        {/* Role */}
+        {/* Rol */}
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
           <TextField
             select
@@ -187,96 +197,37 @@ export function EditGuestGroupsDialog({
           {changingRole && <CircularProgress size={18} />}
         </Stack>
 
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 1 }} />
 
-        {/* Current groups */}
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-          Propietarios actuales
+        <Typography variant="subtitle2" sx={{ mb: 0 }}>
+          Propietarios
         </Typography>
 
         {loadingGuest ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-            <CircularProgress size={22} />
-          </Box>
-        ) : liveGroups.length === 0 ? (
-          <Typography variant="body2" color="text.disabled" sx={{ mb: 2 }}>
-            Sin propietarios asignados
-          </Typography>
-        ) : (
-          <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mb: 2 }}>
-            {liveGroups.map((g) => (
-              <Chip
-                key={g.group_id}
-                label={`${g.group_name} · ${PERMISSION_LABEL[g.permission_level]}`}
-                size="small"
-                variant="soft"
-                color="primary"
-                disabled={removing === g.group_id}
-                onDelete={() => handleRemove(g.group_id)}
-                deleteIcon={
-                  removing === g.group_id ? (
-                    <CircularProgress size={12} color="inherit" />
-                  ) : undefined
-                }
-              />
-            ))}
+          <Stack alignItems="center" sx={{ py: 4 }}>
+            <CircularProgress size={24} />
           </Stack>
-        )}
-
-        {/* Add group */}
-        {unassignedGroups.length > 0 && (
-          <>
-            <Divider sx={{ my: 1.5 }} />
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-              Añadir propietario
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              <TextField
-                select
-                size="small"
-                label="Propietario"
-                value={addGroupId}
-                onChange={(e) => setAddGroupId(e.target.value)}
-                sx={{ flex: 1 }}
-              >
-                <MenuItem value="">Seleccionar...</MenuItem>
-                {unassignedGroups.map((g) => (
-                  <MenuItem key={g.id} value={g.id}>
-                    {g.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                size="small"
-                label="Acceso"
-                value={addPermission}
-                onChange={(e) => setAddPermission(e.target.value as InvitationPermissionLevel)}
-                sx={{ width: 130 }}
-              >
-                <MenuItem value="view">Lectura</MenuItem>
-                <MenuItem value="operate">Operación</MenuItem>
-              </TextField>
-              <Button
-                variant="contained"
-                size="small"
-                disabled={!addGroupId || adding}
-                onClick={handleAdd}
-                sx={{ minWidth: 48, px: 1 }}
-              >
-                {adding ? (
-                  <CircularProgress size={14} color="inherit" />
-                ) : (
-                  <Iconify icon="mingcute:add-line" width={18} />
-                )}
-              </Button>
-            </Box>
-          </>
+        ) : (
+          <GroupDualPicker
+            available={allGroups}
+            selected={localGroups}
+            onChange={setLocalGroups}
+          />
         )}
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose}>Cerrar</Button>
+        <Button onClick={handleClose} disabled={saving}>
+          Cancelar
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          disabled={saving || loadingGuest}
+          startIcon={saving ? <CircularProgress size={14} color="inherit" /> : undefined}
+        >
+          Guardar cambios
+        </Button>
       </DialogActions>
     </Dialog>
   );

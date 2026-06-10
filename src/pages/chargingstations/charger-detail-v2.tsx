@@ -9,7 +9,7 @@ import { useParams } from 'react-router';
 import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
-import { TrashIcon, X } from '@phosphor-icons/react';
+import { X, TrashIcon } from '@phosphor-icons/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';

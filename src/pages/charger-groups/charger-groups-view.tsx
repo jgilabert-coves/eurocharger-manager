@@ -12,7 +12,6 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Divider from '@mui/material/Divider';
-import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -22,7 +21,6 @@ import DialogContent from '@mui/material/DialogContent';
 import InputAdornment from '@mui/material/InputAdornment';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
-import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { paths } from 'src/routes/paths';
 
@@ -31,6 +29,7 @@ import { useDebounce } from 'src/hooks/use-debounce';
 import { put, del, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { ChargerDualPicker } from 'src/components/chargepoint/charger-dual-picker';
 
 import { useAuthContext } from 'src/auth/hooks';
 import { useAbility } from 'src/auth/hooks/use-ability';
@@ -126,7 +125,7 @@ function CreateGroupDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
         Nuevo propietario
         <IconButton
@@ -137,7 +136,7 @@ function CreateGroupDialog({
           <Iconify icon="mingcute:close-line" width={20} />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ pt: 2 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -236,42 +235,19 @@ function CreateGroupDialog({
           placeholder="Ej: Ayuntamiento de X"
           sx={{ mb: 2 }}
         />
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        <Typography variant="subtitle2" sx={{ mb: 0 }}>
           Cargadores a incluir (opcional)
         </Typography>
-        <Box
-          sx={{
-            maxHeight: 240,
-            overflow: 'auto',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1,
-            p: 1,
-          }}
-        >
-          {availableChargepoints.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-              {isEurocharger && !selectedAccountId
-                ? 'Selecciona una cuenta primero.'
-                : 'No hay cargadores disponibles.'}
-            </Typography>
-          ) : (
-            availableChargepoints.map((cp) => (
-              <FormControlLabel
-                key={cp.id}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={selectedIds.includes(cp.id)}
-                    onChange={() => toggle(cp.id)}
-                  />
-                }
-                label={cp.name ?? `Cargador #${cp.id}`}
-                sx={{ display: 'flex', mx: 0 }}
-              />
-            ))
-          )}
-        </Box>
+        <ChargerDualPicker
+          available={availableChargepoints}
+          selected={selectedIds}
+          onChange={setSelectedIds}
+          emptyText={
+            isEurocharger && !selectedAccountId
+              ? 'Selecciona una cuenta primero.'
+              : 'No hay cargadores disponibles.'
+          }
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={loading}>
@@ -380,7 +356,6 @@ function AddChargersDialog({
   isEurocharger: boolean;
 }) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [chargerSearch, setChargerSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -399,18 +374,11 @@ function AddChargersDialog({
   const available = allChargepoints.filter(
     (cp) => !group?.chargers.some((item) => Number(item.id) === cp.id)
   );
-  const filteredAvailable = available.filter((cp) =>
-    (cp.name ?? `Cargador #${cp.id}`).toLowerCase().includes(chargerSearch.toLowerCase())
-  );
 
   const targetAccountId = isEurocharger ? (group?.account_id ?? accountId) : accountId;
 
-  const toggle = (id: number) =>
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-
   const handleClose = () => {
     setSelectedIds([]);
-    setChargerSearch('');
     setError(null);
     onClose();
   };
@@ -433,7 +401,7 @@ function AddChargersDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pr: 6 }}>
         Añadir cargadores a {group?.name}
         <IconButton
@@ -450,60 +418,16 @@ function AddChargersDialog({
             {error}
           </Alert>
         )}
-        <TextField
-          size="small"
-          fullWidth
-          placeholder="Buscar cargador..."
-          value={chargerSearch}
-          onChange={(e) => setChargerSearch(e.target.value)}
-          sx={{ mb: 1.5 }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="eva:search-fill" width={16} sx={{ color: 'text.disabled' }} />
-                </InputAdornment>
-              ),
-            },
-          }}
+        <ChargerDualPicker
+          available={available}
+          selected={selectedIds}
+          onChange={setSelectedIds}
+          emptyText={
+            isEurocharger && !accountChargepointsData
+              ? 'Cargando...'
+              : 'Todos los cargadores ya están en este propietario.'
+          }
         />
-        <Box
-          sx={{
-            maxHeight: 280,
-            overflow: 'auto',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1,
-            p: 1,
-          }}
-        >
-          {available.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-              {isEurocharger && !accountChargepointsData
-                ? 'Cargando...'
-                : 'Todos los cargadores ya están en este propietario.'}
-            </Typography>
-          ) : filteredAvailable.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 1 }}>
-              No se encontraron cargadores.
-            </Typography>
-          ) : (
-            filteredAvailable.map((cp) => (
-              <FormControlLabel
-                key={cp.id}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={selectedIds.includes(cp.id)}
-                    onChange={() => toggle(cp.id)}
-                  />
-                }
-                label={cp.name ?? `Cargador #${cp.id}`}
-                sx={{ display: 'flex', mx: 0 }}
-              />
-            ))
-          )}
-        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={loading}>
