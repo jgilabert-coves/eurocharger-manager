@@ -9,6 +9,7 @@ import { useParams } from 'react-router';
 import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
+import { TrashIcon, X } from '@phosphor-icons/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
@@ -43,6 +44,7 @@ import { del, put, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { PhosphorIcon } from 'src/components/phosphor-icon';
 import { ResetDialog } from 'src/components/ocpp/reset/dialog';
 import { UnlockDialog } from 'src/components/ocpp/unlock/dialog';
 import { TransactionsTable } from 'src/components/transactions-table';
@@ -320,7 +322,7 @@ function ConnectorCard({
                         onDelete(connector);
                       }}
                     >
-                      <Iconify icon="mingcute:trash-line" width={16} />
+                      <PhosphorIcon icon={TrashIcon} size={16} />
                     </IconButton>
                   )}
                 </Stack>
@@ -671,7 +673,7 @@ function ConnectorFormCard({
               {isEdit ? 'Editar conector' : 'Nuevo conector'}
             </Typography>
             <IconButton size="small" onClick={onCancel} disabled={saving}>
-              <Iconify icon="mingcute:close-line" width={16} />
+              <PhosphorIcon icon={X} size={16} />
             </IconButton>
           </Stack>
 

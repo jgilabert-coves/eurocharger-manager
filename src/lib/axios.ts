@@ -130,9 +130,9 @@ export const endpoints = {
   },
   transactions: {
     current: '/transactions',
-    cancel: (id: number) => `/api/transactions/${id}/cancel`,
-    charge: (id: number) => `/api/transactions/${id}/charge`,
-    stop: (id: number) => `/api/transactions/${id}/stop`,
+    cancel: (id: number) => `/transactions/${id}/cancel`,
+    charge: (id: number) => `/transactions/${id}/charge`,
+    stop: (id: number) => `/transactions/${id}/stop`,
   },
   rates: {
     list: '/rates',

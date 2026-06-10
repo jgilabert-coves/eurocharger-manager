@@ -51,15 +51,7 @@ function formatDuration(startDate: Date | string, endDate: Date | string | null)
   return `${minutes}m`;
 }
 
-const STATUS_COLOR: Record<string, 'info' | 'success' | 'default'> = {
-  CARGANDO: 'info',
-  FINALIZADO: 'success',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  CARGANDO: 'En curso',
-  FINALIZADO: 'Finalizada',
-};
+// STATUS_COLOR / STATUS_LABEL removed (unused)
 
 // ----------------------------------------------------------------------
 
@@ -146,7 +138,8 @@ export function TransactionsTable({
     setOrderBy(field);
   };
 
-  const colSpan = (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0) + (isEurocharger ? 1 : 0) + (isAdmin ? 1 : 0);
+  const colSpan =
+    (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0) + (isEurocharger ? 1 : 0) + (isAdmin ? 1 : 0);
 
   return (
     <>
@@ -247,10 +240,7 @@ export function TransactionsTable({
                 </TableRow>
               ) : (
                 rows.map((tx) => (
-                  <TableRow
-                    key={tx.id}
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  >
+                  <TableRow key={tx.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     {/* ID (solo Eurocharger) */}
                     {isEurocharger && (
                       <TableCell>
@@ -399,20 +389,7 @@ export function TransactionsTable({
                                 {tx.appUser.email ?? '—'}
                               </Typography>
                             </Link>
-                            {tx.appUser.email && (
-                              <Tooltip title="Copiar">
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigator.clipboard.writeText(tx.appUser!.email);
-                                  }}
-                                  sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
-                                >
-                                  <Iconify icon="mingcute:copy-2-line" width={14} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
+                            {/* Copiar email eliminado según petición del usuario */}
                           </Stack>
                         </Stack>
                       ) : (
@@ -432,7 +409,12 @@ export function TransactionsTable({
                     {/* Acciones (solo admin/owner/eurocharger) */}
                     {isAdmin && (
                       <TableCell align="center">
-                        <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="center"
+                          spacing={0.5}
+                        >
                           {/* Stop — visible solo si CARGANDO */}
                           {tx.status === 'CARGANDO' && (
                             <Tooltip title="Detener recarga">
@@ -449,7 +431,11 @@ export function TransactionsTable({
                                       await post(endpoints.transactions.stop(tx.id), {});
                                       fetchTransactions();
                                     } catch (err: any) {
-                                      setActionError(err?.response?.data?.error || err?.message || 'Error al ejecutar la acción');
+                                      setActionError(
+                                        err?.response?.data?.error ||
+                                          err?.message ||
+                                          'Error al ejecutar la acción'
+                                      );
                                     } finally {
                                       setLoadingAction(null);
                                     }
@@ -481,7 +467,11 @@ export function TransactionsTable({
                                       await patch(endpoints.transactions.cancel(tx.id), {});
                                       fetchTransactions();
                                     } catch (err: any) {
-                                      setActionError(err?.response?.data?.error || err?.message || 'Error al ejecutar la acción');
+                                      setActionError(
+                                        err?.response?.data?.error ||
+                                          err?.message ||
+                                          'Error al ejecutar la acción'
+                                      );
                                     } finally {
                                       setLoadingAction(null);
                                     }
@@ -513,7 +503,11 @@ export function TransactionsTable({
                                       await post(endpoints.transactions.charge(tx.id), {});
                                       fetchTransactions();
                                     } catch (err: any) {
-                                      setActionError(err?.response?.data?.error || err?.message || 'Error al ejecutar la acción');
+                                      setActionError(
+                                        err?.response?.data?.error ||
+                                          err?.message ||
+                                          'Error al ejecutar la acción'
+                                      );
                                     } finally {
                                       setLoadingAction(null);
                                     }

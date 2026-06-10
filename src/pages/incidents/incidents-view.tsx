@@ -7,14 +7,14 @@ import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
-import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
+// Tooltip removed
+// IconButton removed
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -180,7 +180,9 @@ export default function IncidentsView() {
                         <Stack spacing={0.25}>
                           {incident.chargingStation ? (
                             <Link
-                              to={paths.chargingstations.detail(String(incident.chargingStation.id))}
+                              to={paths.chargingstations.detail(
+                                String(incident.chargingStation.id)
+                              )}
                               style={{ textDecoration: 'none' }}
                             >
                               <Stack direction="row" alignItems="center" spacing={0.75}>
@@ -247,35 +249,13 @@ export default function IncidentsView() {
                               ) : (
                                 <Typography variant="body2">{incident.appUser.name}</Typography>
                               )}
-                              <Tooltip title="Copiar">
-                                <IconButton
-                                  size="small"
-                                  onClick={() =>
-                                    navigator.clipboard.writeText(incident.appUser!.name)
-                                  }
-                                  sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
-                                >
-                                  <Iconify icon="mingcute:copy-2-line" width={14} />
-                                </IconButton>
-                              </Tooltip>
+                              {/* Copiar nombre eliminado según petición del usuario */}
                             </Stack>
                             <Stack direction="row" alignItems="center" spacing={0.5}>
                               <Typography variant="caption" color="text.secondary">
                                 {incident.appUser.email}
                               </Typography>
-                              {incident.appUser.email && (
-                                <Tooltip title="Copiar">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      navigator.clipboard.writeText(incident.appUser!.email)
-                                    }
-                                    sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
-                                  >
-                                    <Iconify icon="mingcute:copy-2-line" width={14} />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
+                              {/* Copiar email eliminado según petición del usuario */}
                             </Stack>
                           </Stack>
                         ) : (

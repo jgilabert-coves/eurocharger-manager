@@ -13,7 +13,6 @@ import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Select from '@mui/material/Select';
-import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
@@ -22,6 +21,7 @@ import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import Typography from '@mui/material/Typography';
+// Tooltip removed
 import IconButton from '@mui/material/IconButton';
 import FormControl from '@mui/material/FormControl';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -397,20 +397,7 @@ export default function TicketsListView() {
                               >
                                 {ticket.appUser.email}
                               </Typography>
-                              {ticket.appUser.email && (
-                                <Tooltip title="Copiar">
-                                  <IconButton
-                                    size="small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigator.clipboard.writeText(ticket.appUser!.email);
-                                    }}
-                                    sx={{ opacity: 0, '.MuiTableRow-root:hover &': { opacity: 1 } }}
-                                  >
-                                    <Iconify icon="mingcute:copy-2-line" width={14} />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
+                              {/* Copiar email eliminado según petición del usuario */}
                             </Stack>
                           </Stack>
                         ) : (

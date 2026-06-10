@@ -6,3 +6,5 @@ node_modules
 dist
 plans-claude/
 plans-claude/*
+docs/
+docs/*
