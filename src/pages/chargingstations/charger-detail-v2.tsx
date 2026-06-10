@@ -983,9 +983,9 @@ export default function ChargerDetailV2() {
                     value={chargepoint.has_call_center ? 'Activo' : 'Inactivo'}
                   />
                 )}
-                {chargepoint.sim_card != null && (
+                {/*chargepoint.sim_card != null && (
                   <InfoRow label="SIM" value={chargepoint.sim_card} />
-                )}
+                )*/}
 
                 {hasLocation && (
                   <Box sx={{ mt: 2, borderRadius: 1.5, overflow: 'hidden', height: 180 }}>
