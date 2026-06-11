@@ -75,7 +75,7 @@ export const NavItem = forwardRef<HTMLButtonElement, NavItemProps>((props, ref) 
         </ItemIcon>
       )}
 
-      {title && (
+      {title && navItem.subItem && (
         <ItemTitle {...ownerState} className={navSectionClasses.item.title} sx={slotProps?.title}>
           {title}
         </ItemTitle>

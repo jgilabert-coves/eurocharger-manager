@@ -3,12 +3,14 @@ import { usePopoverHover } from 'minimal-shared/hooks';
 import { isActiveLink, isExternalLink } from 'minimal-shared/utils';
 
 import { useTheme } from '@mui/material/styles';
+import Popover from '@mui/material/Popover';
+import MenuItem from '@mui/material/MenuItem';
 
+import { RouterLink } from 'src/routes/components';
 import { usePathname } from 'src/routes/hooks';
 
 import { NavItem } from './nav-item';
-import { navSectionClasses } from '../styles';
-import { NavUl, NavLi, NavDropdown, NavDropdownPaper } from '../components';
+import { NavUl, NavLi } from '../components';
 
 import type { NavListProps, NavSubListProps } from '../types';
 
@@ -24,7 +26,6 @@ export function NavList({
   enabledRootRedirect,
 }: NavListProps) {
   const theme = useTheme();
-
   const pathname = usePathname();
 
   const isActive = isActiveLink(pathname, data.path, !!data.children);
@@ -38,10 +39,8 @@ export function NavList({
   } = usePopoverHover<HTMLButtonElement>();
 
   const isRtl = theme.direction === 'rtl';
-  const id = open ? `${data.title}-popover` : undefined;
 
   useEffect(() => {
-    // If the pathname changes, close the menu
     if (open) {
       onClose();
     }
@@ -57,7 +56,6 @@ export function NavList({
   const renderNavItem = () => (
     <NavItem
       ref={navItemRef}
-      aria-describedby={id}
       // slots
       path={data.path}
       icon={data.icon}
@@ -82,54 +80,76 @@ export function NavList({
     />
   );
 
-  const renderDropdown = () =>
-    !!data.children && (
-      <NavDropdown
+  const renderDropdown = () => {
+    if (!data.children) return null;
+
+    const visibleChildren = data.children.filter(
+      (child) =>
+        !child.roles || !currentRole || child.roles.some((r) => currentRole.includes(r))
+    );
+
+    if (!visibleChildren.length) return null;
+
+    return (
+      <Popover
         disableScrollLock
-        id={id}
         open={open}
         anchorEl={anchorEl}
         anchorOrigin={{ vertical: 'center', horizontal: isRtl ? 'left' : 'right' }}
         transformOrigin={{ vertical: 'center', horizontal: isRtl ? 'right' : 'left' }}
-        slotProps={{
-          paper: {
-            onMouseEnter: handleOpenMenu,
-            onMouseLeave: onClose,
-            className: navSectionClasses.dropdown.root,
+        disableRestoreFocus
+        sx={{ pointerEvents: 'none' }}
+        PaperProps={{
+          onMouseEnter: handleOpenMenu,
+          onMouseLeave: onClose,
+          sx: {
+            pointerEvents: 'auto',
+            bgcolor: '#303437',
+            color: 'common.white',
+            borderRadius: 1,
+            p: 0.5,
+            minWidth: 200,
+            ml: 0.75,
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
           },
         }}
-        sx={{ ...cssVars }}
       >
-        <NavDropdownPaper
-          className={navSectionClasses.dropdown.paper}
-          sx={slotProps?.dropdown?.paper}
-        >
-          <NavSubList
-            data={data.children}
-            depth={depth}
-            render={render}
-            cssVars={cssVars}
-            slotProps={slotProps}
-            currentRole={currentRole}
-            enabledRootRedirect={enabledRootRedirect}
-          />
-        </NavDropdownPaper>
-      </NavDropdown>
+        {visibleChildren.map((child) => (
+          <MenuItem
+            key={child.title}
+            component={RouterLink}
+            href={child.path}
+            onClick={onClose}
+            sx={{
+              color: 'common.white',
+              borderRadius: 0.75,
+              typography: 'body2',
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+            }}
+          >
+            {child.title}
+          </MenuItem>
+        ))}
+      </Popover>
     );
+  };
 
   // Hidden item by role
   if (data.roles && currentRole && !data.roles.some((r) => currentRole.includes(r))) {
     return null;
   }
 
+  // Hide parent if none of its children are visible for the current role
+  if (data.children?.length) {
+    const hasVisibleChildren = data.children.some(
+      (child) => !child.roles || !currentRole || child.roles.some((r) => currentRole.includes(r))
+    );
+    if (!hasVisibleChildren) return null;
+  }
+
   return (
     <NavLi disabled={data.disabled}>
       {renderNavItem()}
-      {/*
-       * TODO: Should be removed in MUI next.
-       * Add `open` condition to disable transition effect on close.
-       * https://github.com/mui/material-ui/issues/43106
-       */}
       {open && renderDropdown()}
     </NavLi>
   );
