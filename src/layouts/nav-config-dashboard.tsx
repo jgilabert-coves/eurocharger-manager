@@ -3,6 +3,7 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import { Bell, Bank, Gear, Crown, Airplay, HouseLine, ChargingStation } from '@phosphor-icons/react';
 
 import { paths } from 'src/routes/paths';
+import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
@@ -115,6 +116,12 @@ export const navData: NavSectionProps['data'] = [
     icon: <Crown />,
     roles: ['eurocharger'],
     children: [
+      {
+        title: 'SIMs',
+        path: paths.sims.list,
+        icon: <Iconify icon="solar:sim-card-bold" width={24} />,
+        caption: 'Gestiona las tarjetas SIM de los cargadores',
+      },
       {
         title: 'Planes',
         path: paths.plans.list,

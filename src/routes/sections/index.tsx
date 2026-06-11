@@ -9,6 +9,7 @@ import { authRoutes } from './auth';
 import { ratesRoutes } from './rates';
 import { plansRoutes } from './plans';
 import { alarmsRoutes } from './alarms';
+import { simsRoutes } from './sims';
 import { ticketsRoutes } from './tickets';
 import { appUsersRoutes } from './appusers';
 import { invoicesRoutes } from './invoices';
@@ -58,6 +59,8 @@ export const routesSection: RouteObject[] = [
   ...managerUsersRoutes,
 
   ...ticketsRoutes,
+
+  ...simsRoutes,
 
   ...locationsRoutes,
 
