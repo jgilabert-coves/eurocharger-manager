@@ -182,6 +182,14 @@ export const endpoints = {
     ocppConfig: (id: number) => `/chargingstations/${id}/ocpp/configuration`,
     ocppChangeConfig: (id: number) => `/chargingstations/${id}/ocpp/change-configuration`,
   },
+  sims: {
+    list: '/sims',
+    sync: '/sims/sync',
+    requests: '/sims/requests',
+    available: '/sims/available',
+    update: (id: number) => `/sims/${id}`,
+    simRequest: (chargepointId: number) => `/chargingstations/${chargepointId}/sim-request`,
+  },
   connectors: {
     create: (chargepointId: number) => `/chargingstations/${chargepointId}/connectors`,
     update: (chargepointId: number, connectorId: number) =>
