@@ -32,7 +32,7 @@ export const navData: NavSectionProps['data'] = [
         title: 'Autofacturas',
         path: paths.invoices.list,
         caption: 'Visualiza los importes recaudados en los cargadores',
-        roles: ['eurocharger', 'saas_owner'],
+        roles: ['eurocharger'],
       },
     ],
   },
