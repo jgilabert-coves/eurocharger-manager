@@ -2,12 +2,12 @@ import { useEffect, useCallback } from 'react';
 import { usePopoverHover } from 'minimal-shared/hooks';
 import { isActiveLink, isExternalLink } from 'minimal-shared/utils';
 
-import { useTheme } from '@mui/material/styles';
 import Popover from '@mui/material/Popover';
 import MenuItem from '@mui/material/MenuItem';
+import { useTheme } from '@mui/material/styles';
 
-import { RouterLink } from 'src/routes/components';
 import { usePathname } from 'src/routes/hooks';
+import { RouterLink } from 'src/routes/components';
 
 import { NavItem } from './nav-item';
 import { NavUl, NavLi } from '../components';

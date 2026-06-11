@@ -37,11 +37,15 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem(JWT_STORAGE_KEY);
-      delete axiosInstance.defaults.headers.common.Authorization;
+      const requestUrl: string = error.config?.url ?? '';
 
-      // Redirect to login page
-      window.location.href = paths.auth.jwt.signIn;
+      // Don't redirect if the 401 comes from the login endpoint itself
+      // (wrong credentials) — let the form handle the error message.
+      if (!requestUrl.includes('/auth/login')) {
+        localStorage.removeItem(JWT_STORAGE_KEY);
+        delete axiosInstance.defaults.headers.common.Authorization;
+        window.location.href = paths.auth.jwt.signIn;
+      }
     }
     return Promise.reject((error.response && error.response.data) || 'Something went wrong!');
   }
