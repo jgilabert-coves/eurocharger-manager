@@ -10,7 +10,7 @@ import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import { X, TrashIcon } from '@phosphor-icons/react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -20,6 +20,7 @@ import Stack from '@mui/material/Stack';
 import { Tooltip } from '@mui/material';
 import Switch from '@mui/material/Switch';
 import Dialog from '@mui/material/Dialog';
+import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
@@ -777,7 +778,6 @@ export default function ChargerDetailV2() {
   const [editName, setEditName] = useState('');
   const [editIsPrivate, setEditIsPrivate] = useState(false);
   const [editHasCallCenter, setEditHasCallCenter] = useState(false);
-  const [editSimCard, setEditSimCard] = useState('');
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -803,12 +803,37 @@ export default function ChargerDetailV2() {
     }
   };
 
+  // ── SIM mutations ──────────────────────────────────────────────────────────
+  const { mutate: requestSim, isPending: isRequestingMutation } = useMutation({
+    mutationFn: () => post(endpoints.sims.simRequest(Number(id)), {}),
+    onSuccess: () => {
+      loadChargepoint();
+      notifySuccess('Solicitud de SIM enviada');
+    },
+    onError: () => {
+      notifyError('Ha ocurrido un error al lanzar la acción');
+    },
+  });
+
+  const { mutate: cancelSimRequest } = useMutation({
+    mutationFn: () => del(endpoints.sims.simRequest(Number(id))),
+    onSuccess: () => {
+      loadChargepoint();
+      notifySuccess('Solicitud de SIM cancelada');
+    },
+    onError: () => {
+      notifyError('Ha ocurrido un error al lanzar la acción');
+    },
+  });
+
+  const handleRequestSim = () => requestSim();
+  const handleCancelSimRequest = () => cancelSimRequest();
+
   const openEditCharger = () => {
     if (!chargepoint) return;
     setEditName(chargepoint.name ?? '');
     setEditIsPrivate(chargepoint.is_private ?? false);
     setEditHasCallCenter(chargepoint.has_call_center ?? false);
-    setEditSimCard(chargepoint.sim_card != null ? String(chargepoint.sim_card) : '');
     setEditError(null);
     setEditChargerOpen(true);
   };
@@ -821,7 +846,6 @@ export default function ChargerDetailV2() {
         name: editName.trim() || undefined,
         is_private: editIsPrivate,
         has_call_center: editHasCallCenter,
-        sim_card: editSimCard !== '' ? Number(editSimCard) : null,
       });
       setEditChargerOpen(false);
       await loadChargepoint();
@@ -1284,15 +1308,40 @@ export default function ChargerDetailV2() {
                 label={`Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`}
               />
             )}
-            <TextField
-              label="SIM"
-              size="small"
-              fullWidth
-              type="number"
-              value={editSimCard}
-              onChange={(e) => setEditSimCard(e.target.value)}
-              placeholder="Número de SIM (opcional)"
-            />
+            {/* SIM request UI */}
+            {chargepoint.sim_requested === false && chargepoint.sim_card == null && (
+              <Button
+                variant="outlined"
+                startIcon={<Iconify icon="solar:sim-card-bold" />}
+                onClick={handleRequestSim}
+                disabled={isRequestingMutation}
+              >
+                Solicitar SIM
+              </Button>
+            )}
+            {chargepoint.sim_requested === true && chargepoint.sim_card == null && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip
+                  label="SIM solicitada · Pendiente"
+                  color="warning"
+                  icon={<Iconify icon="solar:sim-card-bold" />}
+                />
+                <IconButton
+                  size="small"
+                  onClick={handleCancelSimRequest}
+                  title="Cancelar solicitud"
+                >
+                  <Iconify icon="mingcute:close-line" />
+                </IconButton>
+              </Box>
+            )}
+            {chargepoint.sim_card != null && (
+              <Chip
+                label={`SIM: ${chargepoint.sim_card}`}
+                color="success"
+                icon={<Iconify icon="solar:sim-card-bold" />}
+              />
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
