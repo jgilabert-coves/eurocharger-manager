@@ -130,6 +130,11 @@ export const navData: NavSectionProps['data'] = [
         path: paths.managerUsers.list,
         caption: 'Visualiza los acceso y roles de los clientes de Eurocharger',
       },
+      {
+        title: 'Traspasar cargadores',
+        path: paths.chargerTransfer.root,
+        caption: 'Cambia cargadores entre cuentas',
+      },
     ],
   },
 ];
