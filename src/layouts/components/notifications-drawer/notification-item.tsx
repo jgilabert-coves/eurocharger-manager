@@ -10,6 +10,7 @@ import { fToNow } from 'src/utils/format-time';
 import { CONFIG } from 'src/global-config';
 
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { FileThumbnail } from 'src/components/file-thumbnail';
 
 // ----------------------------------------------------------------------
@@ -24,6 +25,7 @@ export type NotificationItemProps = {
     avatarUrl: string | null;
     createdAt: string | number | null;
   };
+  onClick?: () => void;
 };
 
 const readerContent = (data: string) => (
@@ -37,11 +39,25 @@ const readerContent = (data: string) => (
   />
 );
 
-export function NotificationItem({ notification }: NotificationItemProps) {
+export function NotificationItem({ notification, onClick }: NotificationItemProps) {
   const renderAvatar = () => (
     <ListItemAvatar>
       {notification.avatarUrl ? (
         <Avatar src={notification.avatarUrl} sx={{ bgcolor: 'background.neutral' }} />
+      ) : notification.type === 'sim_request' ? (
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            display: 'flex',
+            borderRadius: '50%',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'background.neutral',
+          }}
+        >
+          <Iconify icon="solar:sim-card-bold" width={24} />
+        </Box>
       ) : (
         <Box
           sx={{
@@ -215,11 +231,13 @@ export function NotificationItem({ notification }: NotificationItemProps) {
   return (
     <ListItemButton
       disableRipple
+      onClick={onClick}
       sx={[
         (theme) => ({
           p: 2.5,
           alignItems: 'flex-start',
           borderBottom: `dashed 1px ${theme.vars.palette.divider}`,
+          ...(onClick && { cursor: 'pointer' }),
         }),
       ]}
     >
