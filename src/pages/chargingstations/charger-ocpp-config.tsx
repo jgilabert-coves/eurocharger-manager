@@ -27,6 +27,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 
 // ----------------------------------------------------------------------
 
@@ -51,6 +52,8 @@ export default function ChargerOcppConfig() {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const { notifySuccess, notifyError } = useNotification();
 
   const [search, setSearch] = useState('');
   const [pendingEdits, setPendingEdits] = useState<Map<string, PendingEdit>>(new Map());
@@ -127,6 +130,11 @@ export default function ChargerOcppConfig() {
     if (needsReboot) {
       setSaveError('reboot');
     }
+
+    const hasSuccess = Array.from(newResults.values()).some((s) => s === 'ok' || s === 'reboot');
+    const hasError = Array.from(newResults.values()).some((s) => s === 'error');
+    if (hasSuccess) notifySuccess('Configuración OCPP guardada con éxito');
+    if (hasError) notifyError();
 
     // Remove successfully applied edits from pending
     const newPending = new Map(pendingEdits);

@@ -45,6 +45,7 @@ import { del, put, post, fetcher, endpoints } from 'src/lib/axios';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { PhosphorIcon } from 'src/components/phosphor-icon';
+import { useNotification } from 'src/components/notification';
 import { ResetDialog } from 'src/components/ocpp/reset/dialog';
 import { UnlockDialog } from 'src/components/ocpp/unlock/dialog';
 import { TransactionsTable } from 'src/components/transactions-table';
@@ -197,6 +198,7 @@ function ConnectorCard({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const { canOperate, isViewOnly, hasAnyRole } = useAbility();
+  const { notifySuccess, notifyError } = useNotification();
 
   useEffect(() => {
     if (!assignOpen) return () => {};
@@ -235,8 +237,10 @@ function ConnectorCard({
       setAssignOpen(false);
       setSelectedRateId(null);
       onRateAssigned();
+      notifySuccess('Acción realizada con éxito');
     } catch {
       setSaveError('Error al asignar la tarifa. Inténtalo de nuevo.');
+      notifyError('Ha ocurrido un error al lanzar la acción');
     } finally {
       setSaving(false);
     }
@@ -627,6 +631,7 @@ function ConnectorFormCard({
   const [power, setPower] = useState(connector?.power != null ? String(connector.power) : '');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const { notifySuccess, notifyError } = useNotification();
 
   const canSave = typeId !== '' && power.trim() !== '' && !isNaN(Number(power));
 
@@ -645,8 +650,10 @@ function ConnectorFormCard({
         await post(endpoints.connectors.create(chargepointId), payload);
       }
       onSuccess();
+      notifySuccess('Acción realizada con éxito');
     } catch {
       setSaveError('Error al guardar. Inténtalo de nuevo.');
+      notifyError('Ha ocurrido un error al lanzar la acción');
     } finally {
       setSaving(false);
     }
@@ -763,6 +770,7 @@ export default function ChargerDetailV2() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { canOperate, isViewOnly, hasAnyRole, hasRole } = useAbility();
+  const { notifySuccess, notifyError } = useNotification();
 
   // ── Edit chargepoint state ──────────────────────────────────────────────────
   const [editChargerOpen, setEditChargerOpen] = useState(false);
@@ -818,8 +826,10 @@ export default function ChargerDetailV2() {
       setEditChargerOpen(false);
       await loadChargepoint();
       queryClient.invalidateQueries({ queryKey: ['account-subscription', accountId] });
+      notifySuccess('Acción realizada con éxito');
     } catch {
       setEditError('Error al guardar los cambios. Inténtalo de nuevo.');
+      notifyError('Ha ocurrido un error al lanzar la acción');
     } finally {
       setEditSaving(false);
     }
@@ -841,10 +851,12 @@ export default function ChargerDetailV2() {
       await del(endpoints.connectors.delete(chargepoint.id, deleteConfirm.id));
       setDeleteConfirm(null);
       loadChargepoint();
+      notifySuccess('Acción realizada con éxito');
     } catch (err: any) {
       const message = err?.error ?? 'Error al eliminar el conector. Inténtalo de nuevo.';
       setDeleteError(message);
       setDeleteConfirm(null);
+      notifyError('Ha ocurrido un error al lanzar la acción');
     } finally {
       setDeleting(false);
     }

@@ -75,7 +75,7 @@ function verticalVars(theme: Theme) {
     '--nav-item-sub-height': '36px',
     // icon
     // Tamaño del icono del ítem
-    '--nav-icon-size': '24px',
+    '--nav-icon-size': '16px',
     // Margen del icono (separa el icono del texto)
     '--nav-icon-margin': '0 12px 0 0',
     // bullet — punto indicador de sub-ítems sin icono

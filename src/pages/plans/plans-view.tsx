@@ -25,6 +25,7 @@ import { patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { EditPlanDialog } from 'src/components/plans/edit-plan-dialog';
 import { CreatePlanDialog } from 'src/components/plans/create-plan-dialog';
 
@@ -43,6 +44,7 @@ function formatCents(cents: number | null | undefined): string {
 
 export default function PlansView() {
   const queryClient = useQueryClient();
+  const { notifySuccess, notifyError } = useNotification();
   const [createOpen, setCreateOpen] = useState(false);
   const [editPlan, setEditPlan] = useState<Plan | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -60,6 +62,9 @@ export default function PlansView() {
       setTogglingId(plan.id);
       await patch(endpoints.plans.toggleActive(plan.id), { isActive: !plan.isActive });
       queryClient.invalidateQueries({ queryKey: ['plans'] });
+      notifySuccess('Acción realizada con éxito');
+    } catch {
+      notifyError();
     } finally {
       setTogglingId(null);
     }

@@ -41,6 +41,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { put, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 
 // ----------------------------------------------------------------------
 
@@ -1118,6 +1119,8 @@ export function CreateRateWizard({
 }: CreateRateWizardProps) {
   const isConnectorMode = connectorId != null && chargepointId != null;
 
+  const { notifySuccess, notifyError } = useNotification();
+
   const [stepIndex, setStepIndex] = useState(0);
   const [method, setMethod] = useState<Method | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
@@ -1263,10 +1266,12 @@ export function CreateRateWizard({
         });
       }
 
+      notifySuccess('Tarifa creada con éxito');
       onSuccess?.(newRateId);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Ha ocurrido un error al crear la tarifa.';
       setSubmitError(msg);
+      notifyError(msg);
     } finally {
       setSubmitting(false);
     }

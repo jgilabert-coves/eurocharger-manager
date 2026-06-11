@@ -36,6 +36,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import axiosInstance, { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { CreateSubscriptionDialog } from 'src/components/admin/create-subscription-dialog';
 
 import { CONFIG } from '../../global-config';
@@ -134,6 +135,7 @@ const ITEM_LABEL: Record<string, string> = {
 
 export default function SubscriptionsAdminView() {
   const queryClient = useQueryClient();
+  const { notifySuccess, notifyError } = useNotification();
 
   const [diffOpen, setDiffOpen] = useState(false);
   const [diffSubscription, setDiffSubscription] = useState<AdminSubscription | null>(null);
@@ -184,6 +186,7 @@ export default function SubscriptionsAdminView() {
       setDiffData(res.data);
     } catch {
       showSnackbar('Error al cargar el diff de Stripe', 'error');
+      notifyError('Error al cargar el diff de Stripe');
       setDiffOpen(false);
     } finally {
       setDiffLoading(false);
@@ -196,8 +199,10 @@ export default function SubscriptionsAdminView() {
       await post(endpoints.adminSubscriptions.syncItems(sub.id), {});
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       showSnackbar(`Items sincronizados para ${sub.account_name}`);
+      notifySuccess(`Items sincronizados para ${sub.account_name}`);
     } catch {
       showSnackbar('Error al sincronizar los items', 'error');
+      notifyError('Error al sincronizar los items');
     } finally {
       setSyncingId(null);
     }
@@ -209,8 +214,10 @@ export default function SubscriptionsAdminView() {
       await post(endpoints.adminSubscriptions.syncStatus(sub.id), {});
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       showSnackbar(`Estado sincronizado para ${sub.account_name}`);
+      notifySuccess(`Estado sincronizado para ${sub.account_name}`);
     } catch {
       showSnackbar('Error al sincronizar el estado', 'error');
+      notifyError('Error al sincronizar el estado');
     } finally {
       setSyncStatusId(null);
     }
@@ -231,9 +238,11 @@ export default function SubscriptionsAdminView() {
       });
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       showSnackbar(`Suscripción de ${cancelSubscription.account_name} cancelada`);
+      notifySuccess(`Suscripción de ${cancelSubscription.account_name} cancelada`);
       setCancelOpen(false);
     } catch {
       showSnackbar('Error al cancelar la suscripción', 'error');
+      notifyError('Error al cancelar la suscripción');
     } finally {
       setCanceling(false);
     }
@@ -246,6 +255,7 @@ export default function SubscriptionsAdminView() {
       await post(endpoints.adminSubscriptions.syncItems(diffSubscription.id), {});
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       showSnackbar(`Items sincronizados para ${diffSubscription.account_name}`);
+      notifySuccess(`Items sincronizados para ${diffSubscription.account_name}`);
       // Reload diff
       const res: StripeDiffResponse = await fetcher(
         endpoints.adminSubscriptions.stripeDiff(diffSubscription.id)
@@ -253,6 +263,7 @@ export default function SubscriptionsAdminView() {
       setDiffData(res.data);
     } catch {
       showSnackbar('Error al sincronizar los items', 'error');
+      notifyError('Error al sincronizar los items');
     } finally {
       setDiffLoading(false);
     }
@@ -578,6 +589,7 @@ export default function SubscriptionsAdminView() {
         onCreated={() => {
           queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
           showSnackbar('Suscripción creada correctamente');
+          notifySuccess('Suscripción creada correctamente');
         }}
       />
 

@@ -15,6 +15,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { chargepointService } from 'src/services/chargepoints-service';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { AppUserSearchSelect } from 'src/components/app-users/app-user-search-select';
 
 // ----------------------------------------------------------------------
@@ -41,6 +42,7 @@ export function StartTransactionDialog({
 }: StartTransactionDialogProps) {
   const [selectedUser, setSelectedUser] = useState<AppUserDatatableItem | null>(null);
   const [result, setResult] = useState<'Accepted' | 'Rejected' | null>(null);
+  const { notifyError } = useNotification();
 
   const { mutate: startTransaction, isPending } = useMutation({
     mutationFn: () =>
@@ -53,6 +55,7 @@ export function StartTransactionDialog({
       if (res.data.status === 'Accepted') onSuccess?.();
     },
     onError: (error) => {
+      notifyError();
       onError?.(error);
       setResult('Rejected');
     },

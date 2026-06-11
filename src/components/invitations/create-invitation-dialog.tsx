@@ -18,6 +18,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { GroupDualPicker } from 'src/components/chargepoint/group-dual-picker';
 
 // ----------------------------------------------------------------------
@@ -35,6 +36,8 @@ export function CreateInvitationDialog({
   onClose,
   onSuccess,
 }: CreateInvitationDialogProps) {
+  const { notifySuccess, notifyError } = useNotification();
+
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InvitationRole>('saas_guest');
   const [groups, setGroups] = useState<SelectedGroup[]>([]);
@@ -67,10 +70,12 @@ export function CreateInvitationDialog({
         role,
         ...(groups.length > 0 ? { groups: groups.map((g) => ({ groupId: g.groupId, permissionLevel: g.permissionLevel })) } : {}),
       });
+      notifySuccess('Invitación enviada con éxito');
       onSuccess();
       handleClose();
     } catch (err: any) {
       setError(err?.error ?? 'Error al enviar la invitación. Inténtalo de nuevo.');
+      notifyError();
     } finally {
       setLoading(false);
     }

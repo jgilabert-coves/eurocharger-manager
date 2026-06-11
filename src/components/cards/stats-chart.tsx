@@ -40,8 +40,8 @@ function getDateRange(period: Period): { from: string; to: string } | null {
 // ----------------------------------------------------------------------
 
 export type StatsChartProps = {
-  /** Iconify icon name (e.g. "solar:chart-bold") */
-  icon: string;
+  /** Icon — Iconify string name or ReactNode */
+  icon: string | React.ReactNode;
   /** Card header label */
   label: string;
   /** API endpoint base (e.g. "/dashboard/stats") — will append ?from=&to= */
@@ -136,8 +136,12 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
     <Card sx={{ p: 3 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Iconify icon={icon} width={16} sx={{ color: tk.inkDarkest }} />
-          <Typography variant="subtitle2" sx={{ color: tk.inkDarkest }}>
+          {typeof icon === 'string' ? (
+            <Iconify icon={icon} width={18} sx={{ color: tk.inkDarkest }} />
+          ) : (
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', color: tk.inkDarkest }}>{icon}</Box>
+          )}
+          <Typography variant="h6" sx={{ color: tk.inkDarkest }}>
             {label}
           </Typography>
         </Stack>

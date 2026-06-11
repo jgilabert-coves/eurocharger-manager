@@ -13,6 +13,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { post, endpoints } from 'src/lib/axios';
 
+import { useNotification } from 'src/components/notification';
+
 // ----------------------------------------------------------------------
 
 type Availability = 'Inoperative' | 'Operative';
@@ -35,6 +37,7 @@ export function AvailabilityDialog({
   onError,
 }: AvailabilityDialogProps) {
   const [newAvailability, setNewAvailability] = useState<Availability>('Operative');
+  const { notifySuccess, notifyError } = useNotification();
 
   const { mutate: changeAvailability, isPending } = useMutation({
     mutationFn: () =>
@@ -43,10 +46,12 @@ export function AvailabilityDialog({
         availability: newAvailability,
       }),
     onSuccess: () => {
+      notifySuccess('Disponibilidad actualizada');
       onSuccess?.(newAvailability);
       onClose();
     },
     onError: (error) => {
+      notifyError();
       onError?.(error);
       onClose();
     },

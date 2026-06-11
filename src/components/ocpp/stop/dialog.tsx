@@ -10,6 +10,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { post, endpoints } from 'src/lib/axios';
 
+import { useNotification } from 'src/components/notification';
+
 // ----------------------------------------------------------------------
 
 export type StopTransactionDataProps = {
@@ -33,6 +35,8 @@ export function StopTransactionDialog({
   onSuccess,
   onError,
 }: StopTransactionDialogProps) {
+  const { notifySuccess, notifyError } = useNotification();
+
   const { mutate: stopTransaction, isPending } = useMutation({
     mutationFn: () =>
       post(endpoints.chargepoints.single(data.chargepointId) + endpoints.ocpp.stopTransaction, {
@@ -40,10 +44,12 @@ export function StopTransactionDialog({
         transactionId: data.transactionId,
       }),
     onSuccess: () => {
+      notifySuccess('Recarga detenida con éxito');
       onSuccess?.();
       onClose();
     },
     onError: (error) => {
+      notifyError();
       onError?.(error);
       onClose();
     },

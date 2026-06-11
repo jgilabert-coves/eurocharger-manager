@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { PlugCharging } from '@phosphor-icons/react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -9,7 +10,6 @@ import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import { themeConfig } from 'src/theme';
-import { IcPlug } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type ConnectorStatusTotals } from 'src/types/dashboard';
@@ -48,7 +48,7 @@ export function ChargersCard() {
 
   return (
     <Card sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <CardHeader icon={IcPlug} label="Conectores" />
+      <CardHeader icon={<PlugCharging size={18} weight="fill" />} label="Conectores" />
 
       <Stack spacing={2} sx={{ flex: 1, mb: 2 }}>
         {ROWS.map(({ key, label, color }) => {

@@ -34,6 +34,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { EditGuestGroupsDialog } from 'src/components/invitations/edit-guest-groups-dialog';
 import { CreateInvitationDialog } from 'src/components/invitations/create-invitation-dialog';
 
@@ -106,6 +107,8 @@ export default function InvitationsView() {
   const [revokeError, setRevokeError] = useState(false);
   const [editTarget, setEditTarget] = useState<Invitation | null>(null);
 
+  const { notifySuccess, notifyError } = useNotification();
+
   const { data, isFetching, refetch } = useQuery<InvitationsResponse>({
     queryKey: ['invitations', accountId],
     queryFn: () => fetcher(endpoints.invitations.list(accountId!)),
@@ -122,8 +125,10 @@ export default function InvitationsView() {
       setRevokeTarget(null);
       await del(endpoints.invitations.revoke(accountId, inv.id));
       refetch();
+      notifySuccess('Acción realizada con éxito');
     } catch {
       setRevokeError(true);
+      notifyError('Ha ocurrido un error al lanzar la acción');
     } finally {
       setRevoking(null);
     }

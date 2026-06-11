@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
+import { Bell, User, Wallet, ChartBar, Lightning, CalendarCheck } from '@phosphor-icons/react';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
@@ -91,7 +92,7 @@ export default function DashboardV6Page() {
                     ? `${formatNumber(reservationsRes.data.todayGrowth, { decimals: 0 })} respecto a ayer`
                     : '...'
                 }
-                icon="solar:calendar-date-bold"
+                icon={<CalendarCheck size={18} weight="fill" />}
                 palette="info"
                 href={paths.reservations.list}
               />
@@ -106,7 +107,7 @@ export default function DashboardV6Page() {
                   ? `Promedio por cargador: ${formatNumber(activeCharges.avgChargesPerChargepoint, { decimals: 2 })}`
                   : '...'
               }
-              icon="solar:battery-charge-bold"
+              icon={<Lightning size={18} weight="fill" />}
               palette="primary"
               href={paths.transactions.actives}
             />
@@ -124,7 +125,7 @@ export default function DashboardV6Page() {
                   ? `Promedio por recarga: ${formatNumber(revenueStats.avgRevenuePerCharge, { decimals: 2, suffix: '€' })}`
                   : '...'
               }
-              icon="solar:wallet-money-bold"
+              icon={<Wallet size={18} weight="fill" />}
               palette="error"
             />
           </Grid>
@@ -137,7 +138,7 @@ export default function DashboardV6Page() {
                   ? `${formatNumber(appUserGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
                   : '...'
               }
-              icon="solar:users-group-rounded-bold"
+              icon={<User size={18} weight="fill" />}
               palette="warning"
               href={paths.appUsers.list}
             />
@@ -151,7 +152,7 @@ export default function DashboardV6Page() {
                   ? `${formatNumber(alarmsGrowth.todayGrowth, { decimals: 2 })} respecto a ayer`
                   : '...'
               }
-              icon="solar:bell-bing-bold"
+              icon={<Bell size={18} weight="fill" />}
               palette="primary"
               href={paths.alarms.list}
             />
@@ -161,7 +162,7 @@ export default function DashboardV6Page() {
         {/* Stats — full width */}
         <Box sx={{ mb: 3 }}>
           <StatsChart
-            icon="solar:chart-bold"
+            icon={<ChartBar size={18} weight="fill" />}
             label="Estadísticas"
             endpoint={endpoints.dashboard.stats}
             cacheKey={isEurocharger ? 'ec' : ''}

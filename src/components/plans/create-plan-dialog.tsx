@@ -19,6 +19,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { post, endpoints } from 'src/lib/axios';
 
+import { useNotification } from 'src/components/notification';
+
 // ----------------------------------------------------------------------
 
 type ItemKey = 'base' | 'chargers' | 'sim' | 'call_center' | 'guests';
@@ -74,6 +76,8 @@ export function CreatePlanDialog({ open, onClose, onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { notifySuccess, notifyError } = useNotification();
+
   const canSubmit = form.name.trim() !== '';
 
   const handleClose = () => {
@@ -113,9 +117,11 @@ export function CreatePlanDialog({ open, onClose, onSuccess }: Props) {
       }
 
       await post(endpoints.plans.create, body);
+      notifySuccess('Plan creado con éxito');
       handleClose();
       onSuccess?.();
     } catch {
+      notifyError();
       setError('Error al crear el plan. Comprueba los datos e inténtalo de nuevo.');
     } finally {
       setLoading(false);

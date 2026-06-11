@@ -21,6 +21,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { post, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { ClientSelect } from 'src/components/client/client-select';
 
 // ----------------------------------------------------------------------
@@ -62,6 +63,7 @@ const DEFAULT_FORM: CreateManagerUserPayload = {
 };
 
 export function CreateManagerUserDialog({ open, onClose, onSuccess }: Props) {
+  const { notifySuccess, notifyError } = useNotification();
   const [form, setForm] = useState<CreateManagerUserPayload>({
     ...DEFAULT_FORM,
     password: generatePassword(),
@@ -110,9 +112,11 @@ export function CreateManagerUserDialog({ open, onClose, onSuccess }: Props) {
       setLoading(true);
       setError(null);
       await post(endpoints.managerUsers.create, form);
+      notifySuccess('Usuario creado con éxito');
       handleClose();
       onSuccess?.();
     } catch {
+      notifyError();
       setError('Error al crear el usuario. Comprueba los datos e inténtalo de nuevo.');
     } finally {
       setLoading(false);

@@ -28,6 +28,7 @@ import { del, put, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { CreateRateDialog } from 'src/components/rate/create-rate-dialog';
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
 import { ChargerStatusLabel } from 'src/components/chargepoint/charger-status-label';
@@ -67,6 +68,8 @@ function ConnectorFormCard({
 }) {
   const isEdit = connector != null;
 
+  const { notifySuccess, notifyError } = useNotification();
+
   const [typeId, setTypeId] = useState(String(connector?.connectorTypeId ?? ''));
   const [name, setName] = useState(connector?.name ?? '');
   const [power, setPower] = useState(connector?.power != null ? String(connector.power) : '');
@@ -90,8 +93,10 @@ function ConnectorFormCard({
         await post(endpoints.connectors.create(chargepointId), payload);
       }
       onSuccess();
+      notifySuccess('Configuración guardada con éxito');
     } catch {
       setSaveError('Error al guardar. Inténtalo de nuevo.');
+      notifyError();
     } finally {
       setSaving(false);
     }
@@ -200,6 +205,8 @@ function ConnectorCard({
   onRemoveRate: () => void;
   onRateAssigned: () => void;
 }) {
+  const { notifySuccess, notifyError } = useNotification();
+
   const [assignOpen, setAssignOpen] = useState(false);
   const [createRateOpen, setCreateRateOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -246,8 +253,10 @@ function ConnectorCard({
       setAssignOpen(false);
       setSelectedRateId(null);
       onRateAssigned();
+      notifySuccess('Configuración guardada con éxito');
     } catch {
       setSaveError('Error al asignar la tarifa. Inténtalo de nuevo.');
+      notifyError();
     } finally {
       setSaving(false);
     }

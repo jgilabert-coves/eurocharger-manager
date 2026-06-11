@@ -3,8 +3,8 @@ import type { ChargingStation } from 'src/types/charging_stations';
 import type { Ticket, TicketType, TicketStatus } from 'src/types/tickets';
 
 import { Helmet } from 'react-helmet-async';
-import { useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Card from '@mui/material/Card';
@@ -46,6 +46,7 @@ import { post, patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { AppUserSearchSelect } from 'src/components/app-users/app-user-search-select';
 import { StationSearchSelect } from 'src/components/chargepoint/station-search-select';
 
@@ -93,10 +94,10 @@ export default function TicketsListView() {
 
   const page = Number(searchParams.get('page') ?? '0');
   const pageSize = Number(searchParams.get('pageSize') ?? '10');
-  const searchQuery = searchParams.get('search') ?? '';
+  const [localSearch, setLocalSearch] = useState(searchParams.get('search') ?? '');
   const statusFilter = (searchParams.get('status') ?? '') as TicketStatus | '';
   const typeFilter = (searchParams.get('type') ?? '') as TicketType | '';
-  const debouncedSearch = useDebounce(searchQuery);
+  const debouncedSearch = useDebounce(localSearch);
 
   const updateParam = useCallback(
     (updates: Record<string, string>, replace = false) => {
@@ -115,7 +116,13 @@ export default function TicketsListView() {
     [setSearchParams]
   );
 
+  useEffect(() => {
+    updateParam({ search: debouncedSearch, page: '0' }, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
   const { isViewOnly } = useAbility();
+  const { notifySuccess, notifyError } = useNotification();
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedStation, setSelectedStation] = useState<ChargingStation | null>(null);
@@ -148,11 +155,15 @@ export default function TicketsListView() {
   const { mutate: createTicket, isPending: creating } = useMutation({
     mutationFn: (body: typeof EMPTY_FORM) => post(endpoints.tickets.create, body),
     onSuccess: () => {
+      notifySuccess('Acción realizada con éxito');
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       setCreateOpen(false);
       setForm(EMPTY_FORM);
       setSelectedStation(null);
       setSelectedUser(null);
+    },
+    onError: () => {
+      notifyError('Ha ocurrido un error al lanzar la acción');
     },
   });
 
@@ -160,7 +171,11 @@ export default function TicketsListView() {
     mutationFn: ({ ticketId, status }: { ticketId: number; status: TicketStatus }) =>
       patch(endpoints.tickets.update(ticketId), { status }),
     onSuccess: () => {
+      notifySuccess('Acción realizada con éxito');
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    },
+    onError: () => {
+      notifyError('Ha ocurrido un error al lanzar la acción');
     },
   });
 
@@ -208,8 +223,8 @@ export default function TicketsListView() {
         >
           <TextField
             placeholder="Buscar por motivo, descripción, usuario..."
-            value={searchQuery}
-            onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             size="small"
             sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{

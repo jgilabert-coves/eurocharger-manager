@@ -10,6 +10,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { post, endpoints } from 'src/lib/axios';
 
+import { useNotification } from 'src/components/notification';
+
 // ----------------------------------------------------------------------
 
 type Availability = 'Inoperative' | 'Operative';
@@ -31,17 +33,20 @@ export function UnlockDialog({
   onSuccess,
   onError,
 }: UnlockDialogProps) {
+  const { notifySuccess, notifyError } = useNotification();
+
   const { mutate: unlockConnector, isPending } = useMutation({
     mutationFn: () =>
       post(endpoints.chargepoints.unlock(chargepointId), {
         connectorId,
       }),
     onSuccess: () => {
+      notifySuccess('Conector desbloqueado con éxito');
       onSuccess?.(`Conector ${connectorId} desbloqueado correctamente`);
-
       onClose();
     },
     onError: (error) => {
+      notifyError();
       onError?.(error);
       onClose();
     },

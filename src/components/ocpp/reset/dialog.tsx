@@ -13,6 +13,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { post, endpoints } from 'src/lib/axios';
 
+import { useNotification } from 'src/components/notification';
+
 // ----------------------------------------------------------------------
 
 type Reset = 'Soft' | 'Hard';
@@ -33,6 +35,7 @@ export function ResetDialog({
   onError,
 }: ResetDialogProps) {
   const [resetType, setResetType] = useState<Reset>('Hard');
+  const { notifySuccess, notifyError } = useNotification();
 
   const { mutate: resetChargepoint, isPending } = useMutation({
     mutationFn: () =>
@@ -40,10 +43,12 @@ export function ResetDialog({
         type: resetType,
       }),
     onSuccess: () => {
+      notifySuccess('Cargador reiniciado con éxito');
       onSuccess?.();
       onClose();
     },
     onError: (error) => {
+      notifyError();
       onError?.(error);
       onClose();
     },

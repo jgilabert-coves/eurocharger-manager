@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { User, ChargingStation } from '@phosphor-icons/react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -7,7 +8,6 @@ import Avatar from '@mui/material/Avatar';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
-import { IcPlug, IcUsers } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type TopUser, type TopChargepoint } from 'src/types/dashboard';
@@ -31,7 +31,7 @@ export function TopList({ title, isClient }: TopListProps) {
     queryFn: () => fetcher(endpoint),
   });
 
-  const Icon = isClient ? IcUsers : IcPlug;
+  const icon = isClient ? <User size={18} weight="fill" /> : <ChargingStation size={18} weight="fill" />;
 
   const items = isClient
     ? ((res?.data as TopUser[]) ?? []).map((u) => ({
@@ -50,7 +50,7 @@ export function TopList({ title, isClient }: TopListProps) {
   return (
     <Card sx={{ p: 3 }}>
       <Stack direction="row" alignItems="baseline" justifyContent="space-between" sx={{ mb: 1.5 }}>
-        <CardHeader icon={Icon} label={title} />
+        <CardHeader icon={icon} label={title} />
       </Stack>
 
       {isLoading

@@ -43,6 +43,7 @@ import {
 } from 'src/lib/geocoding';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
 import { useAuthContext } from 'src/auth/hooks/use-auth-context';
@@ -160,6 +161,7 @@ export type NewChargepointDialogProps = {
 export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepointDialogProps) {
   const { hasRole } = useAbility();
   const { user } = useAuthContext();
+  const { notifySuccess, notifyError } = useNotification();
   const isEurocharger = hasRole('eurocharger');
   const STEPS = isEurocharger ? STEPS_EUROCHARGER : STEPS_CLIENT;
 
@@ -437,9 +439,11 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;
+      notifySuccess('Cargador creado con éxito');
       onSuccess?.(newId);
       handleClose();
     } catch {
+      notifyError();
       setError('Error al crear el cargador. Inténtalo de nuevo.');
     } finally {
       setLoading(false);

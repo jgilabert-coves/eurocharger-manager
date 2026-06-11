@@ -31,6 +31,7 @@ import { paths } from 'src/routes/paths';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { PlanSelector } from 'src/components/plans/plan-selector';
 
 // ----------------------------------------------------------------------
@@ -133,6 +134,7 @@ const STEP_TITLES = [
 ];
 
 export function CreateSubscriptionDialog({ open, onClose, onCreated }: Props) {
+  const { notifySuccess, notifyError } = useNotification();
   const [step, setStep] = useState(0);
 
   // Step 0
@@ -271,10 +273,12 @@ export function CreateSubscriptionDialog({ open, onClose, onCreated }: Props) {
         planId: selectedPlan.id,
         billingPeriod,
       });
+      notifySuccess('Suscripción creada con éxito');
       onCreated();
       onClose();
     } catch {
       setError('Error al crear la suscripción.');
+      notifyError();
     } finally {
       setCreating(false);
     }
@@ -287,8 +291,10 @@ export function CreateSubscriptionDialog({ open, onClose, onCreated }: Props) {
     try {
       await post(endpoints.adminSubscriptions.sendPaymentLink(selectedAccount.id), {});
       setLinkSent(true);
+      notifySuccess('Enlace de pago enviado con éxito');
     } catch {
       setError('Error al enviar el enlace. Copia la URL manualmente.');
+      notifyError();
     } finally {
       setSendingLink(false);
     }
@@ -303,6 +309,7 @@ export function CreateSubscriptionDialog({ open, onClose, onCreated }: Props) {
   };
 
   const handleStripeSuccess = () => {
+    notifySuccess('Suscripción creada con éxito');
     onCreated();
     onClose();
   };

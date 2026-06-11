@@ -1,9 +1,9 @@
 import type { AppUserDatatableItem } from 'src/types/appuser';
 
-import { useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router';
+import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -63,10 +63,10 @@ export default function AppUsersView() {
 
   const page = Number(searchParams.get('page') ?? '0');
   const pageSize = Number(searchParams.get('pageSize') ?? '10');
-  const searchQuery = searchParams.get('search') ?? '';
+  const [localSearch, setLocalSearch] = useState(searchParams.get('search') ?? '');
   const orderBy = searchParams.get('orderBy') ?? 'id';
   const order = (searchParams.get('order') ?? 'desc') as 'asc' | 'desc';
-  const debouncedSearch = useDebounce(searchQuery);
+  const debouncedSearch = useDebounce(localSearch);
 
   const updateParam = useCallback(
     (updates: Record<string, string>, replace = false) => {
@@ -84,6 +84,11 @@ export default function AppUsersView() {
     },
     [setSearchParams]
   );
+
+  useEffect(() => {
+    updateParam({ search: debouncedSearch, page: '0' }, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   const { data, isFetching } = useQuery<AppUsersResponse>({
     queryKey: ['appusers', page, pageSize, debouncedSearch, orderBy, order],
@@ -132,8 +137,8 @@ export default function AppUsersView() {
         <Stack sx={{ mb: 3 }}>
           <TextField
             placeholder="Buscar por nombre, email..."
-            value={searchQuery}
-            onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             size="small"
             sx={{ maxWidth: 400 }}
             slotProps={{

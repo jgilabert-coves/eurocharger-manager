@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
-import { Alert } from '@mui/material';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
@@ -13,7 +12,6 @@ import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
 import Dialog from '@mui/material/Dialog';
 import Tooltip from '@mui/material/Tooltip';
-import Collapse from '@mui/material/Collapse';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
@@ -40,6 +38,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { AlarmCard } from 'src/components/cards/alarm-card';
+import { useNotification } from 'src/components/notification';
 import { ResetDialog } from 'src/components/ocpp/reset/dialog';
 import { UnlockDialog } from 'src/components/ocpp/unlock/dialog';
 import { AvailabilityDialog } from 'src/components/ocpp/availability/dialog';
@@ -78,8 +77,7 @@ export default function AlarmsView() {
   const [changeAvailabilityTarget, setChangeAvailabilityTarget] =
     useState<SelectedConnector | null>(null);
   const [resetTarget, setResetTarget] = useState<SelectedConnector | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { notifySuccess, notifyError } = useNotification();
   const debouncedSearch = useDebounce(searchQuery);
   const { canOperate } = useAbility();
 
@@ -123,18 +121,11 @@ export default function AlarmsView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
       setResolveTarget(null);
-      setSuccessMessage('Alarma marcada como resuelta');
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
+      notifySuccess('Alarma marcada como resuelta');
     },
-    onError: (error) => {
-      console.error('Failed to resolve alarm:', error);
-      setErrorMessage('Error al resolver la alarma. Por favor, inténtalo de nuevo.');
+    onError: () => {
+      notifyError();
       setResolveTarget(null);
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 3000);
     },
   });
 
@@ -170,24 +161,6 @@ export default function AlarmsView() {
             }}
           />
         </Stack>
-
-        {/* Info - Error messages */}
-        <Collapse in={!!errorMessage} unmountOnExit>
-          <Box sx={{ mb: 3 }}>
-            <Alert severity="error" closeText="X" onClose={() => setErrorMessage(null)}>
-              {errorMessage}
-            </Alert>
-          </Box>
-        </Collapse>
-
-        {/* Success message */}
-        <Collapse in={!!successMessage} unmountOnExit>
-          <Box sx={{ mb: 3 }}>
-            <Alert severity="success" closeText="X" onClose={() => setSuccessMessage(null)}>
-              {successMessage}
-            </Alert>
-          </Box>
-        </Collapse>
 
         {/* Mobile: cards */}
         <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2, mb: 2 }}>
@@ -572,19 +545,8 @@ export default function AlarmsView() {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
           setUnlockTarget(null);
-          setSuccessMessage('Conector desbloqueado correctamente');
-          setTimeout(() => {
-            setSuccessMessage(null);
-          }, 3000);
         }}
-        onError={(error) => {
-          console.error('Failed to unlock connector:', error);
-          setErrorMessage('Error al desbloquear el conector. Por favor, inténtalo de nuevo.');
-          setUnlockTarget(null);
-          setTimeout(() => {
-            setErrorMessage(null);
-          }, 3000);
-        }}
+        onError={() => setUnlockTarget(null)}
       />
 
       {/* Confirm change availability dialog */}
@@ -596,19 +558,8 @@ export default function AlarmsView() {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
           setChangeAvailabilityTarget(null);
-          setSuccessMessage('Disponibilidad cambiada correctamente');
-          setTimeout(() => {
-            setSuccessMessage(null);
-          }, 3000);
         }}
-        onError={(error) => {
-          console.error('Failed to change availability:', error);
-          setErrorMessage('Error al cambiar la disponibilidad. Por favor, inténtalo de nuevo.');
-          setChangeAvailabilityTarget(null);
-          setTimeout(() => {
-            setErrorMessage(null);
-          }, 3000);
-        }}
+        onError={() => setChangeAvailabilityTarget(null)}
       />
 
       {/* Confirm reset dialog */}
@@ -619,19 +570,8 @@ export default function AlarmsView() {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['alarms', 'list'] });
           setResetTarget(null);
-          setSuccessMessage('Cargador reiniciado correctamente');
-          setTimeout(() => {
-            setSuccessMessage(null);
-          }, 3000);
         }}
-        onError={(error) => {
-          console.error('Failed to reset charger:', error);
-          setErrorMessage('Error al reiniciar el cargador. Por favor, inténtalo de nuevo.');
-          setResetTarget(null);
-          setTimeout(() => {
-            setErrorMessage(null);
-          }, 3000);
-        }}
+        onError={() => setResetTarget(null)}
       />
     </>
   );

@@ -16,6 +16,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { put, post, endpoints } from 'src/lib/axios';
 
+import { useNotification } from 'src/components/notification';
+
 // ----------------------------------------------------------------------
 
 const CONNECTOR_TYPES = [
@@ -55,6 +57,8 @@ export function ConnectorDialog({
   onSuccess,
 }: ConnectorDialogProps) {
   const isEdit = connector != null;
+
+  const { notifySuccess, notifyError } = useNotification();
 
   const [form, setForm] = useState<Form>(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
@@ -98,9 +102,11 @@ export function ConnectorDialog({
         await post(endpoints.connectors.create(chargepointId), payload);
       }
 
+      notifySuccess('Conector actualizado con éxito');
       onSuccess();
       onClose();
     } catch {
+      notifyError('Ha ocurrido un error al lanzar la acción');
       setError('Error al guardar el conector. Inténtalo de nuevo.');
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { Percent } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
@@ -6,7 +7,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
 import { fetcher, endpoints } from 'src/lib/axios';
-import { IcCCS, IcTotal, IcSignal, IcSchuko, IcChademo, IcMenunekes } from 'src/assets/icons';
+import { IcCCS, IcTotal, IcSchuko, IcChademo, IcMenunekes } from 'src/assets/icons';
 
 import { type ConnectorTypeBreakdown } from 'src/types/dashboard';
 
@@ -70,7 +71,7 @@ export function ConectoresCard() {
 
   return (
     <Card sx={{ p: 3 }}>
-      <CardHeader icon={IcSignal} label="Información por tipos de conector" />
+      <CardHeader icon={<Percent size={18} weight="fill" />} label="Información por tipos de conector" />
       <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${COLUMNS.length},1fr)`, gap: 0.5 }}>
         {/* Row 1: Icons + labels */}
         {COLUMNS.map(({ key, label, Icon }) => (

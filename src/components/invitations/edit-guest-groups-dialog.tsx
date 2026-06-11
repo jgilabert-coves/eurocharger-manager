@@ -20,6 +20,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { del, post, patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { GroupDualPicker } from 'src/components/chargepoint/group-dual-picker';
 
 // ----------------------------------------------------------------------
@@ -48,6 +49,7 @@ export function EditGuestGroupsDialog({
   onClose,
 }: EditGuestGroupsDialogProps) {
   const queryClient = useQueryClient();
+  const { notifySuccess, notifyError } = useNotification();
 
   const [localGroups, setLocalGroups] = useState<SelectedGroup[]>([]);
   const [saving, setSaving] = useState(false);
@@ -96,7 +98,9 @@ export function EditGuestGroupsDialog({
       await patch(endpoints.invitations.invitationRole(accountId, invitation.id), { role: newRole });
       await queryClient.invalidateQueries({ queryKey: ['invitation-groups', invitation.id] });
       invalidateInvitations();
+      notifySuccess('Roles actualizados con éxito');
     } catch (err: any) {
+      notifyError(err?.error ?? 'Ha ocurrido un error al lanzar la acción');
       setError(err?.error ?? 'Error al cambiar el rol.');
     } finally {
       setChangingRole(false);
@@ -140,8 +144,10 @@ export function EditGuestGroupsDialog({
 
       await queryClient.invalidateQueries({ queryKey: ['invitation-groups', invitation.id] });
       invalidateInvitations();
+      notifySuccess('Roles actualizados con éxito');
       onClose();
     } catch (err: any) {
+      notifyError(err?.error ?? 'Ha ocurrido un error al lanzar la acción');
       setError(err?.error ?? 'Error al guardar los cambios.');
     } finally {
       setSaving(false);

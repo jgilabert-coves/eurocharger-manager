@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { ChartDonut } from '@phosphor-icons/react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -7,7 +8,6 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
 import { themeConfig } from 'src/theme';
-import { IcPlug } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type ConnectorCurrentTypeUsage } from 'src/types/dashboard';
@@ -36,7 +36,7 @@ export function ConnTypeCard() {
 
   return (
     <Card sx={{ p: 3 }}>
-      <CardHeader icon={IcPlug} label="Tipo de conectores" />
+      <CardHeader icon={<ChartDonut size={18} weight="fill" />} label="Tipo de conectores" />
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
         {isLoading
           ? Array.from({ length: 2 }).map((_, i) => (

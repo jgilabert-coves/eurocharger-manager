@@ -1,159 +1,135 @@
 import type { NavSectionProps } from 'src/components/nav-section';
 
+import { Bell, Bank, Gear, Crown, Airplay, HouseLine, ChargingStation } from '@phosphor-icons/react';
+
 import { paths } from 'src/routes/paths';
 
-import { CONFIG } from 'src/global-config';
-
-import { SvgColor } from 'src/components/svg-color';
-// ----------------------------------------------------------------------
-
-const icon = (name: string) => (
-  <SvgColor src={`${CONFIG.assetsDir}/assets/icons/navbar/${name}.svg`} />
-);
-
-const ICONS = {
-  job: icon('ic-job'),
-  blog: icon('ic-blog'),
-  chat: icon('ic-chat'),
-  mail: icon('ic-mail'),
-  user: icon('ic-user'),
-  file: icon('ic-file'),
-  lock: icon('ic-lock'),
-  tour: icon('ic-tour'),
-  order: icon('ic-order'),
-  label: icon('ic-label'),
-  blank: icon('ic-blank'),
-  kanban: icon('ic-kanban'),
-  folder: icon('ic-folder'),
-  course: icon('ic-course'),
-  banking: icon('ic-banking'),
-  booking: icon('ic-booking'),
-  invoice: icon('ic-invoice'),
-  product: icon('ic-product'),
-  calendar: icon('ic-calendar'),
-  disabled: icon('ic-disabled'),
-  external: icon('ic-external'),
-  menuItem: icon('ic-menu-item'),
-  ecommerce: icon('ic-ecommerce'),
-  analytics: icon('ic-analytics'),
-  dashboard: icon('ic-dashboard'),
-  parameter: icon('ic-parameter'),
-};
-
-// ----------------------------------------------------------------------
-
-// ----------------------------------------------------------------------
-// Configuración de navegación del dashboard.
-//
-// Para controlar la visibilidad de un item según el rol del usuario,
-// añade la prop `roles` con los roles que pueden verlo.
-// Si NO se pone `roles`, el item es visible para TODOS los roles.
-//
-// Ejemplo:
-//   { title: 'Usuarios', path: '/users', roles: ['eurocharger'] }
-//   → Solo visible para el rol 'eurocharger'
-//
-//   { title: 'Dashboard', path: '/dashboard' }
-//   → Visible para todos los roles
-//
-// Roles disponibles: ver src/auth/types.ts (Role type)
 // ----------------------------------------------------------------------
 
 export const navData: NavSectionProps['data'] = [
   {
     title: 'Inicio',
     path: paths.dashboard.root,
+    icon: <HouseLine />,
   },
-  /**
-   * Estaciones — visible para todos los roles
-   */
   {
     title: 'Cargadores',
     path: paths.chargingstations.list,
-  },
-  /**
-   * Transactions — visible para todos los roles
-   */
-  {
-    title: 'Recargas',
-    path: paths.transactions.actives,
-  },
-  /**
-   * Alarmas — visible para todos los roles
-   */
-  {
-    title: 'Alarmas',
-    path: paths.alarms.list,
-  },
-  /**
-   * Incidencias — visible para todos los roles
-   */
-  {
-    title: 'Incidencias',
-    path: paths.tickets.list,
-    roles: ['eurocharger', 'saas_admin', 'saas_owner'],
+    icon: <ChargingStation />,
   },
   {
-    title: 'Autorizaciones',
-    path: paths.privileges.list,
-    roles: ['eurocharger', 'saas_owner'],
+    title: 'Ventas',
+    path: paths.menuGroups.ventas,
+    icon: <Bank />,
+    children: [
+      {
+        title: 'Tarifas',
+        path: paths.rates.list,
+        caption: 'Configura los precios de los cargadores',
+        roles: ['eurocharger', 'saas_owner', 'saas_admin'],
+      },
+      {
+        title: 'Autofacturas',
+        path: paths.invoices.list,
+        caption: 'Visualiza los importes recaudados en los cargadores',
+        roles: ['eurocharger', 'saas_owner'],
+      },
+    ],
   },
-  // Autofacturas pendiente de implementación backend — oculto temporalmente
-  // {
-  //   title: 'Pagos',
-  //   path: paths.invoices.list,
-  //   roles: ['eurocharger', 'saas_owner'],
-  // },
-
-  /**
-   * Tarifas — visible solo para roles específicos.
-   *
-   * Para tener un item con subitems (desplegable), usa `children`.
-   * Si no quieres subheader, simplemente no lo pongas.
-   */
   {
-    title: 'Reservas',
-    path: paths.reservations.list,
+    title: 'Analíticas',
+    path: paths.menuGroups.analiticas,
+    icon: <Airplay />,
+    children: [
+      {
+        title: 'Recargas',
+        path: paths.transactions.actives,
+        caption: 'Listado de cargas realizadas en los cargadores',
+      },
+      {
+        title: 'Usuarios',
+        path: paths.appUsers.list,
+        caption: 'Listado de usuarios que utilizan los cargadores',
+        roles: ['eurocharger', 'saas_owner', 'saas_admin', 'saas_guest'],
+      },
+      {
+        title: 'Reservas',
+        path: paths.reservations.list,
+        caption: 'Listado de reservas realizadas en los cargadores',
+        roles: ['eurocharger'],
+      },
+    ],
+  },
+  {
+    title: 'Gestión',
+    path: paths.menuGroups.gestion,
+    icon: <Gear />,
+    children: [
+      {
+        title: 'Propietarios',
+        path: paths.chargerGroups.list,
+        caption: 'Agrupa cargadores por propietarios',
+        roles: ['saas_owner', 'eurocharger'],
+      },
+      {
+        title: 'Traspasar cargadores',
+        path: paths.chargerTransfer.root,
+        caption: 'Asigna cargadores a un nuevo propietario',
+        roles: ['eurocharger'],
+      },
+      {
+        title: 'Autorizaciones',
+        path: paths.privileges.list,
+        caption: 'Gestiona el acceso a cargadores privados para nuevos usuarios',
+        roles: ['eurocharger', 'saas_owner'],
+      },
+      {
+        title: 'Roles y permisos',
+        path: paths.invitations.list,
+        caption: 'Invita a colaboradores a trabajar en este sitio y asígnales roles',
+        roles: ['saas_owner', 'eurocharger'],
+      },
+    ],
+  },
+  {
+    title: 'Mantenimiento',
+    path: paths.menuGroups.mantenimiento,
+    icon: <Bell />,
+    children: [
+      {
+        title: 'Alarmas',
+        path: paths.alarms.list,
+        caption: 'Gestiona las alarmas enviadas por los cargadores',
+      },
+      {
+        title: 'Incidencias',
+        path: paths.tickets.list,
+        caption: 'Gestiona las incidencias enviadas por los usuarios',
+        roles: ['eurocharger', 'saas_admin', 'saas_owner'],
+      },
+    ],
+  },
+  {
+    title: 'Eurocharger',
+    path: paths.menuGroups.eurocharger,
+    icon: <Crown />,
     roles: ['eurocharger'],
-  },
-  {
-    title: 'Tarifas',
-    path: paths.rates.list,
-    roles: ['eurocharger', 'saas_owner', 'saas_admin'],
-  },
-  {
-    title: 'Usuarios',
-    path: paths.appUsers.list,
-    roles: ['eurocharger', 'saas_owner', 'saas_admin', 'saas_guest'],
-  },
-  {
-    title: 'Usuarios del gestor',
-    path: paths.managerUsers.list,
-    roles: ['eurocharger'],
-  },
-  {
-    title: 'Planes',
-    path: paths.plans.list,
-    roles: ['eurocharger'],
-  },
-  {
-    title: 'Suscripciones',
-    path: paths.adminSubscriptions.root,
-    roles: ['eurocharger'],
-  },
-  {
-    title: 'Invitaciones',
-    path: paths.invitations.list,
-    roles: ['saas_owner', 'eurocharger'],
-  },
-  {
-    title: 'Propietarios',
-    path: paths.chargerGroups.list,
-    roles: ['saas_owner', 'eurocharger'],
-  },
-  {
-    title: 'Traspasar cargadores',
-    path: paths.chargerTransfer.root,
-    roles: ['eurocharger'],
+    children: [
+      {
+        title: 'Planes',
+        path: paths.plans.list,
+        caption: 'Configura nuevos planes para la plataforma',
+      },
+      {
+        title: 'Suscripciones',
+        path: paths.adminSubscriptions.root,
+        caption: 'Visualiza los clientes suscritos a la plataforma',
+      },
+      {
+        title: 'Usuarios gestor',
+        path: paths.managerUsers.list,
+        caption: 'Visualiza los acceso y roles de los clientes de Eurocharger',
+      },
+    ],
   },
 ];

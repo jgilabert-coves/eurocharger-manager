@@ -43,7 +43,7 @@ export function HeatmapCard() {
 
   return (
     <Card sx={{ p: 3 }}>
-      <CardHeader icon={IcClock} label="Horarios de afluencia" />
+      <CardHeader icon={<IcClock sx={{ fontSize: 18 }} />} label="Horarios de afluencia" />
       {isLoading ? (
         <Box sx={{ display: 'grid', gridTemplateColumns: '40px repeat(7,1fr)', gap: '4px' }}>
           <Box />

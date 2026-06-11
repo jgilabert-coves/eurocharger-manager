@@ -29,6 +29,7 @@ import { useDebounce } from 'src/hooks/use-debounce';
 import { put, del, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { ChargerDualPicker } from 'src/components/chargepoint/charger-dual-picker';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -61,6 +62,8 @@ function CreateGroupDialog({
   onSuccess: () => void;
   isEurocharger: boolean;
 }) {
+  const { notifySuccess, notifyError } = useNotification();
+
   const [name, setName] = useState('');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<number | ''>('');
@@ -115,9 +118,11 @@ function CreateGroupDialog({
         name: name.trim(),
         chargerIds: selectedIds,
       });
+      notifySuccess('Acción realizada con éxito');
       onSuccess();
       handleClose();
     } catch (err: any) {
+      notifyError('Ha ocurrido un error al lanzar la acción');
       setError(err?.error ?? 'Error al crear el propietario.');
     } finally {
       setLoading(false);
@@ -281,6 +286,8 @@ function RenameDialog({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { notifySuccess, notifyError } = useNotification();
+
   const [name, setName] = useState(group?.name ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -291,9 +298,11 @@ function RenameDialog({
     setError(null);
     try {
       await put(endpoints.accounts.chargerGroup(accountId, group.id), { name: name.trim() });
+      notifySuccess('Acción realizada con éxito');
       onSuccess();
       onClose();
     } catch (err: any) {
+      notifyError('Ha ocurrido un error al lanzar la acción');
       setError(err?.error ?? 'Error al renombrar el propietario.');
     } finally {
       setLoading(false);
@@ -355,6 +364,8 @@ function AddChargersDialog({
   onSuccess: () => void;
   isEurocharger: boolean;
 }) {
+  const { notifySuccess, notifyError } = useNotification();
+
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -391,9 +402,11 @@ function AddChargersDialog({
       await post(endpoints.accounts.chargerGroupChargers(targetAccountId, group.id), {
         chargerIds: selectedIds,
       });
+      notifySuccess('Acción realizada con éxito');
       handleClose();
       onSuccess();
     } catch (err: any) {
+      notifyError('Ha ocurrido un error al lanzar la acción');
       setError(err?.error ?? 'Error al añadir cargadores.');
     } finally {
       setLoading(false);
@@ -456,6 +469,8 @@ export default function ChargerGroupsView() {
   const accountId = user?.account_id ?? 0;
   const queryClient = useQueryClient();
 
+  const { notifySuccess, notifyError } = useNotification();
+
   const [createOpen, setCreateOpen] = useState(false);
   const [renameGroup, setRenameGroup] = useState<ChargerGroup | null>(null);
   const [addChargersGroup, setAddChargersGroup] = useState<ChargerGroup | null>(null);
@@ -498,7 +513,8 @@ export default function ChargerGroupsView() {
   const deleteGroup = useMutation({
     mutationFn: ({ groupId, acctId }: { groupId: string; acctId: number }) =>
       del(endpoints.accounts.chargerGroup(acctId, groupId)),
-    onSuccess: invalidate,
+    onSuccess: () => { notifySuccess('Acción realizada con éxito'); invalidate(); },
+    onError: () => notifyError('Ha ocurrido un error al lanzar la acción'),
   });
 
   const removeCharger = useMutation({
@@ -511,7 +527,8 @@ export default function ChargerGroupsView() {
       chargerId: number;
       acctId: number;
     }) => del(endpoints.accounts.chargerGroupCharger(acctId, groupId, chargerId)),
-    onSuccess: invalidate,
+    onSuccess: () => { notifySuccess('Acción realizada con éxito'); invalidate(); },
+    onError: () => notifyError('Ha ocurrido un error al lanzar la acción'),
   });
 
   const getGroupAccountId = (group: ChargerGroup) => (isEurocharger ? group.account_id : accountId);

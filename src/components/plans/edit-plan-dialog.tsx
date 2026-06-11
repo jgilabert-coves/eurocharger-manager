@@ -19,6 +19,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { patch, endpoints } from 'src/lib/axios';
 
+import { useNotification } from 'src/components/notification';
+
 // ----------------------------------------------------------------------
 
 type ItemKey = 'base' | 'chargers' | 'sim' | 'call_center' | 'guests';
@@ -81,6 +83,7 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
   const [form, setForm] = useState<FormState>(() => planToForm(plan));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { notifySuccess, notifyError } = useNotification();
 
   useEffect(() => {
     if (open) setForm(planToForm(plan));
@@ -122,9 +125,11 @@ export function EditPlanDialog({ plan, open, onClose, onSuccess }: Props) {
       }
 
       await patch(endpoints.plans.update(plan.id), body);
+      notifySuccess('Plan actualizado con éxito');
       handleClose();
       onSuccess?.();
     } catch {
+      notifyError();
       setError('Error al actualizar el plan. Comprueba los datos e inténtalo de nuevo.');
     } finally {
       setLoading(false);

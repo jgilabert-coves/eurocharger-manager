@@ -68,7 +68,6 @@ export default function ChargepointsListV2() {
 
   const page = Number(searchParams.get('page') ?? '0');
   const pageSize = Number(searchParams.get('pageSize') ?? '10');
-  const searchQuery = searchParams.get('search') ?? '';
   const orderBy = searchParams.get('orderBy') ?? 'name';
   const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
   const statusFilter = searchParams.get('status') ?? 'ALL';
@@ -78,7 +77,8 @@ export default function ChargepointsListV2() {
   const [loading, setLoading] = useState(true);
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   const [setupChargepointId, setSetupChargepointId] = useState<number | null>(null);
-  const debouncedSearch = useDebounce(searchQuery);
+  const [localSearch, setLocalSearch] = useState(searchParams.get('search') ?? '');
+  const debouncedSearch = useDebounce(localSearch);
   const { isViewOnly } = useAbility();
 
   const updateParam = useCallback(
@@ -125,6 +125,11 @@ export default function ChargepointsListV2() {
   useEffect(() => {
     fetchChargepoints();
   }, [fetchChargepoints]);
+
+  useEffect(() => {
+    updateParam({ search: debouncedSearch, page: '0' }, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   const handleSort = (field: string) => {
     const isAsc = orderBy === field && order === 'asc';
@@ -177,8 +182,8 @@ export default function ChargepointsListV2() {
         >
           <TextField
             placeholder="Buscar por nombre, dirección, ID..."
-            value={searchQuery}
-            onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             size="small"
             sx={{ flex: 1, maxWidth: { md: 400 } }}
             slotProps={{

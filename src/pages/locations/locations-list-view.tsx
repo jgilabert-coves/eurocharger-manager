@@ -1,9 +1,9 @@
 import type { BasicChargingStationInfo } from 'src/types/charging_stations';
 
-import { useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router';
+import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
@@ -47,8 +47,8 @@ export default function LocationsListView() {
 
   const page = Number(searchParams.get('page') ?? '0');
   const pageSize = Number(searchParams.get('pageSize') ?? '10');
-  const searchQuery = searchParams.get('search') ?? '';
-  const debouncedSearch = useDebounce(searchQuery);
+  const [localSearch, setLocalSearch] = useState(searchParams.get('search') ?? '');
+  const debouncedSearch = useDebounce(localSearch);
 
   const updateParam = useCallback(
     (updates: Record<string, string>, replace = false) => {
@@ -66,6 +66,11 @@ export default function LocationsListView() {
     },
     [setSearchParams]
   );
+
+  useEffect(() => {
+    updateParam({ search: debouncedSearch, page: '0' }, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   const { data: res, isLoading } = useQuery<LocationsResponse>({
     queryKey: ['locations', 'list', { page, pageSize, search: debouncedSearch }],
@@ -95,8 +100,8 @@ export default function LocationsListView() {
             <TextField
               size="small"
               placeholder="Buscar por nombre, dirección…"
-              value={searchQuery}
-              onChange={(e) => updateParam({ search: e.target.value, page: '0' }, true)}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
               sx={{ maxWidth: 360 }}
               slotProps={{
                 input: {

@@ -19,7 +19,7 @@ export type KpiCardProps = {
   subtitle: string;
   delta?: string;
   trend?: 'up' | 'down';
-  icon: string;
+  icon: string | React.ReactNode;
   palette: PaletteKey;
   href?: string;
 };
@@ -52,7 +52,7 @@ export function KpiCard({
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="left" spacing={1}>
-        <Iconify icon={icon} width={24} />
+        {typeof icon === 'string' ? <Iconify icon={icon} width={18} /> : icon}
         <Typography variant="h6">{title}</Typography>
       </Stack>
       <Typography variant="h4">{value}</Typography>

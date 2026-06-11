@@ -41,6 +41,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import axiosInstance, { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 
 // ----------------------------------------------------------------------
 
@@ -63,6 +64,7 @@ type GroupedPrivilege = {
 
 export default function AuthorizationsListView() {
   const queryClient = useQueryClient();
+  const { notifySuccess, notifyError } = useNotification();
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [page, setPage] = useState(0);
@@ -102,9 +104,11 @@ export default function AuthorizationsListView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['privileges'] });
       setDialogOpen(false);
+      notifySuccess('Acción realizada con éxito');
     },
     onError: (error) => {
       console.error('Failed to create privileges:', error);
+      notifyError();
     },
   });
 
@@ -113,6 +117,10 @@ export default function AuthorizationsListView() {
     mutationFn: (id: number) => axiosInstance.delete(endpoints.privileges.delete(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['privileges'] });
+      notifySuccess('Acción realizada con éxito');
+    },
+    onError: () => {
+      notifyError();
     },
   });
 
@@ -122,6 +130,10 @@ export default function AuthorizationsListView() {
       Promise.all(ids.map((id) => axiosInstance.delete(endpoints.privileges.delete(id)))),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['privileges'] });
+      notifySuccess('Acción realizada con éxito');
+    },
+    onError: () => {
+      notifyError();
     },
   });
 

@@ -16,6 +16,7 @@ import { incidentsRoutes } from './incidents';
 import { dashboardRoutes } from './dashboard';
 import { locationsRoutes } from './locations';
 import { privilegesRoutes } from './privileges';
+import { menuGroupsRoutes } from './menu-groups';
 import { invitationsRoutes } from './invitations';
 import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
@@ -71,6 +72,8 @@ export const routesSection: RouteObject[] = [
   ...plansRoutes,
 
   ...adminSubscriptionsRoutes,
+
+  ...menuGroupsRoutes,
 
   {
     path: '/',

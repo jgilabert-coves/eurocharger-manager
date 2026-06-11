@@ -39,6 +39,7 @@ import { post, patch, fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 import { AppUserSearchSelect } from 'src/components/app-users/app-user-search-select';
 import { StationSearchSelect } from 'src/components/chargepoint/station-search-select';
 
@@ -71,6 +72,7 @@ export default function TicketDetailView() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
+  const { notifySuccess, notifyError } = useNotification();
 
   const ticketId = Number(id);
 
@@ -104,6 +106,10 @@ export default function TicketDetailView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tickets', 'detail', ticketId] });
       setTrackingMessage('');
+      notifySuccess('Incidencia actualizada con éxito');
+    },
+    onError: () => {
+      notifyError();
     },
   });
 
@@ -113,6 +119,10 @@ export default function TicketDetailView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tickets', 'detail', ticketId] });
       queryClient.invalidateQueries({ queryKey: ['tickets', 'list'] });
+      notifySuccess('Incidencia actualizada con éxito');
+    },
+    onError: () => {
+      notifyError();
     },
   });
 
@@ -128,6 +138,10 @@ export default function TicketDetailView() {
       queryClient.invalidateQueries({ queryKey: ['tickets', 'detail', ticketId] });
       queryClient.invalidateQueries({ queryKey: ['tickets', 'list'] });
       setEditOpen(false);
+      notifySuccess('Incidencia actualizada con éxito');
+    },
+    onError: () => {
+      notifyError();
     },
   });
 
@@ -136,6 +150,10 @@ export default function TicketDetailView() {
       post(endpoints.tickets.sendEmail(ticketId), body),
     onSuccess: () => {
       setEmailSuccess(true);
+      notifySuccess('Incidencia actualizada con éxito');
+    },
+    onError: () => {
+      notifyError();
     },
   });
 

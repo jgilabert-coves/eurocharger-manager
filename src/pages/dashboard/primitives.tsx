@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -15,19 +16,19 @@ const inkDarkest = themeConfig.palette.grey[900];
 // ----------------------------------------------------------------------
 
 export function CardHeader({
-  icon: Icon,
+  icon,
   label,
   action,
 }: {
-  icon: React.ElementType;
+  icon: ReactNode;
   label: string;
   action?: ReactNode;
 }) {
   return (
     <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <Icon sx={{ fontSize: 16, color: inkDarkest }} />
-        <Typography variant="subtitle2" sx={{ color: inkDarkest }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', color: inkDarkest }}>{icon}</Box>
+        <Typography variant="h6" sx={{ color: inkDarkest }}>
           {label}
         </Typography>
       </Stack>

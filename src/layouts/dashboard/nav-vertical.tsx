@@ -55,6 +55,7 @@ export function NavVertical({
           data={data}
           cssVars={cssVars}
           currentRole={currentRole}
+          enabledRootRedirect
           sx={{ px: 2, flex: '1 1 auto' }}
         />
       </Scrollbar>

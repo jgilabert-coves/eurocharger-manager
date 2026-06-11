@@ -1,3 +1,4 @@
+import { Power } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 
 import Card from '@mui/material/Card';
@@ -10,7 +11,6 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 
-import { IcCoin } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type ActiveCharge } from 'src/types/dashboard';
@@ -31,7 +31,7 @@ export function TransTable() {
 
   return (
     <Card sx={{ p: 3 }}>
-      <CardHeader icon={IcCoin} label="Recargas en curso" />
+      <CardHeader icon={<Power size={18} weight="fill" />} label="Recargas en curso" />
       <TableContainer>
         <Table size="small">
           <TableHead>

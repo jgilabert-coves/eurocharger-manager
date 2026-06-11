@@ -115,4 +115,11 @@ export const paths = {
   adminSubscriptions: {
     root: '/admin/subscriptions',
   },
+  menuGroups: {
+    ventas: '/menu/sales',
+    analiticas: '/menu/analytics',
+    gestion: '/menu/management',
+    mantenimiento: '/menu/maintenance',
+    eurocharger: '/menu/eurocharger',
+  },
 };

@@ -12,7 +12,7 @@ import { CardHeader } from './primitives';
 export function MantenimientoCard() {
   return (
     <Card sx={{ p: 3 }}>
-      <CardHeader icon={IcWrench} label="Mantenimiento" />
+      <CardHeader icon={<IcWrench sx={{ fontSize: 18 }} />} label="Mantenimiento" />
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1.5, mb: 2.5 }}>
         {MANT.map(({ label, v, delta, up }) => (
           <Box key={label} sx={{ textAlign: 'center' }}>

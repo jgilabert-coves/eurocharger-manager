@@ -24,6 +24,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
+import { useNotification } from 'src/components/notification';
 
 // ----------------------------------------------------------------------
 
@@ -140,6 +141,8 @@ export default function ChargerTransferView() {
   const [done, setDone] = useState(false);
   const [transferredCount, setTransferredCount] = useState(0);
 
+  const { notifySuccess, notifyError } = useNotification();
+
   const { data: accountsData } = useQuery<AccountsResponse>({
     queryKey: ['accounts-list'],
     queryFn: () => fetcher([endpoints.accounts.list, { params: { pageSize: 1000 } }]),
@@ -186,8 +189,12 @@ export default function ChargerTransferView() {
       });
     },
     onSuccess: () => {
+      notifySuccess('Cargadores traspasados con éxito');
       setTransferredCount(selectedChargerIds.length);
       setDone(true);
+    },
+    onError: () => {
+      notifyError();
     },
   });
 
