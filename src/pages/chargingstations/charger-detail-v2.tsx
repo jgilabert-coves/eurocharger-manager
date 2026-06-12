@@ -1070,7 +1070,7 @@ export default function ChargerDetailV2() {
                 )*/}
 
                 {hasLocation && (
-                  <Box sx={{ mt: 2, borderRadius: 1.5, overflow: 'hidden', height: 180 }}>
+                  <Box sx={{ mt: 2, borderRadius: 1.5, overflow: 'hidden', flex: 1, minHeight: 150 }}>
                     <Map
                       mapboxAccessToken={CONFIG.mapboxApiKey}
                       initialViewState={{
@@ -1256,7 +1256,6 @@ export default function ChargerDetailV2() {
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="solar:sim-card-bold" width={14} />
                       <Typography variant="caption" color="text.secondary">
                         SIM
                       </Typography>
