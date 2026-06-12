@@ -1261,7 +1261,7 @@ export default function ChargerDetailV2() {
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {chargepoint.sim_requested === false && chargepoint.sim_card == null && (
+                      {!chargepoint.sim_requested && chargepoint.sim_card == null && (
                         <Button
                           size="small"
                           variant="outlined"
@@ -1272,7 +1272,7 @@ export default function ChargerDetailV2() {
                           Solicitar SIM
                         </Button>
                       )}
-                      {chargepoint.sim_requested === true && chargepoint.sim_card == null && (
+                      {!!chargepoint.sim_requested && chargepoint.sim_card == null && (
                         <>
                           <Chip label="SIM solicitada · Pendiente" color="warning" size="small" />
                           <IconButton
