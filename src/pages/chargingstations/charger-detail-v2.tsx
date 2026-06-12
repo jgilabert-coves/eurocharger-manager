@@ -9,7 +9,7 @@ import { useParams } from 'react-router';
 import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
-import { X, TrashIcon } from '@phosphor-icons/react';
+import { X, TrashIcon, PencilSimpleIcon } from '@phosphor-icons/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
@@ -28,7 +28,6 @@ import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -315,7 +314,7 @@ function ConnectorCard({
                         onEdit(connector);
                       }}
                     >
-                      <Iconify icon="mdi:pencil-outline" width={16} />
+                      <PencilSimpleIcon width={16} />
                     </IconButton>
                   )}
                   {hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && (
@@ -850,7 +849,7 @@ export default function ChargerDetailV2() {
   const { data: simConnectivityData } = useQuery<{ data: { status: 'ONLINE' | 'ATTACHED' | 'OFFLINE' | 'BLOCKED' | 'UNKNOWN' } }>({
     queryKey: ['sim-connectivity', chargepoint?.sim_card],
     queryFn: () => fetcher(endpoints.sims.connectivity(chargepoint!.sim_card!)),
-    enabled: !!chargepoint?.sim_card,
+    enabled: !!chargepoint?.sim_card && hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
@@ -1043,7 +1042,7 @@ export default function ChargerDetailV2() {
                 action={
                   !hasRole('saas_guest') ? (
                     <IconButton size="small" title="Editar cargador" onClick={openEditCharger}>
-                      <Iconify icon="mdi:pencil-outline" width={16} />
+                      <PencilSimpleIcon width={16} />
                     </IconButton>
                   ) : undefined
                 }
@@ -1145,49 +1144,47 @@ export default function ChargerDetailV2() {
 
               {/* ── Servicios extras ──────────────────────────────────────────── */}
               {chargepoint && (
-                <Card variant="outlined" sx={{ borderRadius: 2, flex: 1 }}>
-              <CardHeader
-                title="Servicios extras"
-                action={
-                  !editingExtras ? (
-                    <IconButton size="small" onClick={() => setEditingExtras(true)}>
-                      <Iconify icon="solar:pen-bold" />
-                    </IconButton>
-                  ) : (
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          setEditingExtras(false);
-                          setExtrasError(null);
-                          setEditHiredPower(chargepoint.hired_power ?? false);
-                          setEditMaxRechargeTime(
-                            chargepoint.max_recharge_time != null
-                              ? String(chargepoint.max_recharge_time)
-                              : ''
-                          );
-                        }}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={handleSaveExtras}
-                        disabled={extrasSaving}
-                        startIcon={
-                          extrasSaving ? (
-                            <CircularProgress size={14} color="inherit" />
-                          ) : undefined
-                        }
-                      >
-                        Guardar
-                      </Button>
-                    </Stack>
-                  )
-                }
-              />
-              <CardContent>
+                <SectionCard
+                  title="Servicios extras"
+                  action={
+                    !editingExtras ? (
+                      <IconButton size="small" onClick={() => setEditingExtras(true)}>
+                        <PencilSimpleIcon width={16} />
+                      </IconButton>
+                    ) : (
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            setEditingExtras(false);
+                            setExtrasError(null);
+                            setEditHiredPower(chargepoint.hired_power ?? false);
+                            setEditMaxRechargeTime(
+                              chargepoint.max_recharge_time != null
+                                ? String(chargepoint.max_recharge_time)
+                                : ''
+                            );
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={handleSaveExtras}
+                          disabled={extrasSaving}
+                          startIcon={
+                            extrasSaving ? (
+                              <CircularProgress size={14} color="inherit" />
+                            ) : undefined
+                          }
+                        >
+                          Guardar
+                        </Button>
+                      </Stack>
+                    )
+                  }
+                >
                 {extrasError && (
                   <Typography color="error" variant="caption" sx={{ mb: 1, display: 'block' }}>
                     {extrasError}
@@ -1248,7 +1245,7 @@ export default function ChargerDetailV2() {
                   </Box>
 
                   {/* SIM */}
-                  <Box
+                  {hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && <Box
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1308,10 +1305,10 @@ export default function ChargerDetailV2() {
                         </>
                       )}
                     </Box>
-                  </Box>
+                  </Box>}
 
                   {/* Conectividad SIM (solo cuando hay SIM asignada) */}
-                  {chargepoint.sim_card != null && (
+                  {chargepoint.sim_card != null && hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && (
                     <Box
                       sx={{
                         display: 'flex',
@@ -1355,7 +1352,21 @@ export default function ChargerDetailV2() {
                                         : 'grey.400',
                             }}
                           />
-                          <Typography variant="caption" fontWeight={600}>
+                          <Typography
+                            variant="caption"
+                            fontWeight={600}
+                            color={
+                              simConnectivity === 'ONLINE'
+                                ? 'success.main'
+                                : simConnectivity === 'ATTACHED'
+                                  ? 'warning.main'
+                                  : simConnectivity === 'BLOCKED'
+                                    ? 'error.dark'
+                                    : simConnectivity === 'OFFLINE'
+                                      ? 'error.main'
+                                      : 'text.disabled'
+                            }
+                          >
                             {simConnectivity === 'ONLINE'
                               ? 'Online'
                               : simConnectivity === 'ATTACHED'
@@ -1371,8 +1382,7 @@ export default function ChargerDetailV2() {
                     </Box>
                   )}
                 </Stack>
-              </CardContent>
-                </Card>
+                </SectionCard>
               )}
               </Stack>
             </Grid>
