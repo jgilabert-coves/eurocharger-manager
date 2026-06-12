@@ -1139,10 +1139,13 @@ export default function ChargerDetailV2() {
                   </Box>
                 )}
               </SectionCard>
+            </Grid>
 
-              {/* ── Servicios extras ─────────────────────────────────────────────── */}
+            {/* ── Servicios extras (columna derecha, segunda fila) ──────────────── */}
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: { xs: 'none', md: 'block' } }} />
+            <Grid size={{ xs: 12, md: 6 }}>
               {chargepoint && (
-                <Card sx={{ borderRadius: 2, mt: 2 }}>
+                <Card sx={{ borderRadius: 2 }}>
               <CardHeader
                 title="Servicios extras"
                 action={
