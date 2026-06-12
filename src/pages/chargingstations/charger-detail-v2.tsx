@@ -846,7 +846,7 @@ export default function ChargerDetailV2() {
     },
   });
 
-  const { data: simConnectivityData } = useQuery<{ data: { status: 'ONLINE' | 'ATTACHED' | 'OFFLINE' | 'BLOCKED' | 'UNKNOWN' } }>({
+  const { data: simConnectivityData, isLoading: isLoadingSimConnectivity } = useQuery<{ data: { status: 'ONLINE' | 'ATTACHED' | 'OFFLINE' | 'BLOCKED' | 'UNKNOWN' } }>({
     queryKey: ['sim-connectivity', chargepoint?.sim_card],
     queryFn: () => fetcher(endpoints.sims.connectivity(chargepoint!.sim_card!)),
     enabled: !!chargepoint?.sim_card && hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']),
@@ -1335,6 +1335,9 @@ export default function ChargerDetailV2() {
                         arrow
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'default' }}>
+                          {isLoadingSimConnectivity ? (
+                            <CircularProgress size={12} />
+                          ) : (
                           <Box
                             sx={{
                               width: 8,
@@ -1352,6 +1355,7 @@ export default function ChargerDetailV2() {
                                         : 'grey.400',
                             }}
                           />
+                          )}
                           <Typography
                             variant="caption"
                             fontWeight={600}
