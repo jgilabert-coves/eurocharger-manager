@@ -783,7 +783,7 @@ export default function ChargerDetailV2() {
 
   // ── Servicios extras state ──────────────────────────────────────────────────
   const [editingExtras, setEditingExtras] = useState(false);
-  const [editHiredPower, setEditHiredPower] = useState<boolean>(false);
+  const [editShareEnergy, setEditShareEnergy] = useState<boolean>(false);
   const [editMaxRechargeTime, setEditMaxRechargeTime] = useState<string>('');
   const [extrasError, setExtrasError] = useState<string | null>(null);
   const [extrasSaving, setExtrasSaving] = useState(false);
@@ -805,7 +805,7 @@ export default function ChargerDetailV2() {
         endpoints.chargepoints.single(Number(id))
       );
       setChargepoint(response.data);
-      setEditHiredPower(response.data.hired_power ?? false);
+      setEditShareEnergy(response.data.share_energy ?? false);
       setEditMaxRechargeTime(response.data.max_recharge_time != null ? String(response.data.max_recharge_time) : '');
     } catch (err) {
       console.error('Error fetching chargepoint:', err);
@@ -863,7 +863,7 @@ export default function ChargerDetailV2() {
     setExtrasError(null);
     try {
       await put(endpoints.chargepoints.update(Number(id)), {
-        hired_power: editHiredPower,
+        share_energy: editShareEnergy,
         max_recharge_time: editMaxRechargeTime !== '' ? Number(editMaxRechargeTime) : null,
       });
       await loadChargepoint();
@@ -1158,7 +1158,7 @@ export default function ChargerDetailV2() {
                           onClick={() => {
                             setEditingExtras(false);
                             setExtrasError(null);
-                            setEditHiredPower(chargepoint.hired_power ?? false);
+                            setEditShareEnergy(chargepoint.share_energy ?? false);
                             setEditMaxRechargeTime(
                               chargepoint.max_recharge_time != null
                                 ? String(chargepoint.max_recharge_time)
@@ -1200,14 +1200,14 @@ export default function ChargerDetailV2() {
                     </Typography>
                     {editingExtras ? (
                       <Switch
-                        checked={editHiredPower}
-                        onChange={(e) => setEditHiredPower(e.target.checked)}
+                        checked={editShareEnergy}
+                        onChange={(e) => setEditShareEnergy(e.target.checked)}
                         size="small"
                       />
                     ) : (
                       <Chip
-                        label={chargepoint.hired_power ? 'Activada' : 'Desactivada'}
-                        color={chargepoint.hired_power ? 'warning' : 'default'}
+                        label={chargepoint.share_energy ? 'Activada' : 'Desactivada'}
+                        color={chargepoint.share_energy ? 'warning' : 'default'}
                         size="small"
                       />
                     )}
