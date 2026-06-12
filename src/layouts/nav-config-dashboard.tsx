@@ -3,7 +3,7 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import { Bell, Bank, Gear, Crown, Airplay, HouseLine, ChargingStation } from '@phosphor-icons/react';
 
 import { paths } from 'src/routes/paths';
-import { Iconify } from 'src/components/iconify';
+
 
 // ----------------------------------------------------------------------
 
@@ -73,12 +73,6 @@ export const navData: NavSectionProps['data'] = [
         roles: ['saas_owner', 'eurocharger'],
       },
       {
-        title: 'Traspasar cargadores',
-        path: paths.chargerTransfer.root,
-        caption: 'Asigna cargadores a un nuevo propietario',
-        roles: ['eurocharger'],
-      },
-      {
         title: 'Autorizaciones',
         path: paths.privileges.list,
         caption: 'Gestiona el acceso a cargadores privados para nuevos usuarios',
@@ -119,7 +113,6 @@ export const navData: NavSectionProps['data'] = [
       {
         title: 'SIMs',
         path: paths.sims.list,
-        icon: <Iconify icon="solar:sim-card-bold" width={24} />,
         caption: 'Gestiona las tarjetas SIM de los cargadores',
       },
       {

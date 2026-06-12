@@ -111,9 +111,9 @@ function miniVars(theme: Theme) {
     '--nav-item-sub-padding': '0 8px',
     // icon
     // Tamaño del icono
-    '--nav-icon-size': '22px',
+    '--nav-icon-size': '16px',
     // Margen del icono en ítems raíz (el label va debajo del icono)
-    '--nav-icon-root-margin': '0 0 6px 0',
+    '--nav-icon-root-margin': '0',
     // Margen del icono en sub-ítems
     '--nav-icon-sub-margin': '0 8px 0 0',
   };

@@ -234,9 +234,10 @@ const ItemArrow = styled(Iconify, { shouldForwardProp })<StyledState>(({ theme }
       props: { variant: 'rootItem' },
       style: {
         margin: 0,
-        top: 11,
+        top: '50%',
         right: 6,
         position: 'absolute',
+        transform: 'translateY(-50%)',
       },
     },
     { props: { variant: 'subItem' }, style: { marginRight: theme.spacing(-0.5) } },

@@ -6,10 +6,10 @@ import { Navigate } from 'react-router';
 import { CONFIG } from 'src/global-config';
 
 import { authRoutes } from './auth';
+import { simsRoutes } from './sims';
 import { ratesRoutes } from './rates';
 import { plansRoutes } from './plans';
 import { alarmsRoutes } from './alarms';
-import { simsRoutes } from './sims';
 import { ticketsRoutes } from './tickets';
 import { appUsersRoutes } from './appusers';
 import { invoicesRoutes } from './invoices';

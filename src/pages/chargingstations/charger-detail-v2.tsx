@@ -847,7 +847,7 @@ export default function ChargerDetailV2() {
     },
   });
 
-  const { data: simConnectivityData } = useQuery<{ data: { status: 'ONLINE' | 'OFFLINE' | 'UNKNOWN' } }>({
+  const { data: simConnectivityData } = useQuery<{ data: { status: 'ONLINE' | 'ATTACHED' | 'OFFLINE' | 'BLOCKED' | 'UNKNOWN' } }>({
     queryKey: ['sim-connectivity', chargepoint?.sim_card],
     queryFn: () => fetcher(endpoints.sims.connectivity(chargepoint!.sim_card!)),
     enabled: !!chargepoint?.sim_card,
@@ -1139,12 +1139,10 @@ export default function ChargerDetailV2() {
                   </Box>
                 )}
               </SectionCard>
-            </Grid>
-          </Grid>
 
-          {/* ── Servicios extras ─────────────────────────────────────────────── */}
-          {chargepoint && (
-            <Card sx={{ borderRadius: 2, mb: 3 }}>
+              {/* ── Servicios extras ─────────────────────────────────────────────── */}
+              {chargepoint && (
+                <Card sx={{ borderRadius: 2, mt: 2 }}>
               <CardHeader
                 title="Servicios extras"
                 action={
@@ -1320,34 +1318,59 @@ export default function ChargerDetailV2() {
                       <Typography variant="body2" color="text.secondary">
                         Conectividad SIM
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            bgcolor:
-                              simConnectivity === 'ONLINE'
-                                ? 'success.main'
+                      <Tooltip
+                        title={
+                          simConnectivity === 'ONLINE'
+                            ? 'El endpoint tiene una conexión de datos activa.'
+                            : simConnectivity === 'ATTACHED'
+                              ? 'El dispositivo se ha conectado a la red en el pasado. Se mostrará como CONECTADO hasta que la red visitada indique inactividad (puede tardar 1-2 días).'
+                              : simConnectivity === 'OFFLINE'
+                                ? 'El endpoint no se ha conectado a la red o no ha tenido actividad en los últimos 1-2 días. El dispositivo no es accesible para servicios externos.'
+                                : simConnectivity === 'BLOCKED'
+                                  ? 'El dispositivo no tiene servicio permitido. Se asigna este estado cuando se han superado los límites de tráfico.'
+                                  : ''
+                        }
+                        arrow
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'default' }}>
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              bgcolor:
+                                simConnectivity === 'ONLINE'
+                                  ? 'success.main'
+                                  : simConnectivity === 'ATTACHED'
+                                    ? 'warning.main'
+                                    : simConnectivity === 'BLOCKED'
+                                      ? 'error.dark'
+                                      : simConnectivity === 'OFFLINE'
+                                        ? 'error.main'
+                                        : 'grey.400',
+                            }}
+                          />
+                          <Typography variant="body2">
+                            {simConnectivity === 'ONLINE'
+                              ? 'Online'
+                              : simConnectivity === 'ATTACHED'
+                                ? 'Conectado'
                                 : simConnectivity === 'OFFLINE'
-                                  ? 'error.main'
-                                  : 'grey.400',
-                          }}
-                        />
-                        <Typography variant="body2">
-                          {simConnectivity === 'ONLINE'
-                            ? 'Online'
-                            : simConnectivity === 'OFFLINE'
-                              ? 'Offline'
-                              : 'Sin datos'}
-                        </Typography>
-                      </Box>
+                                  ? 'Offline'
+                                  : simConnectivity === 'BLOCKED'
+                                    ? 'Bloqueado'
+                                    : 'Sin datos'}
+                          </Typography>
+                        </Box>
+                      </Tooltip>
                     </Box>
                   )}
                 </Stack>
               </CardContent>
-            </Card>
-          )}
+                </Card>
+              )}
+            </Grid>
+          </Grid>
 
           {/* ── Conectores ──────────────────────────────────────────────────── */}
           <SectionCard
