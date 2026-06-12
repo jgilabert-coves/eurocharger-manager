@@ -10,17 +10,17 @@ import Map, { Marker } from 'react-map-gl';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
 import { X, TrashIcon } from '@phosphor-icons/react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid2';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import { Tooltip } from '@mui/material';
 import Switch from '@mui/material/Switch';
 import Dialog from '@mui/material/Dialog';
-import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
@@ -28,6 +28,7 @@ import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -781,6 +782,13 @@ export default function ChargerDetailV2() {
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  // ── Servicios extras state ──────────────────────────────────────────────────
+  const [editingExtras, setEditingExtras] = useState(false);
+  const [editHiredPower, setEditHiredPower] = useState<boolean>(false);
+  const [editMaxRechargeTime, setEditMaxRechargeTime] = useState<string>('');
+  const [extrasError, setExtrasError] = useState<string | null>(null);
+  const [extrasSaving, setExtrasSaving] = useState(false);
+
   const accountId = user?.account_id ?? 0;
 
   const { data: subscriptionData } = useQuery<{ data: Subscription }>({
@@ -798,6 +806,8 @@ export default function ChargerDetailV2() {
         endpoints.chargepoints.single(Number(id))
       );
       setChargepoint(response.data);
+      setEditHiredPower(response.data.hired_power ?? false);
+      setEditMaxRechargeTime(response.data.max_recharge_time != null ? String(response.data.max_recharge_time) : '');
     } catch (err) {
       console.error('Error fetching chargepoint:', err);
     }
@@ -826,8 +836,45 @@ export default function ChargerDetailV2() {
     },
   });
 
+  const { mutate: removeSimAssignment, isPending: isRemovingSimMutation } = useMutation({
+    mutationFn: () => del(endpoints.sims.removeAssignment(Number(id))),
+    onSuccess: () => {
+      loadChargepoint();
+      notifySuccess('Solicitud de retirada de SIM enviada');
+    },
+    onError: () => {
+      notifyError('Ha ocurrido un error al lanzar la acción');
+    },
+  });
+
+  const { data: simConnectivityData } = useQuery<{ data: { status: 'ONLINE' | 'OFFLINE' | 'UNKNOWN' } }>({
+    queryKey: ['sim-connectivity', chargepoint?.sim_card],
+    queryFn: () => fetcher(endpoints.sims.connectivity(chargepoint!.sim_card!)),
+    enabled: !!chargepoint?.sim_card,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+  const simConnectivity = simConnectivityData?.data?.status ?? 'UNKNOWN';
+
   const handleRequestSim = () => requestSim();
   const handleCancelSimRequest = () => cancelSimRequest();
+
+  const handleSaveExtras = async () => {
+    setExtrasSaving(true);
+    setExtrasError(null);
+    try {
+      await put(endpoints.chargepoints.update(Number(id)), {
+        hired_power: editHiredPower,
+        max_recharge_time: editMaxRechargeTime !== '' ? Number(editMaxRechargeTime) : null,
+      });
+      await loadChargepoint();
+      setEditingExtras(false);
+    } catch {
+      setExtrasError('Error al guardar los cambios');
+    } finally {
+      setExtrasSaving(false);
+    }
+  };
 
   const openEditCharger = () => {
     if (!chargepoint) return;
@@ -1095,6 +1142,213 @@ export default function ChargerDetailV2() {
             </Grid>
           </Grid>
 
+          {/* ── Servicios extras ─────────────────────────────────────────────── */}
+          {chargepoint && (
+            <Card sx={{ borderRadius: 2, mb: 3 }}>
+              <CardHeader
+                title="Servicios extras"
+                action={
+                  !editingExtras ? (
+                    <IconButton size="small" onClick={() => setEditingExtras(true)}>
+                      <Iconify icon="solar:pen-bold" />
+                    </IconButton>
+                  ) : (
+                    <Stack direction="row" spacing={1}>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          setEditingExtras(false);
+                          setExtrasError(null);
+                          setEditHiredPower(chargepoint.hired_power ?? false);
+                          setEditMaxRechargeTime(
+                            chargepoint.max_recharge_time != null
+                              ? String(chargepoint.max_recharge_time)
+                              : ''
+                          );
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={handleSaveExtras}
+                        disabled={extrasSaving}
+                        startIcon={
+                          extrasSaving ? (
+                            <CircularProgress size={14} color="inherit" />
+                          ) : undefined
+                        }
+                      >
+                        Guardar
+                      </Button>
+                    </Stack>
+                  )
+                }
+              />
+              <CardContent>
+                {extrasError && (
+                  <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+                    {extrasError}
+                  </Typography>
+                )}
+                <Stack spacing={2}>
+                  {/* Potencia limitada */}
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Potencia limitada
+                    </Typography>
+                    {editingExtras ? (
+                      <Switch
+                        checked={editHiredPower}
+                        onChange={(e) => setEditHiredPower(e.target.checked)}
+                        size="small"
+                      />
+                    ) : (
+                      <Chip
+                        label={chargepoint.hired_power ? 'Activada' : 'Desactivada'}
+                        color={chargepoint.hired_power ? 'warning' : 'default'}
+                        size="small"
+                      />
+                    )}
+                  </Box>
+
+                  {/* Tiempo máximo de carga */}
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Tiempo máximo de carga
+                    </Typography>
+                    {editingExtras ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={editMaxRechargeTime}
+                        onChange={(e) => setEditMaxRechargeTime(e.target.value)}
+                        InputProps={{
+                          endAdornment: (
+                            <Typography variant="caption" color="text.secondary">
+                              min
+                            </Typography>
+                          ),
+                        }}
+                        sx={{ width: 120 }}
+                      />
+                    ) : (
+                      <Typography variant="body2">
+                        {chargepoint.max_recharge_time != null
+                          ? `${chargepoint.max_recharge_time} min`
+                          : '—'}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* SIM */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 1,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Iconify icon="solar:sim-card-bold" width={18} />
+                      <Typography variant="body2" color="text.secondary">
+                        SIM
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {chargepoint.sim_requested === false && chargepoint.sim_card == null && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<Iconify icon="solar:sim-card-bold" />}
+                          onClick={handleRequestSim}
+                          disabled={isRequestingMutation}
+                        >
+                          Solicitar SIM
+                        </Button>
+                      )}
+                      {chargepoint.sim_requested === true && chargepoint.sim_card == null && (
+                        <>
+                          <Chip label="SIM solicitada · Pendiente" color="warning" size="small" />
+                          <IconButton
+                            size="small"
+                            onClick={handleCancelSimRequest}
+                            title="Cancelar solicitud"
+                          >
+                            <Iconify icon="mingcute:close-line" />
+                          </IconButton>
+                        </>
+                      )}
+                      {chargepoint.sim_card != null && (
+                        <>
+                          <Chip
+                            label={chargepoint.sim_iccid ?? `SIM #${chargepoint.sim_card}`}
+                            color="success"
+                            size="small"
+                            icon={<Iconify icon="solar:sim-card-bold" />}
+                          />
+                          <Button
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            onClick={() => removeSimAssignment()}
+                            disabled={isRemovingSimMutation}
+                          >
+                            Quitar SIM
+                          </Button>
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* Conectividad SIM (solo cuando hay SIM asignada) */}
+                  {chargepoint.sim_card != null && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        Conectividad SIM
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            bgcolor:
+                              simConnectivity === 'ONLINE'
+                                ? 'success.main'
+                                : simConnectivity === 'OFFLINE'
+                                  ? 'error.main'
+                                  : 'grey.400',
+                          }}
+                        />
+                        <Typography variant="body2">
+                          {simConnectivity === 'ONLINE'
+                            ? 'Online'
+                            : simConnectivity === 'OFFLINE'
+                              ? 'Offline'
+                              : 'Sin datos'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
+
           {/* ── Conectores ──────────────────────────────────────────────────── */}
           <SectionCard
             title={`Conectores (${chargepoint.connectors.length})`}
@@ -1306,40 +1560,6 @@ export default function ChargerDetailV2() {
                   />
                 }
                 label={`Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`}
-              />
-            )}
-            {/* SIM request UI */}
-            {chargepoint.sim_requested === false && chargepoint.sim_card == null && (
-              <Button
-                variant="outlined"
-                startIcon={<Iconify icon="solar:sim-card-bold" />}
-                onClick={handleRequestSim}
-                disabled={isRequestingMutation}
-              >
-                Solicitar SIM
-              </Button>
-            )}
-            {chargepoint.sim_requested === true && chargepoint.sim_card == null && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Chip
-                  label="SIM solicitada · Pendiente"
-                  color="warning"
-                  icon={<Iconify icon="solar:sim-card-bold" />}
-                />
-                <IconButton
-                  size="small"
-                  onClick={handleCancelSimRequest}
-                  title="Cancelar solicitud"
-                >
-                  <Iconify icon="mingcute:close-line" />
-                </IconButton>
-              </Box>
-            )}
-            {chargepoint.sim_card != null && (
-              <Chip
-                label={`SIM: ${chargepoint.sim_card}`}
-                color="success"
-                icon={<Iconify icon="solar:sim-card-bold" />}
               />
             )}
           </Stack>
