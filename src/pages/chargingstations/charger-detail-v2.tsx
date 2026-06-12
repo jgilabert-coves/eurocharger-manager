@@ -1094,6 +1094,8 @@ export default function ChargerDetailV2() {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
+              <Stack spacing={2} sx={{ height: '100%' }}>
+              <Box>
               <SectionCard
                 title="Configuración OCPP"
                 action={
@@ -1139,13 +1141,11 @@ export default function ChargerDetailV2() {
                   </Box>
                 )}
               </SectionCard>
-            </Grid>
+              </Box>
 
-            {/* ── Servicios extras (columna derecha, segunda fila) ──────────────── */}
-            <Grid size={{ xs: 12, md: 6 }} sx={{ display: { xs: 'none', md: 'block' } }} />
-            <Grid size={{ xs: 12, md: 6 }}>
+              {/* ── Servicios extras ──────────────────────────────────────────── */}
               {chargepoint && (
-                <Card sx={{ borderRadius: 2 }}>
+                <Card variant="outlined" sx={{ borderRadius: 2, flex: 1 }}>
               <CardHeader
                 title="Servicios extras"
                 action={
@@ -1189,16 +1189,16 @@ export default function ChargerDetailV2() {
               />
               <CardContent>
                 {extrasError && (
-                  <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+                  <Typography color="error" variant="caption" sx={{ mb: 1, display: 'block' }}>
                     {extrasError}
                   </Typography>
                 )}
-                <Stack spacing={2}>
+                <Stack spacing={0}>
                   {/* Potencia limitada */}
                   <Box
-                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}
                   >
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
                       Potencia limitada
                     </Typography>
                     {editingExtras ? (
@@ -1218,9 +1218,9 @@ export default function ChargerDetailV2() {
 
                   {/* Tiempo máximo de carga */}
                   <Box
-                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}
                   >
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
                       Tiempo máximo de carga
                     </Typography>
                     {editingExtras ? (
@@ -1239,7 +1239,7 @@ export default function ChargerDetailV2() {
                         sx={{ width: 120 }}
                       />
                     ) : (
-                      <Typography variant="body2">
+                      <Typography variant="caption" fontWeight={600}>
                         {chargepoint.max_recharge_time != null
                           ? `${chargepoint.max_recharge_time} min`
                           : '—'}
@@ -1255,11 +1255,12 @@ export default function ChargerDetailV2() {
                       justifyContent: 'space-between',
                       flexWrap: 'wrap',
                       gap: 1,
+                      py: 0.5,
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="solar:sim-card-bold" width={18} />
-                      <Typography variant="body2" color="text.secondary">
+                      <Iconify icon="solar:sim-card-bold" width={14} />
+                      <Typography variant="caption" color="text.secondary">
                         SIM
                       </Typography>
                     </Box>
@@ -1316,9 +1317,10 @@ export default function ChargerDetailV2() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        py: 0.5,
                       }}
                     >
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
                         Conectividad SIM
                       </Typography>
                       <Tooltip
@@ -1353,7 +1355,7 @@ export default function ChargerDetailV2() {
                                         : 'grey.400',
                             }}
                           />
-                          <Typography variant="body2">
+                          <Typography variant="caption" fontWeight={600}>
                             {simConnectivity === 'ONLINE'
                               ? 'Online'
                               : simConnectivity === 'ATTACHED'
@@ -1372,6 +1374,7 @@ export default function ChargerDetailV2() {
               </CardContent>
                 </Card>
               )}
+              </Stack>
             </Grid>
           </Grid>
 
