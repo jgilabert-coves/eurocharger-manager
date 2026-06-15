@@ -7,12 +7,14 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import TableContainer from '@mui/material/TableContainer';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -26,6 +28,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { ChangePasswordDialog } from 'src/components/manager-users/change-password-dialog';
 import { CreateManagerUserDialog } from 'src/components/manager-users/create-manager-user-dialog';
 
 import { CONFIG } from '../../global-config';
@@ -66,6 +69,7 @@ export default function ManagerUsersView() {
   const [orderBy, setOrderBy] = useState('id');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [createOpen, setCreateOpen] = useState(false);
+  const [pwUser, setPwUser] = useState<ManagerUser | null>(null);
   const debouncedSearch = useDebounce(searchQuery);
 
   const { data, isFetching, refetch } = useQuery<ManagerUsersResponse>({
@@ -189,19 +193,22 @@ export default function ManagerUsersView() {
                       Alta
                     </TableSortLabel>
                   </TableCell>
+                  <TableCell align="right" sx={{ pr: 3 }}>
+                    Acciones
+                  </TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {isFetching ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
                       <CircularProgress size={32} />
                     </TableCell>
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 10 }}>
                       <Stack alignItems="center" spacing={1.5}>
                         <Iconify
                           icon="eva:people-fill"
@@ -275,6 +282,14 @@ export default function ManagerUsersView() {
                           {dateToString(user.created_at)}
                         </Typography>
                       </TableCell>
+
+                      <TableCell align="right" sx={{ pr: 3 }}>
+                        <Tooltip title="Cambiar contraseña">
+                          <IconButton size="small" onClick={() => setPwUser(user)}>
+                            <Iconify icon="mdi:lock-reset" width={20} />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -310,6 +325,12 @@ export default function ManagerUsersView() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onSuccess={() => refetch()}
+      />
+
+      <ChangePasswordDialog
+        open={pwUser !== null}
+        user={pwUser}
+        onClose={() => setPwUser(null)}
       />
     </>
   );

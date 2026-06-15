@@ -18,6 +18,8 @@ import DialogActions from '@mui/material/DialogActions';
 import InputAdornment from '@mui/material/InputAdornment';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { generatePassword } from 'src/utils/generate-password';
+
 import { post, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -32,18 +34,6 @@ const ROLES: { value: ManagerUserRole; label: string }[] = [
   { value: 'saas_owner', label: 'Propietario' },
   { value: 'eurocharger', label: 'Eurocharger' },
 ];
-
-function generatePassword(): string {
-  const lower = 'abcdefghijklmnopqrstuvwxyz';
-  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const digits = '0123456789';
-  const special = '!@#$%&*';
-  const all = lower + upper + digits + special;
-  const rand = (s: string) => s[Math.floor(Math.random() * s.length)];
-  const chars = [rand(lower), rand(upper), rand(digits), rand(special)];
-  for (let i = 0; i < 8; i++) chars.push(rand(all));
-  return chars.sort(() => Math.random() - 0.5).join('');
-}
 
 // ----------------------------------------------------------------------
 

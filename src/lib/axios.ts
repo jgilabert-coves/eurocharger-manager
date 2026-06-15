@@ -39,9 +39,16 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       const requestUrl: string = error.config?.url ?? '';
 
-      // Don't redirect if the 401 comes from the login endpoint itself
-      // (wrong credentials) — let the form handle the error message.
-      if (!requestUrl.includes('/auth/login')) {
+      // Public auth endpoints handle their own 401 in the UI (wrong credentials,
+      // expired reset token…) — they are not "session expired", so don't redirect.
+      const publicAuthPaths = [
+        endpoints.auth.signIn, // /auth/login
+        endpoints.auth.forgotPassword, // /auth/forgot-password
+        endpoints.auth.resetPassword, // /auth/reset-password
+      ];
+      const isPublicAuth = publicAuthPaths.some((path) => requestUrl.includes(path));
+
+      if (!isPublicAuth) {
         localStorage.removeItem(JWT_STORAGE_KEY);
         delete axiosInstance.defaults.headers.common.Authorization;
         window.location.href = paths.auth.jwt.signIn;
@@ -160,6 +167,7 @@ export const endpoints = {
   managerUsers: {
     list: '/manager-users',
     create: '/manager-users',
+    updatePassword: (id: number) => `/manager-users/${id}/password`,
   },
   operators: {
     list: '/operators',
