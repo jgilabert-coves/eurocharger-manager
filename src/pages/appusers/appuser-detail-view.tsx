@@ -61,6 +61,12 @@ function toDateInputValue(value?: Date | string | null): string {
   }
 }
 
+// Campo de texto vacío → null (para persistir NULL en BD en vez de "" o undefined).
+function emptyToNull(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+}
+
 // ----------------------------------------------------------------------
 
 function SectionCard({
@@ -135,9 +141,10 @@ function formatAddress(user: AppUser): string {
 function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => void }) {
   const { isViewOnly } = useAbility();
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState('');
-  const [surname, setSurname] = useState('');
-  const [email, setEmail] = useState('');
+  // Nombre/Apellidos/Email editan la identidad de facturación (billing_*), no el login.
+  const [billingName, setBillingName] = useState('');
+  const [billingSurname, setBillingSurname] = useState('');
+  const [billingEmail, setBillingEmail] = useState('');
   const [telephone, setTelephone] = useState('');
   const [cardId, setCardId] = useState('');
   const [address, setAddress] = useState('');
@@ -151,9 +158,9 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const syncFromUser = (u: AppUser) => {
-    setName(u.name ?? '');
-    setSurname(u.surname ?? '');
-    setEmail(u.email ?? '');
+    setBillingName(u.billingName ?? '');
+    setBillingSurname(u.billingSurname ?? '');
+    setBillingEmail(u.billingEmail ?? '');
     setTelephone(u.telephone ?? '');
     setCardId(u.cardId ?? '');
     setAddress(u.address ?? '');
@@ -179,18 +186,20 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
     try {
       setSaving(true);
       setSaveError(null);
+      // Claves name/surname/email del payload → el backend las persiste en
+      // billing_name/billing_surname/billing_email. Campos vacíos → null.
       await put(endpoints.appUsers.update(user.id), {
-        name: name || undefined,
-        surname: surname || undefined,
-        email: email || undefined,
-        telephone: telephone || undefined,
-        cardId: cardId || undefined,
-        address: address || undefined,
-        city: city || undefined,
-        postalCode: postalCode || undefined,
-        stateProvinceId: stateProvinceId || undefined,
-        countryId: countryId || undefined,
-        birthday: birthday || undefined,
+        name: emptyToNull(billingName),
+        surname: emptyToNull(billingSurname),
+        email: emptyToNull(billingEmail),
+        telephone: emptyToNull(telephone),
+        cardId: emptyToNull(cardId),
+        address: emptyToNull(address),
+        city: emptyToNull(city),
+        postalCode: emptyToNull(postalCode),
+        stateProvinceId: stateProvinceId ?? null,
+        countryId: countryId ?? null,
+        birthday: emptyToNull(birthday),
         isActive,
       });
       setEditing(false);
@@ -202,6 +211,18 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
       setSaving(false);
     }
   };
+
+  // Campos que la autorización de carga exige no-null (authorization_service.py).
+  // Si alguno queda vacío, el usuario no podrá iniciar cargas.
+  const chargingBlocked =
+    !emptyToNull(billingEmail) ||
+    !emptyToNull(telephone) ||
+    !emptyToNull(cardId) ||
+    !emptyToNull(address) ||
+    !emptyToNull(city) ||
+    !emptyToNull(postalCode) ||
+    !birthday.trim() ||
+    countryId == null;
 
   return (
     <SectionCard
@@ -220,9 +241,9 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
     >
       {!editing ? (
         <Stack divider={<Divider />}>
-          <InfoRow label="Nombre" value={user.name} />
-          <InfoRow label="Apellidos" value={user.surname} />
-          <InfoRow label="Email" value={user.email} />
+          <InfoRow label="Nombre" value={user.billingName} />
+          <InfoRow label="Apellidos" value={user.billingSurname} />
+          <InfoRow label="Email" value={user.billingEmail} />
           <InfoRow label="Teléfono" value={user.telephone} />
           <InfoRow label="DNI / CIF" value={user.cardId} mono />
           <InfoRow label="Dirección" value={formatAddress(user)} />
@@ -243,20 +264,26 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
         </Stack>
       ) : (
         <Stack spacing={1.5}>
+          {chargingBlocked && (
+            <Alert severity="warning" variant="outlined">
+              Con alguno de estos campos vacío (email, teléfono, DNI/CIF, dirección, ciudad,
+              código postal, país o fecha de nacimiento), este usuario no podrá iniciar cargas.
+            </Alert>
+          )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <TextField
               label="Nombre"
               size="small"
               fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={billingName}
+              onChange={(e) => setBillingName(e.target.value)}
             />
             <TextField
               label="Apellidos"
               size="small"
               fullWidth
-              value={surname}
-              onChange={(e) => setSurname(e.target.value)}
+              value={billingSurname}
+              onChange={(e) => setBillingSurname(e.target.value)}
             />
           </Stack>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
@@ -265,8 +292,8 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
               size="small"
               fullWidth
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={billingEmail}
+              onChange={(e) => setBillingEmail(e.target.value)}
             />
             <TextField
               label="Teléfono"
