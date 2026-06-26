@@ -102,7 +102,7 @@ export default function TransactionsView() {
             onChange={(_, val) => {
               if (val) setStatusFilter(val);
             }}
-            sx={{ flexWrap: 'wrap' }}
+            sx={{ flexWrap: 'wrap', alignSelf: { xs: 'flex-start' } }}
           >
             <ToggleButton value="CARGANDO">En curso</ToggleButton>
             <ToggleButton value="FINALIZADO">Finalizadas</ToggleButton>
@@ -116,7 +116,7 @@ export default function TransactionsView() {
               onChange={(_, val) => {
                 if (val) setSourceFilter(val);
               }}
-              sx={{ flexWrap: 'wrap' }}
+              sx={{ flexWrap: 'wrap', alignSelf: { xs: 'flex-start' } }}
             >
               <ToggleButton value="ALL">Todos</ToggleButton>
               <ToggleButton value="APP">EuroCharger</ToggleButton>

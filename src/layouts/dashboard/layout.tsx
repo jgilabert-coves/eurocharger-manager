@@ -143,7 +143,15 @@ export function DashboardLayout({
             */}
         </>
       ),
-      rightArea: null,
+      rightArea: (
+        // En móvil la barra lateral vertical (que contiene el AccountDrawer con el logout)
+        // está oculta, así que exponemos la cuenta aquí. En escritorio la ocultamos
+        // porque ya aparece en el sidebar.
+        <AccountDrawer
+          data={_account}
+          sx={{ [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
+        />
+      ),
     };
 
     return (
