@@ -20,6 +20,7 @@ export type Transaction = {
   hasReceipt?: boolean;
   operatorId?: number | null;
   failed?: boolean | null;
+  message?: string | null;
 };
 
 export type MeterValue = {

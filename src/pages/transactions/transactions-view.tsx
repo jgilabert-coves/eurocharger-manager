@@ -1,3 +1,7 @@
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 
@@ -14,11 +18,14 @@ import { endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
+import { DateRangeFilter } from 'src/components/date-range-filter';
 import { TransactionsTable } from 'src/components/transactions-table';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
 
 import { CONFIG } from '../../global-config';
+
+dayjs.extend(utc);
 
 // ----------------------------------------------------------------------
 
@@ -37,10 +44,17 @@ export default function TransactionsView() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Rango de fechas aplicado (lo que filtra). El componente gestiona su propio buffer.
+  const [appliedFrom, setAppliedFrom] = useState<Dayjs | null>(null);
+  const [appliedTo, setAppliedTo] = useState<Dayjs | null>(null);
+
   const extraParams = useMemo((): Record<string, string> => ({
     ...(statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
     ...(isEurocharger && sourceFilter !== 'ALL' ? { source: sourceFilter.toLowerCase() } : {}),
-  }), [statusFilter, sourceFilter, isEurocharger]);
+    // La hora se elige en local y se envía en UTC (t.started está en UTC en BD).
+    ...(appliedFrom ? { start_date: appliedFrom.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
+    ...(appliedTo ? { end_date: appliedTo.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
+  }), [statusFilter, sourceFilter, isEurocharger, appliedFrom, appliedTo]);
 
   const showEndDate = statusFilter !== 'CARGANDO';
   const debouncedSearch = useDebounce(searchQuery, 400);
@@ -58,8 +72,9 @@ export default function TransactionsView() {
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           spacing={2}
+          useFlexGap
           alignItems={{ md: 'center' }}
-          sx={{ mb: 3 }}
+          sx={{ mb: 3, flexWrap: 'wrap' }}
         >
           <TextField
             placeholder="Buscar por usuario, estación, cargador..."
@@ -109,15 +124,26 @@ export default function TransactionsView() {
               <ToggleButton value="OCPI">OCPI</ToggleButton>
             </ToggleButtonGroup>
           )}
+
+          {/* Rango de fechas (sobre la fecha de inicio de la recarga) — todos los roles */}
+          <DateRangeFilter
+            from={appliedFrom}
+            to={appliedTo}
+            onChange={(f, t) => {
+              setAppliedFrom(f);
+              setAppliedTo(t);
+            }}
+          />
         </Stack>
 
         <TransactionsTable
-          key={`${statusFilter}-${sourceFilter}`}
+          key={`${statusFilter}-${sourceFilter}-${appliedFrom?.valueOf() ?? ''}-${appliedTo?.valueOf() ?? ''}`}
           endpoint={endpoints.transactions.current}
           extraParams={extraParams}
           searchQuery={debouncedSearch}
           showEndDate={showEndDate}
           showStatus={false}
+          showReason={statusFilter === 'FINALIZADO'}
         />
       </DashboardContent>
     </>

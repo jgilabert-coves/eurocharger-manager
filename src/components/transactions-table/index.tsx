@@ -62,6 +62,7 @@ type TransactionsTableProps = {
   defaultPageSize?: number;
   showEndDate?: boolean;
   showStatus?: boolean;
+  showReason?: boolean;
 };
 
 // ----------------------------------------------------------------------
@@ -74,6 +75,7 @@ export function TransactionsTable({
   extraParams,
   showEndDate = false,
   showStatus = false,
+  showReason = false,
 }: TransactionsTableProps) {
   const [rows, setRows] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +148,12 @@ export function TransactionsTable({
   };
 
   const colSpan =
-    (showEndDate ? 8 : 7) + 1 + (showStatus ? 1 : 0) + (isEurocharger ? 1 : 0) + (isAdmin ? 1 : 0);
+    (showEndDate ? 8 : 7) +
+    1 +
+    (showStatus ? 1 : 0) +
+    (showReason ? 1 : 0) +
+    (isEurocharger ? 1 : 0) +
+    (isAdmin ? 1 : 0);
 
   return (
     <>
@@ -225,6 +232,7 @@ export function TransactionsTable({
                   </TableSortLabel>
                 </TableCell>
                 <TableCell align={showStatus ? 'center' : 'left'}>Usuario</TableCell>
+                {showReason && <TableCell>Motivo</TableCell>}
                 {showStatus && <TableCell>Estado</TableCell>}
                 {isAdmin && <TableCell align="center">Acciones</TableCell>}
               </TableRow>
@@ -404,6 +412,15 @@ export function TransactionsTable({
                         </Typography>
                       )}
                     </TableCell>
+
+                    {/* Motivo de la parada (solo en finalizadas) */}
+                    {showReason && (
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {tx.message ?? '—'}
+                        </Typography>
+                      </TableCell>
+                    )}
 
                     {/* Estado (solo en vista "Todas") */}
                     {showStatus && (
