@@ -71,6 +71,7 @@ export default function ChargepointsListV2() {
   const orderBy = searchParams.get('orderBy') ?? 'name';
   const order = (searchParams.get('order') ?? 'asc') as 'asc' | 'desc';
   const statusFilter = searchParams.get('status') ?? 'ALL';
+  const sourceFilter = searchParams.get('source') ?? 'APP';
 
   const [rows, setRows] = useState<Chargepoint[]>([]);
   const [total, setTotal] = useState(0);
@@ -79,7 +80,8 @@ export default function ChargepointsListV2() {
   const [setupChargepointId, setSetupChargepointId] = useState<number | null>(null);
   const [localSearch, setLocalSearch] = useState(searchParams.get('search') ?? '');
   const debouncedSearch = useDebounce(localSearch);
-  const { isViewOnly } = useAbility();
+  const { isViewOnly, hasRole } = useAbility();
+  const isEurocharger = hasRole('eurocharger');
 
   const updateParam = useCallback(
     (updates: Record<string, string>, replace = false) => {
@@ -103,7 +105,10 @@ export default function ChargepointsListV2() {
       setLoading(true);
       const queryArgs: AxiosRequestConfig = {
         params: {
-          roaming: 0,
+          // Eurocharger filtra por origen (source); el resto de roles mantiene roaming=0.
+          ...(isEurocharger
+            ? { source: sourceFilter.toLowerCase() }
+            : { roaming: 0 }),
           page,
           pageSize,
           searchQuery: debouncedSearch,
@@ -120,7 +125,7 @@ export default function ChargepointsListV2() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, debouncedSearch, orderBy, order, statusFilter]);
+  }, [page, pageSize, debouncedSearch, orderBy, order, statusFilter, isEurocharger, sourceFilter]);
 
   useEffect(() => {
     fetchChargepoints();
@@ -138,6 +143,10 @@ export default function ChargepointsListV2() {
 
   const handleStatusFilter = (_: React.MouseEvent, value: string | null) => {
     if (value !== null) updateParam({ status: value, page: '0' });
+  };
+
+  const handleSourceFilter = (_: React.MouseEvent, value: string | null) => {
+    if (value !== null) updateParam({ source: value, page: '0' });
   };
 
   return (
@@ -212,6 +221,20 @@ export default function ChargepointsListV2() {
               </ToggleButton>
             ))}
           </ToggleButtonGroup>
+
+          {isEurocharger && (
+            <ToggleButtonGroup
+              value={sourceFilter}
+              exclusive
+              onChange={handleSourceFilter}
+              size="small"
+              sx={{ flexWrap: 'wrap' }}
+            >
+              <ToggleButton value="APP">EuroCharger</ToggleButton>
+              <ToggleButton value="HUBJECT">Roaming</ToggleButton>
+              <ToggleButton value="OCPI">OCPI</ToggleButton>
+            </ToggleButtonGroup>
+          )}
         </Stack>
 
         {/* Table */}

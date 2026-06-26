@@ -9,6 +9,10 @@ export type ChargingStationResponse = {
 
 export type Chargepoint = {
   id: number;
+  source?: 'app' | 'hubject' | 'ocpi' | null;
+  operator_code?: string | null;
+  operator_name?: string | null;
+  operator_logo_url?: string | null;
   ocpp_id?: string | null;
   endpointAddress?: string | null;
   port?: number | null;

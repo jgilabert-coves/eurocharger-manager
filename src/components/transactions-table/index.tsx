@@ -156,7 +156,7 @@ export function TransactionsTable({
           <TextField
             size="small"
             sx={{ maxWidth: 400 }}
-            placeholder="Buscar por usuario, estación, cargador..."
+            placeholder="Buscar por ID, usuario, estación, cargador..."
             value={searchQueryInternal}
             onChange={(e) => {
               setSearchQueryInternal(e.target.value);

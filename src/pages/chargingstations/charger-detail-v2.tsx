@@ -798,8 +798,10 @@ export default function ChargerDetailV2() {
         endpoints.chargepoints.single(Number(id))
       );
       setChargepoint(response.data);
+      return response.data;
     } catch (err) {
       console.error('Error fetching chargepoint:', err);
+      return undefined;
     }
   };
 
@@ -865,7 +867,11 @@ export default function ChargerDetailV2() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await Promise.all([loadChargepoint(), loadOcppStatus()]);
+      const cp = await loadChargepoint();
+      // El estado de conexión OCPP no aplica a Roaming/OCPI (no son cargadores propios).
+      if (cp && cp.source !== 'hubject' && cp.source !== 'ocpi') {
+        await loadOcppStatus();
+      }
       setLoading(false);
     };
     load();
@@ -881,6 +887,10 @@ export default function ChargerDetailV2() {
     chargepoint.longitude !== 0;
 
   const missingConnectors = (chargepoint?.connectors.length ?? 0) === 0;
+
+  // En cargadores Roaming/OCPI no tenemos acceso a la configuración OCPP.
+  const showOcppConfig =
+    chargepoint?.source !== 'hubject' && chargepoint?.source !== 'ocpi';
 
   if (loading) {
     return (
@@ -1022,6 +1032,7 @@ export default function ChargerDetailV2() {
               </SectionCard>
             </Grid>
 
+            {showOcppConfig ? (
             <Grid size={{ xs: 12, md: 6 }}>
               <SectionCard
                 title="Configuración OCPP"
@@ -1069,6 +1080,54 @@ export default function ChargerDetailV2() {
                 )}
               </SectionCard>
             </Grid>
+            ) : (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <SectionCard
+                title="Operador"
+                action={
+                  <Label color={chargepoint.source === 'ocpi' ? 'info' : 'warning'} variant="soft">
+                    {chargepoint.source === 'ocpi' ? 'OCPI' : 'Roaming'}
+                  </Label>
+                }
+              >
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 1.5,
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      bgcolor: 'background.neutral',
+                    }}
+                  >
+                    {chargepoint.operator_logo_url ? (
+                      <Box
+                        component="img"
+                        // ?v fuerza una clave de caché nueva en el edge de Google: la URL
+                        // sin query tenía cacheado un objeto con Cache-Control malformado
+                        // que rompía HTTP/2 (ERR_HTTP2_PROTOCOL_ERROR).
+                        src={`${chargepoint.operator_logo_url}?v=1`}
+                        alt={chargepoint.operator_name ?? 'Operador'}
+                        sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <Iconify icon="mdi:transit-connection-variant" width={24} />
+                    )}
+                  </Box>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {chargepoint.operator_name ?? 'Operador externo'}
+                  </Typography>
+                </Stack>
+                {chargepoint.operator_code && (
+                  <InfoRow label="ID operador" value={chargepoint.operator_code} mono />
+                )}
+              </SectionCard>
+            </Grid>
+            )}
           </Grid>
 
           {/* ── Conectores ──────────────────────────────────────────────────── */}
