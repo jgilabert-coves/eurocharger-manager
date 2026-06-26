@@ -27,6 +27,7 @@ import { MenuButton } from '../components/menu-button';
 import { HeaderSection } from '../core/header-section';
 import { LayoutSection } from '../core/layout-section';
 import { AccountDrawer } from '../components/account-drawer';
+import { SignOutButton } from '../components/sign-out-button';
 import { navData as dashboardNavData } from '../nav-config-dashboard';
 import { SubscriptionBanner } from '../components/subscription-banner';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
@@ -118,6 +119,28 @@ export function DashboardLayout({
             onClose={onClose}
             cssVars={navVars.section}
             currentRole={currentRole}
+            slots={{
+              // En móvil el logout vive aquí, en el pie del propio menú de navegación,
+              // que es donde el usuario lo busca (el AccountDrawer del header abre otro cajón).
+              bottomArea: (
+                <Box
+                  sx={(t) => ({
+                    p: 2.5,
+                    borderTop: `1px solid ${t.vars.palette.divider}`,
+                  })}
+                >
+                  <Box sx={{ mb: 1.5, minWidth: 0 }}>
+                    <Typography variant="subtitle2" noWrap>
+                      {user?.account_name ?? user?.email}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {user?.email}
+                    </Typography>
+                  </Box>
+                  <SignOutButton onClose={onClose} />
+                </Box>
+              ),
+            }}
           />
 
           {/** @slot Logo */}
