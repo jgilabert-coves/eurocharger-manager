@@ -8,6 +8,7 @@ import Stack from '@mui/material/Stack';
 import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -21,6 +22,31 @@ import { Iconify } from 'src/components/iconify';
 
 const PERIODS = ['Semana', 'Mes', 'Año', 'Periodo'] as const;
 type Period = (typeof PERIODS)[number];
+
+type ChartType = 'line' | 'bar';
+
+// Shared styling for the small pill ToggleButtonGroups in the header
+const toggleGroupSx = {
+  bgcolor: tk.skyLighter,
+  borderRadius: 2,
+  '& .MuiToggleButton-root': {
+    border: 'none',
+    fontSize: 12,
+    fontWeight: 400,
+    px: 1.5,
+    py: 0.5,
+    borderRadius: '8px !important',
+    color: tk.inkLighter,
+    textTransform: 'none',
+    '&.Mui-selected': {
+      fontWeight: 600,
+      bgcolor: tk.white,
+      color: tk.inkDarkest,
+      boxShadow: `0 0 0 0.5px ${tk.skyLight}`,
+      '&:hover': { bgcolor: tk.white },
+    },
+  },
+} as const;
 
 const PERIOD_DAYS: Record<string, number> = {
   Semana: 7,
@@ -55,6 +81,7 @@ const EMPTY: StatsPeriodData = { labels: ['—'], series: [] };
 export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartProps) {
   const [sel, setSel] = useState(0);
   const [period, setPeriod] = useState<Period>('Semana');
+  const [chartType, setChartType] = useState<ChartType>('line');
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -117,12 +144,22 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
       })
     : [];
 
+  // Headroom for the Y axis so the top point/bar never touches the upper edge.
+  // Small integer counts get +1; larger values get ~15% padding rounded up.
+  const dataMax = seriesData.length ? Math.max(0, ...seriesData) : 0;
+  const yMax = dataMax <= 0 ? 1 : dataMax <= 5 ? dataMax + 1 : Math.ceil(dataMax * 1.15);
+
   const filteredLabels = xLabels.map((l) => (l === '' ? ' ' : l));
 
   const handlePeriodChange = (_: unknown, v: string | null) => {
     if (!v) return;
     setSel(0);
     setPeriod(v as Period);
+  };
+
+  const handleChartTypeChange = (_: unknown, v: string | null) => {
+    if (!v) return;
+    setChartType(v as ChartType);
   };
 
   const skeletonCount = series.length || 4;
@@ -140,39 +177,36 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
             {label}
           </Typography>
         </Stack>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={period}
-          onChange={handlePeriodChange}
-          sx={{
-            bgcolor: tk.skyLighter,
-            borderRadius: 2,
-            '& .MuiToggleButton-root': {
-              border: 'none',
-              fontSize: 12,
-              fontWeight: 400,
-              px: 1.5,
-              py: 0.5,
-              borderRadius: '8px !important',
-              color: tk.inkLighter,
-              textTransform: 'none',
-              '&.Mui-selected': {
-                fontWeight: 600,
-                bgcolor: tk.white,
-                color: tk.inkDarkest,
-                boxShadow: `0 0 0 0.5px ${tk.skyLight}`,
-                '&:hover': { bgcolor: tk.white },
-              },
-            },
-          }}
-        >
-          {PERIODS.map((p) => (
-            <ToggleButton key={p} value={p}>
-              {p}
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={period}
+            onChange={handlePeriodChange}
+            sx={toggleGroupSx}
+          >
+            {PERIODS.map((p) => (
+              <ToggleButton key={p} value={p}>
+                {p}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={chartType}
+            onChange={handleChartTypeChange}
+            sx={toggleGroupSx}
+          >
+            <ToggleButton value="line" sx={{ px: 1 }} aria-label="Línea">
+              <Iconify icon="mdi:chart-line" width={18} />
             </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+            <ToggleButton value="bar" sx={{ px: 1 }} aria-label="Barras">
+              <Iconify icon="mdi:chart-bar" width={18} />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
       </Stack>
 
       {/* Custom date range picker */}
@@ -280,7 +314,45 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
       {loading ? (
         <Skeleton variant="rounded" height={220} sx={{ borderRadius: 2 }} />
       ) : (
-        active && (
+        active &&
+        (chartType === 'bar' ? (
+          <BarChart
+            height={220}
+            borderRadius={4}
+            series={[
+              {
+                data: seriesData,
+                color: active.color,
+                valueFormatter: (v: number | null, { dataIndex }: { dataIndex: number }) =>
+                  active.formattedDataPoints?.[dataIndex] ?? String(v ?? ''),
+              },
+            ]}
+            xAxis={[
+              {
+                data: filteredLabels,
+                scaleType: 'band',
+                tickLabelStyle: { fontSize: 11, fill: tk.skyDark },
+              },
+            ]}
+            yAxis={[
+              {
+                min: 0,
+                max: yMax,
+                disableLine: true,
+                disableTicks: true,
+                tickLabelStyle: { fontSize: 11, fill: tk.skyDark },
+              },
+            ]}
+            margin={{ top: 10, bottom: 28, left: 50, right: 10 }}
+            grid={{ horizontal: true }}
+            sx={{
+              '& .MuiBarElement-root': { fillOpacity: 0.30 },
+              '& .MuiChartsGrid-line': { stroke: tk.skyLight, strokeDasharray: '3 3' },
+              '& .MuiChartsAxis-line': { stroke: tk.skyLight },
+              '& .MuiChartsAxis-tick': { stroke: 'transparent' },
+            }}
+          />
+        ) : (
           <LineChart
             height={220}
             series={[
@@ -307,6 +379,7 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
             yAxis={[
               {
                 min: 0,
+                max: yMax,
                 disableLine: true,
                 disableTicks: true,
                 tickLabelStyle: { fontSize: 11, fill: tk.skyDark },
@@ -321,7 +394,7 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
               '& .MuiChartsAxis-tick': { stroke: 'transparent' },
             }}
           />
-        )
+        ))
       )}
     </Card>
   );
