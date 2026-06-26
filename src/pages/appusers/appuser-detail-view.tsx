@@ -155,6 +155,7 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
   const [countryId, setCountryId] = useState<number | null | undefined>(null);
   const [birthday, setBirthday] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [confirmActiveOpen, setConfirmActiveOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -229,6 +230,7 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
     .map((f) => f.label);
 
   return (
+    <>
     <SectionCard
       title="Datos personales"
       action={
@@ -388,10 +390,12 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
             slotProps={{ inputLabel: { shrink: true } }}
           />
           <FormControlLabel
+            sx={{ ml: 0, width: '100%', justifyContent: 'space-between' }}
+            labelPlacement="start"
             control={
               <Switch
                 checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
+                onChange={() => setConfirmActiveOpen(true)}
                 size="small"
               />
             }
@@ -420,6 +424,39 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
         </Stack>
       )}
     </SectionCard>
+
+      <Dialog
+        open={confirmActiveOpen}
+        onClose={() => setConfirmActiveOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>{isActive ? 'Desactivar cuenta' : 'Activar cuenta'}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {isActive
+              ? 'Al desactivar la cuenta, este usuario no podrá iniciar cargas. ¿Quieres continuar?'
+              : '¿Quieres activar la cuenta de este usuario?'}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button size="small" onClick={() => setConfirmActiveOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            color={isActive ? 'error' : 'primary'}
+            onClick={() => {
+              setIsActive((prev) => !prev);
+              setConfirmActiveOpen(false);
+            }}
+          >
+            {isActive ? 'Desactivar' : 'Activar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
 

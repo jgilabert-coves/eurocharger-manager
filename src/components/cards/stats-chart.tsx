@@ -111,15 +111,10 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
   const active = series[sel];
 
   const seriesData = active
-    ? (() => {
-        const N = active.dataPoints.length;
-        const NL = xLabels.length;
-        return xLabels.map((_, i) => {
-          const srcIdx = NL > 1 ? Math.round((i * (N - 1)) / (NL - 1)) : 0;
-          const val = active.dataPoints[srcIdx];
-          return typeof val === 'number' ? val : 0;
-        });
-      })()
+    ? xLabels.map((_, i) => {
+        const val = active.dataPoints[i];
+        return typeof val === 'number' ? val : 0;
+      })
     : [];
 
   const filteredLabels = xLabels.map((l) => (l === '' ? ' ' : l));
@@ -294,7 +289,7 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
                 color: active.color,
                 showMark: false,
                 area: true,
-                curve: 'catmullRom',
+                curve: 'monotoneX',
                 valueFormatter: (v: number | null, { dataIndex }: { dataIndex: number }) =>
                   active.formattedDataPoints?.[dataIndex] ?? String(v ?? ''),
               },
