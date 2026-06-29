@@ -781,6 +781,15 @@ export default function ChargerDetailV2() {
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  // ── Asignar estación (rol eurocharger) ──────────────────────────────────────
+  const [assignStationOpen, setAssignStationOpen] = useState(false);
+  const [stationSearch, setStationSearch] = useState('');
+  const [stationOptions, setStationOptions] = useState<
+    { id: number; name: string | null; address?: string | null }[]
+  >([]);
+  const [loadingStations, setLoadingStations] = useState(false);
+  const [assigningStationId, setAssigningStationId] = useState<number | null>(null);
+
   const accountId = user?.account_id ?? 0;
 
   const { data: subscriptionData } = useQuery<{ data: Subscription }>({
@@ -836,6 +845,49 @@ export default function ChargerDetailV2() {
       setEditSaving(false);
     }
   };
+
+  const handleAssignStation = async (stationId: number) => {
+    try {
+      setAssigningStationId(stationId);
+      await put(endpoints.chargepoints.update(Number(id)), {
+        charging_station_id: stationId,
+      });
+      setAssignStationOpen(false);
+      setStationSearch('');
+      await loadChargepoint();
+      notifySuccess('Estación asignada correctamente');
+    } catch {
+      notifyError('No se pudo asignar la estación');
+    } finally {
+      setAssigningStationId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!assignStationOpen) return () => {};
+    let cancelled = false;
+    setLoadingStations(true);
+    const timer = setTimeout(
+      async () => {
+        try {
+          const res = await fetcher([
+            endpoints.locations.list,
+            { params: { page: 0, pageSize: 20, searchQuery: stationSearch } },
+          ]);
+          if (!cancelled) setStationOptions(res?.data ?? []);
+        } catch {
+          // ignore
+        } finally {
+          if (!cancelled) setLoadingStations(false);
+        }
+      },
+      stationSearch ? 300 : 0
+    );
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [assignStationOpen, stationSearch]);
 
   const loadOcppStatus = async () => {
     try {
@@ -1004,6 +1056,46 @@ export default function ChargerDetailV2() {
                     label="Call Center"
                     value={chargepoint.has_call_center ? 'Activo' : 'Inactivo'}
                   />
+                )}
+                {hasAnyRole(['eurocharger']) && (
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    spacing={1}
+                    sx={{ py: 0.5 }}
+                  >
+                    <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                      Estación
+                    </Typography>
+                    {chargepoint.charging_station_id != null ? (
+                      <Button
+                        variant="text"
+                        size="small"
+                        endIcon={<Iconify icon="mdi:open-in-new" width={14} />}
+                        onClick={() =>
+                          window.open(
+                            paths.locations.detail(String(chargepoint.charging_station_id)),
+                            '_blank',
+                            'noopener,noreferrer'
+                          )
+                        }
+                        sx={{ py: 0, minWidth: 0 }}
+                      >
+                        {chargepoint.charging_station_name ??
+                          `Estación ${chargepoint.charging_station_id}`}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Iconify icon="mdi:link-variant-plus" width={14} />}
+                        onClick={() => setAssignStationOpen(true)}
+                      >
+                        Asignar estación
+                      </Button>
+                    )}
+                  </Stack>
                 )}
                 {/*chargepoint.sim_card != null && (
                   <InfoRow label="SIM" value={chargepoint.sim_card} />
@@ -1365,6 +1457,78 @@ export default function ChargerDetailV2() {
             startIcon={editSaving ? <CircularProgress size={14} color="inherit" /> : undefined}
           >
             Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Asignar estación (rol eurocharger) */}
+      <Dialog
+        open={assignStationOpen}
+        onClose={() => assigningStationId === null && setAssignStationOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Asignar estación</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField
+              label="Buscar estación"
+              size="small"
+              fullWidth
+              value={stationSearch}
+              onChange={(e) => setStationSearch(e.target.value)}
+              placeholder="Nombre, dirección o ciudad"
+            />
+            {loadingStations ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress size={20} />
+              </Box>
+            ) : stationOptions.length === 0 ? (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ py: 2, textAlign: 'center' }}
+              >
+                No se han encontrado estaciones.
+              </Typography>
+            ) : (
+              <Stack spacing={0.5} sx={{ maxHeight: 320, overflowY: 'auto' }}>
+                {stationOptions.map((station) => (
+                  <Button
+                    key={station.id}
+                    fullWidth
+                    variant="text"
+                    onClick={() => handleAssignStation(station.id)}
+                    disabled={assigningStationId !== null}
+                    startIcon={
+                      assigningStationId === station.id ? (
+                        <CircularProgress size={14} color="inherit" />
+                      ) : undefined
+                    }
+                    sx={{ justifyContent: 'flex-start', textAlign: 'left' }}
+                  >
+                    <Stack alignItems="flex-start" spacing={0}>
+                      <Typography variant="body2" fontWeight={600}>
+                        {station.name ?? `Estación ${station.id}`}
+                      </Typography>
+                      {station.address && (
+                        <Typography variant="caption" color="text.secondary">
+                          {station.address}
+                        </Typography>
+                      )}
+                    </Stack>
+                  </Button>
+                ))}
+              </Stack>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setAssignStationOpen(false)}
+            disabled={assigningStationId !== null}
+          >
+            Cancelar
           </Button>
         </DialogActions>
       </Dialog>

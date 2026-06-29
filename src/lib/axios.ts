@@ -176,6 +176,8 @@ export const endpoints = {
     list: '/locations',
     create: '/locations',
     single: (id: number) => `/locations/${id}`,
+    update: (id: number) => `/locations/${id}`,
+    recompute: (id: number) => `/locations/${id}/recompute`,
   },
   chargepoints: {
     list: '/chargingstations',

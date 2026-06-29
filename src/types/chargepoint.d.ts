@@ -13,6 +13,8 @@ export type Chargepoint = {
   operator_code?: string | null;
   operator_name?: string | null;
   operator_logo_url?: string | null;
+  charging_station_id?: number | null;
+  charging_station_name?: string | null;
   ocpp_id?: string | null;
   endpointAddress?: string | null;
   port?: number | null;
