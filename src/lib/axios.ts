@@ -159,6 +159,9 @@ export const endpoints = {
     update: (id: number) => `/appusers/${id}`,
     transactions: (id: number) => `/appusers/${id}/transactions`,
     topup: (id: number) => `/appusers/${id}/wallet/topup`,
+    charges: (id: number) => `/appusers/${id}/charges`,
+    chargeRefund: (id: number, chargeId: number) => `/appusers/${id}/charges/${chargeId}/refund`,
+    chargeStatus: (id: number, chargeId: number) => `/appusers/${id}/charges/${chargeId}/status`,
   },
   clients: {
     list: '/clients',
@@ -200,7 +203,8 @@ export const endpoints = {
     update: (id: number) => `/sims/${id}`,
     simRequest: (chargepointId: number) => `/chargingstations/${chargepointId}/sim-request`,
     connectivity: (id: number) => `/sims/${id}/connectivity`,
-    removeAssignment: (chargepointId: number) => `/chargingstations/${chargepointId}/sim-assignment`,
+    removeAssignment: (chargepointId: number) =>
+      `/chargingstations/${chargepointId}/sim-assignment`,
   },
   connectors: {
     create: (chargepointId: number) => `/chargingstations/${chargepointId}/connectors`,
@@ -305,8 +309,11 @@ export const endpoints = {
     revoke: (accountId: number, id: string) => `/accounts/${accountId}/invitations/${id}`,
     validate: (token: string) => `/invitations/validate/${token}`,
     accept: '/invitations/accept',
-    invitationGroups: (accountId: number, id: string) => `/accounts/${accountId}/invitations/${id}/groups`,
-    invitationGroup: (accountId: number, id: string, groupId: string) => `/accounts/${accountId}/invitations/${id}/groups/${groupId}`,
-    invitationRole: (accountId: number, id: string) => `/accounts/${accountId}/invitations/${id}/role`,
+    invitationGroups: (accountId: number, id: string) =>
+      `/accounts/${accountId}/invitations/${id}/groups`,
+    invitationGroup: (accountId: number, id: string, groupId: string) =>
+      `/accounts/${accountId}/invitations/${id}/groups/${groupId}`,
+    invitationRole: (accountId: number, id: string) =>
+      `/accounts/${accountId}/invitations/${id}/role`,
   },
 };

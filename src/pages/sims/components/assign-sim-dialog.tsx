@@ -44,7 +44,8 @@ export function AssignSimDialog({ open, onClose, chargepointId, onSuccess }: Pro
   const availableSims = res?.data ?? [];
 
   const { mutate: assignSim, isPending: assigning } = useMutation({
-    mutationFn: (simId: number) => put(endpoints.sims.update(simId), { chargepoint_id: chargepointId }),
+    mutationFn: (simId: number) =>
+      put(endpoints.sims.update(simId), { chargepoint_id: chargepointId }),
     onSuccess: () => {
       notifySuccess('SIM asignada con éxito');
       queryClient.invalidateQueries({ queryKey: ['sims'] });

@@ -11,6 +11,7 @@ import { LoadingScreen } from '../../components/loading-screen';
 
 const AppUsersView = lazy(() => import('src/pages/appusers/appusers-view'));
 const AppUserDetailView = lazy(() => import('src/pages/appusers/appuser-detail-view'));
+const AppUserChargesView = lazy(() => import('src/pages/appusers/appuser-charges-view'));
 
 function SuspenseOutlet() {
   const pathname = usePathname();
@@ -39,6 +40,12 @@ const appUserDetailLayout = () => (
   </RoleGuard>
 );
 
+const appUserChargesLayout = () => (
+  <RoleGuard roles={['eurocharger']}>
+    <AppUserChargesView />
+  </RoleGuard>
+);
+
 export const appUsersRoutes: RouteObject[] = [
   {
     path: 'appusers',
@@ -54,6 +61,14 @@ export const appUsersRoutes: RouteObject[] = [
           appUserDetailLayout()
         ) : (
           <AuthGuard>{appUserDetailLayout()}</AuthGuard>
+        ),
+      },
+      {
+        path: ':id/charges',
+        element: CONFIG.auth.skip ? (
+          appUserChargesLayout()
+        ) : (
+          <AuthGuard>{appUserChargesLayout()}</AuthGuard>
         ),
       },
     ],

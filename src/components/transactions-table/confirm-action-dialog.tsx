@@ -17,23 +17,31 @@ export type TransactionAction = 'stop' | 'cancel' | 'charge';
 
 const ACTION_CONFIG: Record<
   TransactionAction,
-  { title: string; description: string; confirmLabel: string; confirmColor: 'error' | 'warning' | 'success' }
+  {
+    title: string;
+    description: string;
+    confirmLabel: string;
+    confirmColor: 'error' | 'warning' | 'success';
+  }
 > = {
   stop: {
     title: 'Detener recarga',
-    description: '¿Estás seguro de que quieres detener esta recarga? Se enviará la orden de parada al cargador.',
+    description:
+      '¿Estás seguro de que quieres detener esta recarga? Se enviará la orden de parada al cargador.',
     confirmLabel: 'Detener',
     confirmColor: 'error',
   },
   cancel: {
     title: 'Cancelar recarga',
-    description: '¿Estás seguro de que quieres cancelar esta recarga? Esta acción no se puede deshacer.',
+    description:
+      '¿Estás seguro de que quieres cancelar esta recarga? Esta acción no se puede deshacer.',
     confirmLabel: 'Cancelar recarga',
     confirmColor: 'warning',
   },
   charge: {
     title: 'Cobrar recarga',
-    description: '¿Estás seguro de que quieres cobrar esta recarga? Se generará el recibo y se realizará el cargo.',
+    description:
+      '¿Estás seguro de que quieres cobrar esta recarga? Se generará el recibo y se realizará el cargo.',
     confirmLabel: 'Cobrar',
     confirmColor: 'success',
   },
@@ -49,7 +57,13 @@ type Props = {
   onSuccess: () => void;
 };
 
-export function ConfirmTransactionActionDialog({ open, action, onClose, onConfirm, onSuccess }: Props) {
+export function ConfirmTransactionActionDialog({
+  open,
+  action,
+  onClose,
+  onConfirm,
+  onSuccess,
+}: Props) {
   const [isPending, setIsPending] = useState(false);
   const [result, setResult] = useState<'success' | 'error' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,7 +95,9 @@ export function ConfirmTransactionActionDialog({ open, action, onClose, onConfir
       <DialogTitle>{config.title}</DialogTitle>
       <DialogContent>
         {result ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2, gap: 1.5 }}>
+          <Box
+            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2, gap: 1.5 }}
+          >
             <Iconify
               icon={result === 'success' ? 'eva:checkmark-circle-2-fill' : 'eva:close-circle-fill'}
               width={48}

@@ -45,9 +45,7 @@ export default function App({ children }: AppProps) {
           >
             <MotionLazy>
               <ProgressBar />
-              <NotificationProvider>
-                {children}
-              </NotificationProvider>
+              <NotificationProvider>{children}</NotificationProvider>
             </MotionLazy>
           </ThemeProvider>
         </SettingsProvider>

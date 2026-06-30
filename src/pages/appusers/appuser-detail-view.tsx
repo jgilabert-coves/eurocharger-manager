@@ -1,8 +1,8 @@
 import type { AppUser, BillingDetails } from 'src/types/appuser';
 
-import { useParams } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -24,6 +24,7 @@ import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
+import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/global-config';
@@ -231,199 +232,200 @@ function PersonalDataSection({ user, onSaved }: { user: AppUser; onSaved: () => 
 
   return (
     <>
-    <SectionCard
-      title="Datos personales"
-      action={
-        !editing && !isViewOnly() ? (
-          <Button
-            size="small"
-            startIcon={<Iconify icon="mdi:pencil-outline" width={14} />}
-            onClick={() => setEditing(true)}
-          >
-            Editar
-          </Button>
-        ) : undefined
-      }
-    >
-      {!editing ? (
-        <Stack divider={<Divider />}>
-          <InfoRow label="Nombre" value={user.name} />
-          <InfoRow label="Apellidos" value={user.surname} />
-          <InfoRow label="Email" value={user.billingEmail} />
-          <InfoRow label="Teléfono" value={user.telephone} />
-          <InfoRow label="DNI / CIF" value={user.cardId} mono />
-          <InfoRow label="Dirección" value={formatAddress(user)} />
-          <InfoRow label="Fecha de nacimiento" value={formatDateDisplay(user.birthday)} />
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ py: 0.5 }}
-          >
-            <Typography variant="caption" color="text.secondary">
-              Estado
-            </Typography>
-            <Label color={user.isActive === false ? 'error' : 'success'} variant="soft">
-              {user.isActive === false ? 'Inactivo' : 'Activo'}
-            </Label>
-          </Stack>
-        </Stack>
-      ) : (
-        <Stack spacing={1.5}>
-          {missingChargingFields.length > 0 && (
-            <Alert severity="warning" variant="outlined">
-              Con {missingChargingFields.length === 1 ? 'este campo vacío' : 'estos campos vacíos'}{' '}
-              ({missingChargingFields.join(', ')}), este usuario no podrá iniciar cargas.
-            </Alert>
-          )}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField
-              label="Nombre"
-              size="small"
-              fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <TextField
-              label="Apellidos"
-              size="small"
-              fullWidth
-              value={surname}
-              onChange={(e) => setSurname(e.target.value)}
-            />
-          </Stack>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField
-              label="Email"
-              size="small"
-              fullWidth
-              type="email"
-              value={billingEmail}
-              onChange={(e) => setBillingEmail(e.target.value)}
-            />
-            <TextField
-              label="Teléfono"
-              size="small"
-              fullWidth
-              value={telephone}
-              onChange={(e) => setTelephone(e.target.value)}
-            />
-          </Stack>
-          <TextField
-            label="DNI / CIF"
-            size="small"
-            fullWidth
-            value={cardId}
-            onChange={(e) => setCardId(e.target.value)}
-            slotProps={{ input: { style: { fontFamily: 'monospace' } } }}
-          />
-          <TextField
-            label="Dirección"
-            size="small"
-            fullWidth
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField
-              label="Ciudad"
-              size="small"
-              fullWidth
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
-            <TextField
-              label="Código postal"
-              size="small"
-              fullWidth
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
-            />
-          </Stack>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField
-              select
-              label="País"
-              size="small"
-              fullWidth
-              value={countryId || null}
-              onChange={(e) => {
-                setCountryId(Number(e.target.value));
-                setStateProvinceId(null);
-              }}
-            >
-              <MenuItem value="">
-                <em>—</em>
-              </MenuItem>
-              {COUNTRIES.map((c) => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              label="Provincia / Estado"
-              size="small"
-              fullWidth
-              value={stateProvinceId || null}
-              onChange={(e) => setStateProvinceId(Number(e.target.value))}
-              disabled={!COUNTRIES.find((c) => c.id === countryId)?.state_provinces.length}
-            >
-              <MenuItem value="">
-                <em>—</em>
-              </MenuItem>
-              {(COUNTRIES.find((c) => c.id === countryId)?.state_provinces ?? []).map((p) => (
-                <MenuItem key={p.id} value={p.id}>
-                  {p.name}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
-          <TextField
-            label="Fecha de nacimiento"
-            size="small"
-            fullWidth
-            type="date"
-            value={birthday}
-            onChange={(e) => setBirthday(e.target.value)}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <FormControlLabel
-            sx={{ ml: 0, width: '100%', justifyContent: 'space-between' }}
-            labelPlacement="start"
-            control={
-              <Switch
-                checked={isActive}
-                onChange={() => setConfirmActiveOpen(true)}
-                size="small"
-              />
-            }
-            label={<Typography variant="caption">Cuenta activa</Typography>}
-          />
-          {saveError && (
-            <Typography variant="caption" color="error">
-              {saveError}
-            </Typography>
-          )}
-          <Divider />
-          <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button size="small" onClick={handleCancel} disabled={saving}>
-              Cancelar
-            </Button>
+      <SectionCard
+        title="Datos personales"
+        action={
+          !editing && !isViewOnly() ? (
             <Button
               size="small"
-              variant="contained"
-              onClick={handleSave}
-              disabled={saving}
-              startIcon={saving ? <CircularProgress size={12} color="inherit" /> : undefined}
+              startIcon={<Iconify icon="mdi:pencil-outline" width={14} />}
+              onClick={() => setEditing(true)}
             >
-              Guardar
+              Editar
             </Button>
+          ) : undefined
+        }
+      >
+        {!editing ? (
+          <Stack divider={<Divider />}>
+            <InfoRow label="Nombre" value={user.name} />
+            <InfoRow label="Apellidos" value={user.surname} />
+            <InfoRow label="Email" value={user.billingEmail} />
+            <InfoRow label="Teléfono" value={user.telephone} />
+            <InfoRow label="DNI / CIF" value={user.cardId} mono />
+            <InfoRow label="Dirección" value={formatAddress(user)} />
+            <InfoRow label="Fecha de nacimiento" value={formatDateDisplay(user.birthday)} />
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ py: 0.5 }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Estado
+              </Typography>
+              <Label color={user.isActive === false ? 'error' : 'success'} variant="soft">
+                {user.isActive === false ? 'Inactivo' : 'Activo'}
+              </Label>
+            </Stack>
           </Stack>
-        </Stack>
-      )}
-    </SectionCard>
+        ) : (
+          <Stack spacing={1.5}>
+            {missingChargingFields.length > 0 && (
+              <Alert severity="warning" variant="outlined">
+                Con{' '}
+                {missingChargingFields.length === 1 ? 'este campo vacío' : 'estos campos vacíos'} (
+                {missingChargingFields.join(', ')}), este usuario no podrá iniciar cargas.
+              </Alert>
+            )}
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField
+                label="Nombre"
+                size="small"
+                fullWidth
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <TextField
+                label="Apellidos"
+                size="small"
+                fullWidth
+                value={surname}
+                onChange={(e) => setSurname(e.target.value)}
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField
+                label="Email"
+                size="small"
+                fullWidth
+                type="email"
+                value={billingEmail}
+                onChange={(e) => setBillingEmail(e.target.value)}
+              />
+              <TextField
+                label="Teléfono"
+                size="small"
+                fullWidth
+                value={telephone}
+                onChange={(e) => setTelephone(e.target.value)}
+              />
+            </Stack>
+            <TextField
+              label="DNI / CIF"
+              size="small"
+              fullWidth
+              value={cardId}
+              onChange={(e) => setCardId(e.target.value)}
+              slotProps={{ input: { style: { fontFamily: 'monospace' } } }}
+            />
+            <TextField
+              label="Dirección"
+              size="small"
+              fullWidth
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField
+                label="Ciudad"
+                size="small"
+                fullWidth
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              />
+              <TextField
+                label="Código postal"
+                size="small"
+                fullWidth
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField
+                select
+                label="País"
+                size="small"
+                fullWidth
+                value={countryId || null}
+                onChange={(e) => {
+                  setCountryId(Number(e.target.value));
+                  setStateProvinceId(null);
+                }}
+              >
+                <MenuItem value="">
+                  <em>—</em>
+                </MenuItem>
+                {COUNTRIES.map((c) => (
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Provincia / Estado"
+                size="small"
+                fullWidth
+                value={stateProvinceId || null}
+                onChange={(e) => setStateProvinceId(Number(e.target.value))}
+                disabled={!COUNTRIES.find((c) => c.id === countryId)?.state_provinces.length}
+              >
+                <MenuItem value="">
+                  <em>—</em>
+                </MenuItem>
+                {(COUNTRIES.find((c) => c.id === countryId)?.state_provinces ?? []).map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+            <TextField
+              label="Fecha de nacimiento"
+              size="small"
+              fullWidth
+              type="date"
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <FormControlLabel
+              sx={{ ml: 0, width: '100%', justifyContent: 'space-between' }}
+              labelPlacement="start"
+              control={
+                <Switch
+                  checked={isActive}
+                  onChange={() => setConfirmActiveOpen(true)}
+                  size="small"
+                />
+              }
+              label={<Typography variant="caption">Cuenta activa</Typography>}
+            />
+            {saveError && (
+              <Typography variant="caption" color="error">
+                {saveError}
+              </Typography>
+            )}
+            <Divider />
+            <Stack direction="row" justifyContent="flex-end" spacing={1}>
+              <Button size="small" onClick={handleCancel} disabled={saving}>
+                Cancelar
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handleSave}
+                disabled={saving}
+                startIcon={saving ? <CircularProgress size={12} color="inherit" /> : undefined}
+              >
+                Guardar
+              </Button>
+            </Stack>
+          </Stack>
+        )}
+      </SectionCard>
 
       <Dialog
         open={confirmActiveOpen}
@@ -936,9 +938,26 @@ export default function AppUserDetailView() {
 
           {/* Transactions */}
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-              Últimas recargas
-            </Typography>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 1.5 }}
+            >
+              <Typography variant="subtitle2" fontWeight={700}>
+                Últimas recargas
+              </Typography>
+              {hasRole('eurocharger') ? (
+                <Button
+                  component={Link}
+                  to={paths.appUsers.charges(Number(id))}
+                  size="small"
+                  endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
+                >
+                  Ver cargos (Stripe)
+                </Button>
+              ) : null}
+            </Stack>
             <TransactionsTable
               endpoint={endpoints.appUsers.transactions(Number(id))}
               defaultPageSize={5}

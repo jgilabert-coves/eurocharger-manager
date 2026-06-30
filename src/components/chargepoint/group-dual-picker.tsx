@@ -26,14 +26,17 @@ type GroupDualPickerProps = {
   emptyText?: string;
 };
 
-export function GroupDualPicker({ available, selected, onChange, emptyText }: GroupDualPickerProps) {
+export function GroupDualPicker({
+  available,
+  selected,
+  onChange,
+  emptyText,
+}: GroupDualPickerProps) {
   const [search, setSearch] = useState('');
 
   const selectedIds = selected.map((s) => s.groupId);
   const unselected = available.filter((g) => !selectedIds.includes(g.id));
-  const filtered = unselected.filter((g) =>
-    g.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = unselected.filter((g) => g.name.toLowerCase().includes(search.toLowerCase()));
   const selectedGroups = available.filter((g) => selectedIds.includes(g.id));
 
   const allFilteredSelected =
@@ -54,8 +57,7 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
   const handleAdd = (id: string) =>
     onChange([...selected, { groupId: id, permissionLevel: 'view' }]);
 
-  const handleRemove = (id: string) =>
-    onChange(selected.filter((s) => s.groupId !== id));
+  const handleRemove = (id: string) => onChange(selected.filter((s) => s.groupId !== id));
 
   const handlePermission = (id: string, level: 'view' | 'operate') =>
     onChange(selected.map((s) => (s.groupId === id ? { ...s, permissionLevel: level } : s)));
@@ -65,7 +67,10 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
   return (
     <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
       {/* ── Panel izquierdo: disponibles ── */}
-      <Paper variant="outlined" sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Paper
+        variant="outlined"
+        sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+      >
         <Stack
           direction="row"
           alignItems="center"
@@ -76,7 +81,9 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
             Disponibles ({unselected.length})
           </Typography>
           <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Typography variant="caption" color="text.secondary">Todos</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Todos
+            </Typography>
             <Checkbox
               size="small"
               checked={allFilteredSelected}
@@ -132,8 +139,14 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
                   '&:hover': { bgcolor: 'action.hover' },
                 }}
               >
-                <Iconify icon="mdi:account-group" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
-                <Typography variant="body2" noWrap>{g.name}</Typography>
+                <Iconify
+                  icon="mdi:account-group"
+                  width={14}
+                  sx={{ color: 'text.disabled', flexShrink: 0 }}
+                />
+                <Typography variant="body2" noWrap>
+                  {g.name}
+                </Typography>
               </Box>
             ))
           )}
@@ -141,7 +154,10 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
       </Paper>
 
       {/* ── Panel derecho: seleccionados ── */}
-      <Paper variant="outlined" sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Paper
+        variant="outlined"
+        sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+      >
         <Stack
           direction="row"
           alignItems="center"
@@ -157,7 +173,13 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
               variant="text"
               color="inherit"
               onClick={() => onChange([])}
-              sx={{ p: 0, minWidth: 0, fontSize: '0.65rem', color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+              sx={{
+                p: 0,
+                minWidth: 0,
+                fontSize: '0.65rem',
+                color: 'text.secondary',
+                '&:hover': { color: 'error.main' },
+              }}
             >
               Deseleccionar todos
             </Button>
@@ -166,7 +188,14 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
 
         <Box sx={{ flex: 1, overflowY: 'auto', height: PANEL_HEIGHT, p: 0.5 }}>
           {selectedGroups.length === 0 ? (
-            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Typography variant="body2" color="text.disabled" textAlign="center">
                 Ningún propietario seleccionado
               </Typography>
@@ -187,9 +216,20 @@ export function GroupDualPicker({ available, selected, onChange, emptyText }: Gr
                     '&:hover': { bgcolor: 'action.hover' },
                   }}
                 >
-                  <Stack direction="row" alignItems="center" gap={0.75} sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                    <Iconify icon="mdi:account-group" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
-                    <Typography variant="body2" noWrap>{g.name}</Typography>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    gap={0.75}
+                    sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}
+                  >
+                    <Iconify
+                      icon="mdi:account-group"
+                      width={14}
+                      sx={{ color: 'text.disabled', flexShrink: 0 }}
+                    />
+                    <Typography variant="body2" noWrap>
+                      {g.name}
+                    </Typography>
                   </Stack>
 
                   <Stack direction="row" alignItems="center" spacing={0.25}>

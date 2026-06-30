@@ -461,7 +461,8 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         chargerGroupId: resolvedGroupId,
         ...(chargerHasCallCenter && { has_call_center: true }),
         share_energy: chargerShareEnergy,
-        max_recharge_time: chargerMaxRechargeTime.trim() !== '' ? Number(chargerMaxRechargeTime) : null,
+        max_recharge_time:
+          chargerMaxRechargeTime.trim() !== '' ? Number(chargerMaxRechargeTime) : null,
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;
@@ -1011,7 +1012,10 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
           color="inherit"
           onClick={() => setServicesOpen((v) => !v)}
           endIcon={
-            <Iconify icon={servicesOpen ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
+            <Iconify
+              icon={servicesOpen ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'}
+              width={18}
+            />
           }
           sx={{ justifyContent: 'space-between', px: 1 }}
         >

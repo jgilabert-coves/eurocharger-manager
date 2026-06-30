@@ -327,11 +327,7 @@ export default function ManagerUsersView() {
         onSuccess={() => refetch()}
       />
 
-      <ChangePasswordDialog
-        open={pwUser !== null}
-        user={pwUser}
-        onClose={() => setPwUser(null)}
-      />
+      <ChangePasswordDialog open={pwUser !== null} user={pwUser} onClose={() => setPwUser(null)} />
     </>
   );
 }

@@ -106,9 +106,7 @@ export default function ChargepointsListV2() {
       const queryArgs: AxiosRequestConfig = {
         params: {
           // Eurocharger filtra por origen (source); el resto de roles mantiene roaming=0.
-          ...(isEurocharger
-            ? { source: sourceFilter.toLowerCase() }
-            : { roaming: 0 }),
+          ...(isEurocharger ? { source: sourceFilter.toLowerCase() } : { roaming: 0 }),
           page,
           pageSize,
           searchQuery: debouncedSearch,

@@ -68,7 +68,9 @@ export function ClientSelect({ value, onChange }: ClientSelectProps) {
     };
 
     doFetch();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [mode, debouncedSearch]);
 
   const set = (field: keyof CreateClientPayload) => (e: React.ChangeEvent<HTMLInputElement>) =>

@@ -71,11 +71,13 @@ export const SignUpSchema = zod.object({
 type Country = { id: number; name: string; code_2: string };
 
 const BillingSchema = zod.object({
-  cif:        zod.string().min(1, { message: 'El CIF/NIF es obligatorio' }),
-  address:    zod.string().min(1, { message: 'La dirección es obligatoria' }),
-  city:       zod.string().min(1, { message: 'La ciudad es obligatoria' }),
+  cif: zod.string().min(1, { message: 'El CIF/NIF es obligatorio' }),
+  address: zod.string().min(1, { message: 'La dirección es obligatoria' }),
+  city: zod.string().min(1, { message: 'La ciudad es obligatoria' }),
   postalCode: zod.string().min(1, { message: 'El código postal es obligatorio' }),
-  countryId:  zod.number({ required_error: 'El país es obligatorio' }).positive({ message: 'El país es obligatorio' }),
+  countryId: zod
+    .number({ required_error: 'El país es obligatorio' })
+    .positive({ message: 'El país es obligatorio' }),
 });
 type BillingSchemaType = zod.infer<typeof BillingSchema>;
 
@@ -299,9 +301,13 @@ function PaymentForm({ plan, billingPeriod, accountData, onSuccess, onBack }: Pa
                 value={field.value || ''}
                 onChange={(e) => field.onChange(Number(e.target.value))}
               >
-                <MenuItem value="" disabled>Selecciona un país</MenuItem>
+                <MenuItem value="" disabled>
+                  Selecciona un país
+                </MenuItem>
                 {countries.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.name}
+                  </MenuItem>
                 ))}
               </Select>
               {fieldState.error && <FormHelperText>{fieldState.error.message}</FormHelperText>}

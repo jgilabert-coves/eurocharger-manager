@@ -58,7 +58,9 @@ export function StationSearchSelect({
     };
 
     doFetch();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedSearch, open]);
 
   return (

@@ -162,12 +162,7 @@ function InfoRow({
 
 // ----------------------------------------------------------------------
 
-const STOP_STATUSES = new Set([
-  'charging',
-  'finishing',
-  'suspendedev',
-  'suspendedevse',
-]);
+const STOP_STATUSES = new Set(['charging', 'finishing', 'suspendedev', 'suspendedevse']);
 
 type DialogState = {
   type: 'availability' | 'unlock' | 'start' | 'stop' | null;
@@ -870,7 +865,9 @@ export default function ChargerDetailV2() {
     },
   });
 
-  const { data: simConnectivityData, isLoading: isLoadingSimConnectivity } = useQuery<{ data: { status: 'ONLINE' | 'ATTACHED' | 'OFFLINE' | 'BLOCKED' | 'UNKNOWN' } }>({
+  const { data: simConnectivityData, isLoading: isLoadingSimConnectivity } = useQuery<{
+    data: { status: 'ONLINE' | 'ATTACHED' | 'OFFLINE' | 'BLOCKED' | 'UNKNOWN' };
+  }>({
     queryKey: ['sim-connectivity', chargepoint?.sim_card],
     queryFn: () => fetcher(endpoints.sims.connectivity(chargepoint!.sim_card!)),
     enabled: !!chargepoint?.sim_card && hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']),
@@ -1082,8 +1079,7 @@ export default function ChargerDetailV2() {
   const missingConnectors = (chargepoint?.connectors.length ?? 0) === 0;
 
   // En cargadores Roaming/OCPI no tenemos acceso a la configuración OCPP.
-  const showOcppConfig =
-    chargepoint?.source !== 'hubject' && chargepoint?.source !== 'ocpi';
+  const showOcppConfig = chargepoint?.source !== 'hubject' && chargepoint?.source !== 'ocpi';
 
   if (loading) {
     return (
@@ -1243,7 +1239,9 @@ export default function ChargerDetailV2() {
                 )*/}
 
                 {hasLocation && (
-                  <Box sx={{ mt: 2, borderRadius: 1.5, overflow: 'hidden', flex: 1, minHeight: 150 }}>
+                  <Box
+                    sx={{ mt: 2, borderRadius: 1.5, overflow: 'hidden', flex: 1, minHeight: 150 }}
+                  >
                     <Map
                       mapboxAccessToken={CONFIG.mapboxApiKey}
                       initialViewState={{
@@ -1269,96 +1267,103 @@ export default function ChargerDetailV2() {
               <Stack spacing={2} sx={{ height: '100%' }}>
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                   {showOcppConfig ? (
-                  <SectionCard
-                title="Configuración OCPP"
-                action={
-                  <Stack direction="row" alignItems="center" spacing={0.75}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: ocppConnected ? 'success.main' : 'error.main',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <Typography
-                      variant="caption"
-                      fontWeight={600}
-                      color={ocppConnected ? 'success.main' : 'error.main'}
+                    <SectionCard
+                      title="Configuración OCPP"
+                      action={
+                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              bgcolor: ocppConnected ? 'success.main' : 'error.main',
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Typography
+                            variant="caption"
+                            fontWeight={600}
+                            color={ocppConnected ? 'success.main' : 'error.main'}
+                          >
+                            {ocppConnected ? 'Conectado' : 'Desconectado'}
+                          </Typography>
+                        </Stack>
+                      }
                     >
-                      {ocppConnected ? 'Conectado' : 'Desconectado'}
-                    </Typography>
-                  </Stack>
-                }
-              >
-                <InfoRow label="OCPP ID" value={chargepoint.ocpp_id} />
-                <InfoRow
-                  label="Endpoint"
-                  value={'ws://' + chargepoint.endpointAddress + ':' + chargepoint.port}
-                />
-                {chargepoint.client_cp_id != null && (
-                  <InfoRow label="Client CP ID" value={chargepoint.client_cp_id} mono />
-                )}
-                <InfoRow label="Protocolo" value="OCPP 1.6J" />
-                {hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && (
-                  <Box sx={{ mt: 'auto', pt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Iconify icon="mingcute:settings-3-line" width={16} />}
-                      onClick={() => router.push(paths.chargingstations.ocppConfig(String(chargepoint.id)))}
-                    >
-                      Ver configuración
-                    </Button>
-                  </Box>
-                )}
-                  </SectionCard>
-                  ) : (
-                  <SectionCard
-                title="Operador"
-                action={
-                  <Label color={chargepoint.source === 'ocpi' ? 'info' : 'warning'} variant="soft">
-                    {chargepoint.source === 'ocpi' ? 'OCPI' : 'Roaming'}
-                  </Label>
-                }
-              >
-                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
-                  <Box
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 1.5,
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                      bgcolor: 'background.neutral',
-                    }}
-                  >
-                    {chargepoint.operator_logo_url ? (
-                      <Box
-                        component="img"
-                        // ?v fuerza una clave de caché nueva en el edge de Google: la URL
-                        // sin query tenía cacheado un objeto con Cache-Control malformado
-                        // que rompía HTTP/2 (ERR_HTTP2_PROTOCOL_ERROR).
-                        src={`${chargepoint.operator_logo_url}?v=1`}
-                        alt={chargepoint.operator_name ?? 'Operador'}
-                        sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      <InfoRow label="OCPP ID" value={chargepoint.ocpp_id} />
+                      <InfoRow
+                        label="Endpoint"
+                        value={'ws://' + chargepoint.endpointAddress + ':' + chargepoint.port}
                       />
-                    ) : (
-                      <Iconify icon="mdi:transit-connection-variant" width={24} />
-                    )}
-                  </Box>
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    {chargepoint.operator_name ?? 'Operador externo'}
-                  </Typography>
-                </Stack>
-                {chargepoint.operator_code && (
-                  <InfoRow label="ID operador" value={chargepoint.operator_code} mono />
-                )}
-                  </SectionCard>
+                      {chargepoint.client_cp_id != null && (
+                        <InfoRow label="Client CP ID" value={chargepoint.client_cp_id} mono />
+                      )}
+                      <InfoRow label="Protocolo" value="OCPP 1.6J" />
+                      {hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']) && (
+                        <Box
+                          sx={{ mt: 'auto', pt: 1.5, display: 'flex', justifyContent: 'flex-end' }}
+                        >
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<Iconify icon="mingcute:settings-3-line" width={16} />}
+                            onClick={() =>
+                              router.push(paths.chargingstations.ocppConfig(String(chargepoint.id)))
+                            }
+                          >
+                            Ver configuración
+                          </Button>
+                        </Box>
+                      )}
+                    </SectionCard>
+                  ) : (
+                    <SectionCard
+                      title="Operador"
+                      action={
+                        <Label
+                          color={chargepoint.source === 'ocpi' ? 'info' : 'warning'}
+                          variant="soft"
+                        >
+                          {chargepoint.source === 'ocpi' ? 'OCPI' : 'Roaming'}
+                        </Label>
+                      }
+                    >
+                      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+                        <Box
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 1.5,
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            bgcolor: 'background.neutral',
+                          }}
+                        >
+                          {chargepoint.operator_logo_url ? (
+                            <Box
+                              component="img"
+                              // ?v fuerza una clave de caché nueva en el edge de Google: la URL
+                              // sin query tenía cacheado un objeto con Cache-Control malformado
+                              // que rompía HTTP/2 (ERR_HTTP2_PROTOCOL_ERROR).
+                              src={`${chargepoint.operator_logo_url}?v=1`}
+                              alt={chargepoint.operator_name ?? 'Operador'}
+                              sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            />
+                          ) : (
+                            <Iconify icon="mdi:transit-connection-variant" width={24} />
+                          )}
+                        </Box>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          {chargepoint.operator_name ?? 'Operador externo'}
+                        </Typography>
+                      </Stack>
+                      {chargepoint.operator_code && (
+                        <InfoRow label="ID operador" value={chargepoint.operator_code} mono />
+                      )}
+                    </SectionCard>
                   )}
                 </Box>
 

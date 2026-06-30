@@ -153,7 +153,10 @@ export function DateRangeFilter({
         onClick={open}
         startIcon={<Iconify icon="mingcute:time-line" width={16} />}
         endIcon={<Iconify icon="eva:chevron-down-fill" width={16} />}
-        sx={[{ height: 40, fontWeight: 400, whiteSpace: 'nowrap' }, ...(Array.isArray(sx) ? sx : [sx])]}
+        sx={[
+          { height: 40, fontWeight: 400, whiteSpace: 'nowrap' },
+          ...(Array.isArray(sx) ? sx : [sx]),
+        ]}
       >
         {label}
       </Button>

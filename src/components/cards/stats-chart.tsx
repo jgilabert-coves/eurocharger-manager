@@ -171,7 +171,12 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
           {typeof icon === 'string' ? (
             <Iconify icon={icon} width={18} sx={{ color: tk.inkDarkest }} />
           ) : (
-            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', color: tk.inkDarkest }}>{icon}</Box>
+            <Box
+              component="span"
+              sx={{ display: 'inline-flex', alignItems: 'center', color: tk.inkDarkest }}
+            >
+              {icon}
+            </Box>
           )}
           <Typography variant="h6" sx={{ color: tk.inkDarkest }}>
             {label}
@@ -346,7 +351,7 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
             margin={{ top: 10, bottom: 28, left: 50, right: 10 }}
             grid={{ horizontal: true }}
             sx={{
-              '& .MuiBarElement-root': { fillOpacity: 0.30 },
+              '& .MuiBarElement-root': { fillOpacity: 0.3 },
               '& .MuiChartsGrid-line': { stroke: tk.skyLight, strokeDasharray: '3 3' },
               '& .MuiChartsAxis-line': { stroke: tk.skyLight },
               '& .MuiChartsAxis-tick': { stroke: 'transparent' },

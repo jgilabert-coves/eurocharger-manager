@@ -68,7 +68,14 @@ export function CreateInvitationDialog({
       await post(endpoints.invitations.create(accountId), {
         email: email.trim(),
         role,
-        ...(groups.length > 0 ? { groups: groups.map((g) => ({ groupId: g.groupId, permissionLevel: g.permissionLevel })) } : {}),
+        ...(groups.length > 0
+          ? {
+              groups: groups.map((g) => ({
+                groupId: g.groupId,
+                permissionLevel: g.permissionLevel,
+              })),
+            }
+          : {}),
       });
       notifySuccess('Invitación enviada con éxito');
       onSuccess();

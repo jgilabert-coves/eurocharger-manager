@@ -81,6 +81,7 @@ export const paths = {
   appUsers: {
     list: `/appusers`,
     detail: (id: string | number) => `/appusers/${id}`,
+    charges: (id: string | number) => `/appusers/${id}/charges`,
   },
   invoices: {
     list: `/invoices`,

@@ -114,7 +114,10 @@ export function ChangePasswordDialog({ open, user, onClose }: Props) {
                       </IconButton>
                     </Tooltip>
                     <IconButton size="small" onClick={() => setShowPassword((s) => !s)} edge="end">
-                      <Iconify icon={showPassword ? 'eva:eye-off-fill' : 'eva:eye-fill'} width={18} />
+                      <Iconify
+                        icon={showPassword ? 'eva:eye-off-fill' : 'eva:eye-fill'}
+                        width={18}
+                      />
                     </IconButton>
                   </InputAdornment>
                 ),

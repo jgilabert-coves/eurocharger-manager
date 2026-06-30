@@ -40,7 +40,12 @@ type Props = {
  * chincheta arrastrable. Mismo comportamiento que en la edición de estaciones;
  * se comparte para no duplicar la lógica.
  */
-export function LocationPicker({ value, onChange, label = 'Ubicación en el mapa', height = 300 }: Props) {
+export function LocationPicker({
+  value,
+  onChange,
+  label = 'Ubicación en el mapa',
+  height = 300,
+}: Props) {
   const mapRef = useRef<MapRef>(null);
   const [mapSearch, setMapSearch] = useState('');
   const [mapOptions, setMapOptions] = useState<GeocodingFeature[]>([]);

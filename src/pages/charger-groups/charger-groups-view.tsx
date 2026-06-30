@@ -513,7 +513,10 @@ export default function ChargerGroupsView() {
   const deleteGroup = useMutation({
     mutationFn: ({ groupId, acctId }: { groupId: string; acctId: number }) =>
       del(endpoints.accounts.chargerGroup(acctId, groupId)),
-    onSuccess: () => { notifySuccess('Acción realizada con éxito'); invalidate(); },
+    onSuccess: () => {
+      notifySuccess('Acción realizada con éxito');
+      invalidate();
+    },
     onError: () => notifyError('Ha ocurrido un error al lanzar la acción'),
   });
 
@@ -527,7 +530,10 @@ export default function ChargerGroupsView() {
       chargerId: number;
       acctId: number;
     }) => del(endpoints.accounts.chargerGroupCharger(acctId, groupId, chargerId)),
-    onSuccess: () => { notifySuccess('Acción realizada con éxito'); invalidate(); },
+    onSuccess: () => {
+      notifySuccess('Acción realizada con éxito');
+      invalidate();
+    },
     onError: () => notifyError('Ha ocurrido un error al lanzar la acción'),
   });
 

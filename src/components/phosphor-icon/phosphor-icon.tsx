@@ -18,13 +18,13 @@ type PhosphorIconProps = {
  * <PhosphorIcon icon={Trash} size={18} />
  * <PhosphorIcon icon={X} size={16} weight="bold" />
  */
-export function PhosphorIcon({ icon: Icon, size = 20, weight = 'regular', color = 'currentColor' }: PhosphorIconProps) {
+export function PhosphorIcon({
+  icon: Icon,
+  size = 20,
+  weight = 'regular',
+  color = 'currentColor',
+}: PhosphorIconProps) {
   return (
-    <Icon
-      size={size}
-      weight={weight}
-      color={color}
-      style={{ display: 'block', flexShrink: 0 }}
-    />
+    <Icon size={size} weight={weight} color={color} style={{ display: 'block', flexShrink: 0 }} />
   );
 }

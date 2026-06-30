@@ -48,13 +48,16 @@ export default function TransactionsView() {
   const [appliedFrom, setAppliedFrom] = useState<Dayjs | null>(null);
   const [appliedTo, setAppliedTo] = useState<Dayjs | null>(null);
 
-  const extraParams = useMemo((): Record<string, string> => ({
-    ...(statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
-    ...(isEurocharger && sourceFilter !== 'ALL' ? { source: sourceFilter.toLowerCase() } : {}),
-    // La hora se elige en local y se envía en UTC (t.started está en UTC en BD).
-    ...(appliedFrom ? { start_date: appliedFrom.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
-    ...(appliedTo ? { end_date: appliedTo.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
-  }), [statusFilter, sourceFilter, isEurocharger, appliedFrom, appliedTo]);
+  const extraParams = useMemo(
+    (): Record<string, string> => ({
+      ...(statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
+      ...(isEurocharger && sourceFilter !== 'ALL' ? { source: sourceFilter.toLowerCase() } : {}),
+      // La hora se elige en local y se envía en UTC (t.started está en UTC en BD).
+      ...(appliedFrom ? { start_date: appliedFrom.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
+      ...(appliedTo ? { end_date: appliedTo.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
+    }),
+    [statusFilter, sourceFilter, isEurocharger, appliedFrom, appliedTo]
+  );
 
   const showEndDate = statusFilter !== 'CARGANDO';
   const debouncedSearch = useDebounce(searchQuery, 400);

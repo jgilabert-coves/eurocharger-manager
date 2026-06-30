@@ -38,7 +38,6 @@ function ConfigSkeleton() {
   return (
     <Stack spacing={1}>
       {Array.from({ length: 8 }).map((_, i) => (
-         
         <Skeleton key={i} variant="rounded" height={52} />
       ))}
     </Stack>
@@ -102,8 +101,8 @@ export default function ChargerOcppConfig() {
 
     const results = await Promise.allSettled(
       entries.map((e) =>
-        post(endpoints.chargepoints.ocppChangeConfig(Number(id)), { key: e.key, value: e.newValue }),
-      ),
+        post(endpoints.chargepoints.ocppChangeConfig(Number(id)), { key: e.key, value: e.newValue })
+      )
     );
 
     const newResults = new Map<string, SaveStatus>();
@@ -173,10 +172,7 @@ export default function ChargerOcppConfig() {
 
           {/* Reboot warning */}
           {saveError === 'reboot' && (
-            <Alert
-              severity="warning"
-              onClose={() => setSaveError(null)}
-            >
+            <Alert severity="warning" onClose={() => setSaveError(null)}>
               Algunos cambios requieren reiniciar el cargador para aplicarse.
             </Alert>
           )}
@@ -184,7 +180,8 @@ export default function ChargerOcppConfig() {
           {/* Error loading */}
           {isError && (
             <Alert severity="error">
-              {(error as any)?.error ?? 'Error al obtener la configuración OCPP. Comprueba que el cargador está conectado.'}
+              {(error as any)?.error ??
+                'Error al obtener la configuración OCPP. Comprueba que el cargador está conectado.'}
             </Alert>
           )}
 
@@ -204,7 +201,11 @@ export default function ChargerOcppConfig() {
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Iconify icon="mingcute:search-line" width={18} sx={{ color: 'text.disabled' }} />
+                      <Iconify
+                        icon="mingcute:search-line"
+                        width={18}
+                        sx={{ color: 'text.disabled' }}
+                      />
                     </InputAdornment>
                   ),
                   endAdornment: search ? (
@@ -224,7 +225,11 @@ export default function ChargerOcppConfig() {
                 onClick={handleSave}
                 startIcon={
                   saving ? (
-                    <Iconify icon="mingcute:loading-line" width={18} sx={{ animation: 'spin 1s linear infinite' }} />
+                    <Iconify
+                      icon="mingcute:loading-line"
+                      width={18}
+                      sx={{ animation: 'spin 1s linear infinite' }}
+                    />
                   ) : (
                     <Iconify icon="mingcute:save-line" width={18} />
                   )
@@ -259,15 +264,25 @@ export default function ChargerOcppConfig() {
                   <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
                     VALOR
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ width: 90, textAlign: 'right' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ width: 90, textAlign: 'right' }}
+                  >
                     ESTADO
                   </Typography>
                 </Stack>
               )}
 
               {filteredKeys.length === 0 && !isFetching && !isError && (
-                <Typography variant="body2" color="text.disabled" sx={{ py: 4, textAlign: 'center' }}>
-                  {search ? 'No hay resultados para la búsqueda.' : 'No hay claves de configuración disponibles.'}
+                <Typography
+                  variant="body2"
+                  color="text.disabled"
+                  sx={{ py: 4, textAlign: 'center' }}
+                >
+                  {search
+                    ? 'No hay resultados para la búsqueda.'
+                    : 'No hay claves de configuración disponibles.'}
                 </Typography>
               )}
 

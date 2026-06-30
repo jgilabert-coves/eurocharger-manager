@@ -39,8 +39,7 @@ export function SimsInventoryTab() {
 
   const { data: res, isLoading } = useQuery<SimsResponse>({
     queryKey: ['sims', 'list', { page, pageSize }],
-    queryFn: () =>
-      fetcher([endpoints.sims.list, { params: { page, pageSize } }]),
+    queryFn: () => fetcher([endpoints.sims.list, { params: { page, pageSize } }]),
   });
 
   const rows = res?.data ?? [];
@@ -81,11 +80,7 @@ export function SimsInventoryTab() {
   return (
     <>
       <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
-        <Button
-          variant="outlined"
-          disabled={syncing}
-          onClick={() => syncSims()}
-        >
+        <Button variant="outlined" disabled={syncing} onClick={() => syncSims()}>
           {syncing ? 'Sincronizando…' : 'Sincronizar con EMnify'}
         </Button>
       </Stack>

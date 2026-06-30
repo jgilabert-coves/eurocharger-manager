@@ -1,9 +1,16 @@
 import type { NavSectionProps } from 'src/components/nav-section';
 
-import { Bell, Bank, Gear, Crown, Airplay, HouseLine, ChargingStation } from '@phosphor-icons/react';
+import {
+  Bell,
+  Bank,
+  Gear,
+  Crown,
+  Airplay,
+  HouseLine,
+  ChargingStation,
+} from '@phosphor-icons/react';
 
 import { paths } from 'src/routes/paths';
-
 
 // ----------------------------------------------------------------------
 

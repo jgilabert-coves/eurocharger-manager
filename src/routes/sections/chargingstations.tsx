@@ -64,9 +64,15 @@ export const chargingStationsRoutes: RouteObject[] = [
       {
         path: ':id/ocpp-config',
         element: CONFIG.auth.skip ? (
-          <RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}><ChargerOcppConfig /></RoleGuard>
+          <RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}>
+            <ChargerOcppConfig />
+          </RoleGuard>
         ) : (
-          <AuthGuard><RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}><ChargerOcppConfig /></RoleGuard></AuthGuard>
+          <AuthGuard>
+            <RoleGuard roles={['saas_admin', 'saas_owner', 'eurocharger']}>
+              <ChargerOcppConfig />
+            </RoleGuard>
+          </AuthGuard>
         ),
       },
     ],

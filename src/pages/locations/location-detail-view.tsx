@@ -375,7 +375,12 @@ export default function LocationDetailView() {
       </Helmet>
 
       <DashboardContent>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 4 }}>
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{ mb: 4 }}
+        >
           <Stack spacing={0.5}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Typography variant="h4">{location.internalName || location.name}</Typography>
@@ -449,7 +454,11 @@ export default function LocationDetailView() {
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 0.75, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 0.75, display: 'block' }}
+                >
                   Ubicación en el mapa
                 </Typography>
 
@@ -539,11 +548,19 @@ export default function LocationDetailView() {
                   </Map>
                 </Box>
                 {latitude !== '' && longitude !== '' ? (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 0.5, display: 'block' }}
+                  >
                     {latitude}, {longitude}
                   </Typography>
                 ) : (
-                  <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    sx={{ mt: 0.5, display: 'block' }}
+                  >
                     Busca una dirección o haz clic en el mapa para colocar la chincheta
                   </Typography>
                 )}

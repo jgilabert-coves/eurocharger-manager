@@ -129,7 +129,11 @@ export function ChargerDualPicker({ available, selected, onChange, emptyText }: 
                   '&:hover': { bgcolor: 'action.hover' },
                 }}
               >
-                <Iconify icon="mdi:ev-station" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+                <Iconify
+                  icon="mdi:ev-station"
+                  width={14}
+                  sx={{ color: 'text.disabled', flexShrink: 0 }}
+                />
                 <Typography variant="body2" noWrap>
                   {cpName(cp)}
                 </Typography>
@@ -184,8 +188,17 @@ export function ChargerDualPicker({ available, selected, onChange, emptyText }: 
                   '&:hover': { bgcolor: 'action.hover' },
                 }}
               >
-                <Stack direction="row" alignItems="center" gap={0.75} sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                  <Iconify icon="mdi:ev-station" width={14} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  gap={0.75}
+                  sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}
+                >
+                  <Iconify
+                    icon="mdi:ev-station"
+                    width={14}
+                    sx={{ color: 'text.disabled', flexShrink: 0 }}
+                  />
                   <Typography variant="body2" noWrap>
                     {cpName(cp)}
                   </Typography>

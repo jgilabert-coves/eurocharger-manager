@@ -56,10 +56,7 @@ export function EditGuestGroupsDialog({
   const [changingRole, setChangingRole] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    data: guestData,
-    isFetching: loadingGuest,
-  } = useQuery<{ data: GuestState }>({
+  const { data: guestData, isFetching: loadingGuest } = useQuery<{ data: GuestState }>({
     queryKey: ['invitation-groups', invitation.id],
     queryFn: () => fetcher(endpoints.invitations.invitationGroups(accountId, invitation.id)),
     enabled: open,
@@ -95,7 +92,9 @@ export function EditGuestGroupsDialog({
     try {
       setChangingRole(true);
       setError(null);
-      await patch(endpoints.invitations.invitationRole(accountId, invitation.id), { role: newRole });
+      await patch(endpoints.invitations.invitationRole(accountId, invitation.id), {
+        role: newRole,
+      });
       await queryClient.invalidateQueries({ queryKey: ['invitation-groups', invitation.id] });
       invalidateInvitations();
       notifySuccess('Roles actualizados con éxito');
@@ -214,11 +213,7 @@ export function EditGuestGroupsDialog({
             <CircularProgress size={24} />
           </Stack>
         ) : (
-          <GroupDualPicker
-            available={allGroups}
-            selected={localGroups}
-            onChange={setLocalGroups}
-          />
+          <GroupDualPicker available={allGroups} selected={localGroups} onChange={setLocalGroups} />
         )}
       </DialogContent>
 

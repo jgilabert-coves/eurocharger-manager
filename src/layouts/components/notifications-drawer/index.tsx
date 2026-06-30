@@ -84,7 +84,8 @@ export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDr
       }))
     : [];
 
-  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length + simRequestCount;
+  const totalUnRead =
+    notifications.filter((item) => item.isUnRead === true).length + simRequestCount;
 
   const handleMarkAllAsRead = () => {
     setNotifications(notifications.map((notification) => ({ ...notification, isUnRead: false })));

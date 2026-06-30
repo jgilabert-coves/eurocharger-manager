@@ -124,8 +124,7 @@ export function NavList({
     if (!data.children || depth !== 1 || open) return null;
 
     const visibleChildren = data.children.filter(
-      (child) =>
-        !child.roles || !currentRole || child.roles.some((r) => currentRole.includes(r))
+      (child) => !child.roles || !currentRole || child.roles.some((r) => currentRole.includes(r))
     );
 
     if (!visibleChildren.length) return null;

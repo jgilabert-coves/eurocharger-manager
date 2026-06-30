@@ -59,7 +59,9 @@ export function AppUserSearchSelect({
     };
 
     doFetch();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedSearch, open]);
 
   return (

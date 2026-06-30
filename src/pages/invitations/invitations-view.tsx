@@ -277,11 +277,18 @@ export default function InvitationsView() {
 
                       <TableCell sx={{ maxWidth: 200 }}>
                         {inv.groups.length === 0 ? (
-                          <Typography variant="caption" color="text.disabled">—</Typography>
+                          <Typography variant="caption" color="text.disabled">
+                            —
+                          </Typography>
                         ) : (
                           <Stack direction="row" flexWrap="wrap" gap={0.5}>
                             {inv.groups.slice(0, 2).map((g) => (
-                              <Chip key={g.group_id} label={g.group_name} size="small" variant="soft" />
+                              <Chip
+                                key={g.group_id}
+                                label={g.group_name}
+                                size="small"
+                                variant="soft"
+                              />
                             ))}
                             {inv.groups.length > 2 && (
                               <Chip label={`+${inv.groups.length - 2}`} size="small" />

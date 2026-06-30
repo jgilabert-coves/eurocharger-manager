@@ -31,7 +31,11 @@ export function TopList({ title, isClient }: TopListProps) {
     queryFn: () => fetcher(endpoint),
   });
 
-  const icon = isClient ? <User size={18} weight="fill" /> : <ChargingStation size={18} weight="fill" />;
+  const icon = isClient ? (
+    <User size={18} weight="fill" />
+  ) : (
+    <ChargingStation size={18} weight="fill" />
+  );
 
   const items = isClient
     ? ((res?.data as TopUser[]) ?? []).map((u) => ({

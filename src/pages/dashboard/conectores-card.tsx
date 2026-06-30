@@ -71,7 +71,10 @@ export function ConectoresCard() {
 
   return (
     <Card sx={{ p: 3 }}>
-      <CardHeader icon={<Percent size={18} weight="fill" />} label="Información por tipos de conector" />
+      <CardHeader
+        icon={<Percent size={18} weight="fill" />}
+        label="Información por tipos de conector"
+      />
       <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${COLUMNS.length},1fr)`, gap: 0.5 }}>
         {/* Row 1: Icons + labels */}
         {COLUMNS.map(({ key, label, Icon }) => (
