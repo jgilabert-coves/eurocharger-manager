@@ -221,8 +221,8 @@ export default function ChargingStationView() {
                   <Map
                     mapboxAccessToken={CONFIG.mapboxApiKey}
                     initialViewState={{
-                      longitude: chargepoint.longitude,
-                      latitude: chargepoint.latitude,
+                      longitude: chargepoint.longitude ?? undefined,
+                      latitude: chargepoint.latitude ?? undefined,
                       zoom: 15,
                     }}
                     mapStyle="mapbox://styles/mapbox/streets-v12"

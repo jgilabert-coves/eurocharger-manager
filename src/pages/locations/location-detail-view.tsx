@@ -361,6 +361,13 @@ export default function LocationDetailView() {
     { on: location.hasTesla, label: 'Tesla', typeId: 6 },
   ].filter((t) => t.on);
 
+  // Si la estación tiene cargadores y TODOS son privados, queda oculta del mapa
+  // automáticamente (regla derivada en backend vía deleted_at). En ese caso el
+  // toggle manual de visibilidad no aplica.
+  const allChargersPrivate =
+    (location.chargepoints?.length ?? 0) > 0 &&
+    location.chargepoints.every((cp) => Boolean(cp.isPrivate));
+
   return (
     <>
       <Helmet>
@@ -544,12 +551,18 @@ export default function LocationDetailView() {
               <Grid size={{ xs: 12 }}>
                 <FormControlLabel
                   control={
-                    <Switch checked={visible} onChange={(e) => setVisible(e.target.checked)} />
+                    <Switch
+                      checked={allChargersPrivate ? false : visible}
+                      disabled={allChargersPrivate}
+                      onChange={(e) => setVisible(e.target.checked)}
+                    />
                   }
                   label="Visible en el mapa"
                 />
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Si se desactiva, la estación se oculta del mapa.
+                  {allChargersPrivate
+                    ? 'Todos los cargadores son privados: la estación permanece oculta del mapa y solo es visible para los usuarios autorizados.'
+                    : 'Si se desactiva, la estación se oculta del mapa.'}
                 </Typography>
               </Grid>
             </Grid>
@@ -612,12 +625,19 @@ export default function LocationDetailView() {
                   />
                 </DataRow>
                 <DataRow label="Visible en el mapa">
-                  <Chip
-                    size="small"
-                    variant="soft"
-                    color={location.deletedAt == null ? 'success' : 'default'}
-                    label={location.deletedAt == null ? 'Sí' : 'No'}
-                  />
+                  <Stack alignItems="flex-end" spacing={0.25}>
+                    <Chip
+                      size="small"
+                      variant="soft"
+                      color={location.deletedAt == null ? 'success' : 'default'}
+                      label={location.deletedAt == null ? 'Sí' : 'No'}
+                    />
+                    {allChargersPrivate && (
+                      <Typography variant="caption" color="text.secondary">
+                        Oculta: todos los cargadores son privados
+                      </Typography>
+                    )}
+                  </Stack>
                 </DataRow>
               </SectionCard>
             </Grid>

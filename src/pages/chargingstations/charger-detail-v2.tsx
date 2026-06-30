@@ -53,6 +53,7 @@ import { StopTransactionDialog } from 'src/components/ocpp/stop/dialog';
 import { CreateRateDialog } from 'src/components/rate/create-rate-dialog';
 import { StartTransactionDialog } from 'src/components/ocpp/start/dialog';
 import { AvailabilityDialog } from 'src/components/ocpp/availability/dialog';
+import { LocationPicker } from 'src/components/location-picker/location-picker';
 import { ConnectorStatusChip } from 'src/components/chips/connector-status-chip';
 import { ConnectorTypeIcon } from 'src/components/chargepoint/connector-type-icon';
 
@@ -773,13 +774,26 @@ export default function ChargerDetailV2() {
   const { notifySuccess, notifyError } = useNotification();
 
   // ── Edit chargepoint state ──────────────────────────────────────────────────
+  // ── Editar cargador: identidad + ubicación ──────────────────────────────────
   const [editChargerOpen, setEditChargerOpen] = useState(false);
   const [editName, setEditName] = useState('');
   const [editIsPrivate, setEditIsPrivate] = useState(false);
-  const [editHasCallCenter, setEditHasCallCenter] = useState(false);
-  const [editSimCard, setEditSimCard] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editPostalCode, setEditPostalCode] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editLatitude, setEditLatitude] = useState('');
+  const [editLongitude, setEditLongitude] = useState('');
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  // ── Servicios adicionales: SIM, Call Center, tiempo máx. recarga ─────────────
+  const [servicesEditOpen, setServicesEditOpen] = useState(false);
+  const [servicesConfirmOpen, setServicesConfirmOpen] = useState(false);
+  const [editHasCallCenter, setEditHasCallCenter] = useState(false);
+  const [editSimCard, setEditSimCard] = useState('');
+  const [editMaxRechargeTime, setEditMaxRechargeTime] = useState('');
+  const [servicesSaving, setServicesSaving] = useState(false);
+  const [servicesError, setServicesError] = useState<string | null>(null);
 
   // ── Asignar estación (rol eurocharger) ──────────────────────────────────────
   const [assignStationOpen, setAssignStationOpen] = useState(false);
@@ -800,6 +814,9 @@ export default function ChargerDetailV2() {
   });
   const callCenterItem = subscriptionData?.data?.items?.find((i) => i.type === 'call_center');
   const callCenterUnitPrice = callCenterItem?.unit_price_cents;
+  // SIM oculta temporalmente; conservamos el valor existente al guardar servicios.
+
+  const formatPrice = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €/mes`;
 
   const loadChargepoint = async () => {
     try {
@@ -818,8 +835,11 @@ export default function ChargerDetailV2() {
     if (!chargepoint) return;
     setEditName(chargepoint.name ?? '');
     setEditIsPrivate(chargepoint.is_private ?? false);
-    setEditHasCallCenter(chargepoint.has_call_center ?? false);
-    setEditSimCard(chargepoint.sim_card != null ? String(chargepoint.sim_card) : '');
+    setEditAddress(chargepoint.address ?? '');
+    setEditPostalCode(chargepoint.postal_code ?? '');
+    setEditCity(chargepoint.city ?? '');
+    setEditLatitude(chargepoint.latitude != null ? String(chargepoint.latitude) : '');
+    setEditLongitude(chargepoint.longitude != null ? String(chargepoint.longitude) : '');
     setEditError(null);
     setEditChargerOpen(true);
   };
@@ -831,18 +851,62 @@ export default function ChargerDetailV2() {
       await put(endpoints.chargepoints.update(Number(id)), {
         name: editName.trim() || undefined,
         is_private: editIsPrivate,
-        has_call_center: editHasCallCenter,
-        sim_card: editSimCard !== '' ? Number(editSimCard) : null,
+        address: editAddress.trim() || null,
+        postal_code: editPostalCode.trim() || null,
+        city: editCity.trim() || null,
+        latitude: editLatitude.trim() !== '' ? Number(editLatitude) : null,
+        longitude: editLongitude.trim() !== '' ? Number(editLongitude) : null,
       });
       setEditChargerOpen(false);
       await loadChargepoint();
-      queryClient.invalidateQueries({ queryKey: ['account-subscription', accountId] });
       notifySuccess('Acción realizada con éxito');
     } catch {
       setEditError('Error al guardar los cambios. Inténtalo de nuevo.');
       notifyError('Ha ocurrido un error al lanzar la acción');
     } finally {
       setEditSaving(false);
+    }
+  };
+
+  // ── Servicios adicionales ──────────────────────────────────────────────────
+  const openEditServices = () => {
+    if (!chargepoint) return;
+    setEditHasCallCenter(chargepoint.has_call_center ?? false);
+    setEditSimCard(chargepoint.sim_card != null ? String(chargepoint.sim_card) : '');
+    setEditMaxRechargeTime(
+      chargepoint.max_recharge_time != null ? String(chargepoint.max_recharge_time) : ''
+    );
+    setServicesError(null);
+    setServicesEditOpen(true);
+  };
+
+  // El cambio de SIM / Call Center conlleva coste en la suscripción: pedimos
+  // confirmación antes de aplicar.
+  const requestSaveServices = () => {
+    setServicesEditOpen(false);
+    setServicesConfirmOpen(true);
+  };
+
+  const confirmSaveServices = async () => {
+    try {
+      setServicesSaving(true);
+      setServicesError(null);
+      await put(endpoints.chargepoints.update(Number(id)), {
+        has_call_center: editHasCallCenter,
+        sim_card: editSimCard !== '' ? Number(editSimCard) : null,
+        max_recharge_time: editMaxRechargeTime.trim() !== '' ? Number(editMaxRechargeTime) : null,
+      });
+      setServicesConfirmOpen(false);
+      await loadChargepoint();
+      queryClient.invalidateQueries({ queryKey: ['account-subscription', accountId] });
+      notifySuccess('Servicios actualizados correctamente');
+    } catch {
+      setServicesError('Error al guardar los servicios. Inténtalo de nuevo.');
+      notifyError('Ha ocurrido un error al lanzar la acción');
+      setServicesConfirmOpen(false);
+      setServicesEditOpen(true);
+    } finally {
+      setServicesSaving(false);
     }
   };
 
@@ -1041,6 +1105,12 @@ export default function ChargerDetailV2() {
               >
                 <InfoRow label="Nombre" value={chargepoint.name} />
                 <InfoRow label="Dirección" value={chargepoint.address} />
+                {(chargepoint.postal_code || chargepoint.city) && (
+                  <InfoRow
+                    label="Ciudad"
+                    value={[chargepoint.postal_code, chargepoint.city].filter(Boolean).join(' ')}
+                  />
+                )}
                 {hasLocation && (
                   <InfoRow
                     label="Coordenadas"
@@ -1051,12 +1121,6 @@ export default function ChargerDetailV2() {
                   <InfoRow label="ID cliente" value={chargepoint.client_id} />
                 )}
                 <InfoRow label="Acceso" value={chargepoint.is_private ? 'Privado' : 'Público'} />
-                {chargepoint.has_call_center != null && (
-                  <InfoRow
-                    label="Call Center"
-                    value={chargepoint.has_call_center ? 'Activo' : 'Inactivo'}
-                  />
-                )}
                 {hasAnyRole(['eurocharger']) && (
                   <Stack
                     direction="row"
@@ -1106,8 +1170,8 @@ export default function ChargerDetailV2() {
                     <Map
                       mapboxAccessToken={CONFIG.mapboxApiKey}
                       initialViewState={{
-                        longitude: chargepoint.longitude,
-                        latitude: chargepoint.latitude,
+                        longitude: chargepoint.longitude ?? undefined,
+                        latitude: chargepoint.latitude ?? undefined,
                         zoom: 14,
                       }}
                       mapStyle="mapbox://styles/mapbox/streets-v12"
@@ -1124,9 +1188,11 @@ export default function ChargerDetailV2() {
               </SectionCard>
             </Grid>
 
-            {showOcppConfig ? (
             <Grid size={{ xs: 12, md: 6 }}>
-              <SectionCard
+              <Stack spacing={2} sx={{ height: '100%' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  {showOcppConfig ? (
+                  <SectionCard
                 title="Configuración OCPP"
                 action={
                   <Stack direction="row" alignItems="center" spacing={0.75}>
@@ -1170,11 +1236,9 @@ export default function ChargerDetailV2() {
                     </Button>
                   </Box>
                 )}
-              </SectionCard>
-            </Grid>
-            ) : (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <SectionCard
+                  </SectionCard>
+                  ) : (
+                  <SectionCard
                 title="Operador"
                 action={
                   <Label color={chargepoint.source === 'ocpi' ? 'info' : 'warning'} variant="soft">
@@ -1217,9 +1281,49 @@ export default function ChargerDetailV2() {
                 {chargepoint.operator_code && (
                   <InfoRow label="ID operador" value={chargepoint.operator_code} mono />
                 )}
-              </SectionCard>
+                  </SectionCard>
+                  )}
+                </Box>
+
+                {showOcppConfig && (
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <SectionCard
+                      title="Servicios adicionales"
+                      action={
+                        !hasRole('saas_guest') ? (
+                          <IconButton
+                            size="small"
+                            title="Editar servicios"
+                            onClick={openEditServices}
+                          >
+                            <Iconify icon="mdi:pencil-outline" width={16} />
+                          </IconButton>
+                        ) : undefined
+                      }
+                    >
+                      <InfoRow
+                        label="Call Center"
+                        value={chargepoint.has_call_center ? 'Activo' : 'Inactivo'}
+                      />
+                      {callCenterUnitPrice !== undefined && (
+                        <InfoRow
+                          label="Coste Call Center"
+                          value={formatPrice(callCenterUnitPrice)}
+                        />
+                      )}
+                      <InfoRow
+                        label="Tiempo máx. recarga"
+                        value={
+                          chargepoint.max_recharge_time != null
+                            ? `${chargepoint.max_recharge_time} min`
+                            : '—'
+                        }
+                      />
+                    </SectionCard>
+                  </Box>
+                )}
+              </Stack>
             </Grid>
-            )}
           </Grid>
 
           {/* ── Conectores ──────────────────────────────────────────────────── */}
@@ -1399,13 +1503,18 @@ export default function ChargerDetailV2() {
       <Dialog
         open={editChargerOpen}
         onClose={() => !editSaving && setEditChargerOpen(false)}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle>Editar cargador</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
+          <Stack spacing={2.5} sx={{ pt: 1 }}>
             {editError && <Alert severity="error">{editError}</Alert>}
+
+            {/* ── Identidad y privacidad ── */}
+            <Typography variant="subtitle2" fontWeight={700}>
+              Identidad y privacidad
+            </Typography>
             <TextField
               label="Nombre"
               size="small"
@@ -1423,26 +1532,55 @@ export default function ChargerDetailV2() {
               }
               label="Acceso privado"
             />
-            {callCenterUnitPrice !== undefined && (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={editHasCallCenter}
-                    onChange={(e) => setEditHasCallCenter(e.target.checked)}
-                    size="small"
-                  />
-                }
-                label={`Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`}
-              />
-            )}
+            <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+              Un cargador privado solo es visible para los usuarios añadidos en Autorizaciones. Si
+              todos los cargadores de la estación son privados, la estación queda oculta.
+            </Typography>
+
+            <Divider />
+
+            {/* ── Ubicación (mismo selector que en estaciones) ── */}
+            <Typography variant="subtitle2" fontWeight={700}>
+              Ubicación
+            </Typography>
             <TextField
-              label="SIM"
+              label="Dirección"
               size="small"
               fullWidth
-              type="number"
-              value={editSimCard}
-              onChange={(e) => setEditSimCard(e.target.value)}
-              placeholder="Número de SIM (opcional)"
+              value={editAddress}
+              onChange={(e) => setEditAddress(e.target.value)}
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label="Código postal"
+                size="small"
+                fullWidth
+                value={editPostalCode}
+                onChange={(e) => setEditPostalCode(e.target.value)}
+              />
+              <TextField
+                label="Ciudad"
+                size="small"
+                fullWidth
+                value={editCity}
+                onChange={(e) => setEditCity(e.target.value)}
+              />
+            </Stack>
+            <LocationPicker
+              value={{
+                latitude: editLatitude,
+                longitude: editLongitude,
+                address: editAddress,
+                city: editCity,
+                postalCode: editPostalCode,
+              }}
+              onChange={(patch) => {
+                if (patch.latitude !== undefined) setEditLatitude(patch.latitude);
+                if (patch.longitude !== undefined) setEditLongitude(patch.longitude);
+                if (patch.address !== undefined) setEditAddress(patch.address);
+                if (patch.city !== undefined) setEditCity(patch.city);
+                if (patch.postalCode !== undefined) setEditPostalCode(patch.postalCode);
+              }}
             />
           </Stack>
         </DialogContent>
@@ -1457,6 +1595,95 @@ export default function ChargerDetailV2() {
             startIcon={editSaving ? <CircularProgress size={14} color="inherit" /> : undefined}
           >
             Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Editar servicios adicionales (SIM, Call Center, tiempo máx. recarga) */}
+      <Dialog
+        open={servicesEditOpen}
+        onClose={() => !servicesSaving && setServicesEditOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Editar servicios adicionales</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2.5} sx={{ pt: 1 }}>
+            {servicesError && <Alert severity="error">{servicesError}</Alert>}
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Switch
+                  checked={editHasCallCenter}
+                  onChange={(e) => setEditHasCallCenter(e.target.checked)}
+                  size="small"
+                />
+              }
+              label={
+                callCenterUnitPrice !== undefined
+                  ? `Call Center – ${formatPrice(callCenterUnitPrice)}`
+                  : 'Call Center'
+              }
+            />
+            <TextField
+              label="Tiempo máx. de recarga (min)"
+              size="small"
+              fullWidth
+              type="number"
+              value={editMaxRechargeTime}
+              onChange={(e) => setEditMaxRechargeTime(e.target.value)}
+              placeholder="Opcional"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setServicesEditOpen(false)} disabled={servicesSaving}>
+            Cancelar
+          </Button>
+          <Button variant="contained" onClick={requestSaveServices} disabled={servicesSaving}>
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmación de coste al guardar servicios */}
+      <Dialog
+        open={servicesConfirmOpen}
+        onClose={() => !servicesSaving && setServicesConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Confirmar cambios</DialogTitle>
+        <DialogContent>
+          <DialogContentText component="div">
+            Estos servicios tienen un coste en tu suscripción:
+            <Box component="ul" sx={{ mt: 1, mb: 1, pl: 2.5 }}>
+              {editHasCallCenter && callCenterUnitPrice !== undefined ? (
+                <li>Call Center: {formatPrice(callCenterUnitPrice)}</li>
+              ) : (
+                <li>Sin servicios de pago activos.</li>
+              )}
+            </Box>
+            ¿Quieres confirmar los cambios?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setServicesConfirmOpen(false);
+              setServicesEditOpen(true);
+            }}
+            disabled={servicesSaving}
+          >
+            Volver
+          </Button>
+          <Button
+            variant="contained"
+            onClick={confirmSaveServices}
+            disabled={servicesSaving}
+            startIcon={servicesSaving ? <CircularProgress size={14} color="inherit" /> : undefined}
+          >
+            Confirmar
           </Button>
         </DialogActions>
       </Dialog>
