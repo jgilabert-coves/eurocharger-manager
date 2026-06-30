@@ -76,6 +76,7 @@ export function NavVertical({
         data={data}
         cssVars={cssVars}
         currentRole={currentRole}
+        enabledRootRedirect
         sx={[
           (theme) => ({
             ...theme.mixins.hideScrollY,

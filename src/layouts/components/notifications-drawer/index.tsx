@@ -1,7 +1,9 @@
+import type { PendingSimRequest } from 'src/types/sims';
 import type { IconButtonProps } from '@mui/material/IconButton';
 
 import { m } from 'framer-motion';
 import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useBoolean } from 'minimal-shared/hooks';
 
 import Tab from '@mui/material/Tab';
@@ -14,17 +16,26 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
+import { fetcher, endpoints } from 'src/lib/axios';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { varTap, varHover, transitionTap } from 'src/components/animate';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { NotificationItem } from './notification-item';
 
 import type { NotificationItemProps } from './notification-item';
 
 // ----------------------------------------------------------------------
+
+type SimRequestsResponse = { data: PendingSimRequest[]; status_code: number; error: null };
 
 const TABS = [
   { value: 'all', label: 'All', count: 22 },
@@ -40,6 +51,9 @@ export type NotificationsDrawerProps = IconButtonProps & {
 
 export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDrawerProps) {
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
+  const router = useRouter();
+  const { user } = useAuthContext();
+  const isEurocharger = user?.roles?.includes('eurocharger') ?? false;
 
   const [currentTab, setCurrentTab] = useState('all');
 
@@ -49,7 +63,28 @@ export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDr
 
   const [notifications, setNotifications] = useState(data);
 
-  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length;
+  const { data: simRequestsRes } = useQuery<SimRequestsResponse>({
+    queryKey: ['sim-requests-notifications'],
+    queryFn: () => fetcher(endpoints.sims.requests),
+    enabled: isEurocharger,
+  });
+
+  const simRequests = simRequestsRes?.data ?? [];
+  const simRequestCount = simRequests.length;
+
+  const simNotifications: NotificationItemProps['notification'][] = isEurocharger
+    ? simRequests.map((req) => ({
+        id: String(req.id),
+        type: 'sim_request',
+        title: `Solicitud de SIM — ${req.account_name}`,
+        category: `Para el cargador ${req.name ?? req.ocpp_id}`,
+        isUnRead: true,
+        avatarUrl: null,
+        createdAt: req.sim_requested_at,
+      }))
+    : [];
+
+  const totalUnRead = notifications.filter((item) => item.isUnRead === true).length + simRequestCount;
 
   const handleMarkAllAsRead = () => {
     setNotifications(notifications.map((notification) => ({ ...notification, isUnRead: false })));
@@ -116,6 +151,17 @@ export function NotificationsDrawer({ data = [], sx, ...other }: NotificationsDr
   const renderList = () => (
     <Scrollbar>
       <Box component="ul">
+        {simNotifications.map((notification) => (
+          <Box component="li" key={`sim-${notification.id}`} sx={{ display: 'flex' }}>
+            <NotificationItem
+              notification={notification}
+              onClick={() => {
+                router.push(paths.sims.list);
+                onClose();
+              }}
+            />
+          </Box>
+        ))}
         {notifications?.map((notification) => (
           <Box component="li" key={notification.id} sx={{ display: 'flex' }}>
             <NotificationItem notification={notification} />

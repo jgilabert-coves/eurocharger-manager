@@ -92,6 +92,9 @@ export const paths = {
     list: `/tickets`,
     detail: (id: string | number) => `/tickets/${id}`,
   },
+  sims: {
+    list: '/sims',
+  },
   locations: {
     list: `/locations`,
     detail: (id: string | number) => `/locations/${id}`,

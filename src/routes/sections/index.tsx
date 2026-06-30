@@ -6,6 +6,7 @@ import { Navigate } from 'react-router';
 import { CONFIG } from 'src/global-config';
 
 import { authRoutes } from './auth';
+import { simsRoutes } from './sims';
 import { ratesRoutes } from './rates';
 import { plansRoutes } from './plans';
 import { alarmsRoutes } from './alarms';
@@ -58,6 +59,8 @@ export const routesSection: RouteObject[] = [
   ...managerUsersRoutes,
 
   ...ticketsRoutes,
+
+  ...simsRoutes,
 
   ...locationsRoutes,
 

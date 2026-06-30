@@ -58,8 +58,8 @@ export const Logo = forwardRef<HTMLAnchorElement, LogoProps>((props, ref) => {
       className={mergeClasses([logoClasses.root, className])}
       sx={[
         () => ({
-          width: 40,
-          height: 40,
+          width: 28,
+          height: 28,
           ...(!isSingle && { width: 140, height: 50 }),
           ...(disabled && { pointerEvents: 'none' }),
         }),

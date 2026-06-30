@@ -4,6 +4,7 @@ import { Bell, Bank, Gear, Crown, Airplay, HouseLine, ChargingStation } from '@p
 
 import { paths } from 'src/routes/paths';
 
+
 // ----------------------------------------------------------------------
 
 export const navData: NavSectionProps['data'] = [
@@ -72,12 +73,6 @@ export const navData: NavSectionProps['data'] = [
         roles: ['saas_owner', 'eurocharger'],
       },
       {
-        title: 'Traspasar cargadores',
-        path: paths.chargerTransfer.root,
-        caption: 'Asigna cargadores a un nuevo propietario',
-        roles: ['eurocharger'],
-      },
-      {
         title: 'Autorizaciones',
         path: paths.privileges.list,
         caption: 'Gestiona el acceso a cargadores privados para nuevos usuarios',
@@ -115,6 +110,11 @@ export const navData: NavSectionProps['data'] = [
     icon: <Crown />,
     roles: ['eurocharger'],
     children: [
+      {
+        title: 'SIMs',
+        path: paths.sims.list,
+        caption: 'Gestiona las tarjetas SIM de los cargadores',
+      },
       {
         title: 'Planes',
         path: paths.plans.list,

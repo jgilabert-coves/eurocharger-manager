@@ -1,5 +1,6 @@
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+import type { Sim } from 'src/types/sims';
 import type { Subscription } from 'src/types/billing';
 import type { GeocodingFeature } from 'src/lib/geocoding';
 import type { MapRef, MapLayerMouseEvent } from 'react-map-gl';
@@ -19,6 +20,7 @@ import Switch from '@mui/material/Switch';
 import Divider from '@mui/material/Divider';
 import Stepper from '@mui/material/Stepper';
 import Tooltip from '@mui/material/Tooltip';
+import Collapse from '@mui/material/Collapse';
 import MenuItem from '@mui/material/MenuItem';
 import StepLabel from '@mui/material/StepLabel';
 import TextField from '@mui/material/TextField';
@@ -33,7 +35,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { CONFIG } from 'src/global-config';
-import { post, fetcher, endpoints } from 'src/lib/axios';
+import { put, post, fetcher, endpoints } from 'src/lib/axios';
 import {
   COUNTRY_MAP,
   parseLatLon,
@@ -193,6 +195,10 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   const [chargerName, setChargerName] = useState('');
   const [chargerIsPrivate, setChargerIsPrivate] = useState(false);
   const [chargerHasCallCenter, setChargerHasCallCenter] = useState(false);
+  const [chargerShareEnergy, setChargerShareEnergy] = useState(false);
+  const [chargerMaxRechargeTime, setChargerMaxRechargeTime] = useState('');
+  const [chargerSimId, setChargerSimId] = useState<number | ''>('');
+  const [servicesOpen, setServicesOpen] = useState(false);
 
   // Submit
   const [loading, setLoading] = useState(false);
@@ -225,6 +231,20 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   });
   const callCenterItem = subscriptionData?.data?.items?.find((i) => i.type === 'call_center');
   const callCenterUnitPrice = callCenterItem?.unit_price_cents;
+  const simItem = subscriptionData?.data?.items?.find((i) => i.type === 'sim');
+  const simUnitPrice = simItem?.unit_price_cents;
+
+  const formatPrice = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €/mes`;
+
+  const canManageSim = hasRole('saas_admin') || hasRole('saas_owner') || isEurocharger;
+
+  const { data: availableSimsData } = useQuery<{ data: Sim[]; total: number }>({
+    queryKey: ['sims', 'available'],
+    queryFn: () => fetcher(endpoints.sims.available),
+    enabled: open && canManageSim,
+    staleTime: 30 * 1000,
+  });
+  const availableSims: Sim[] = availableSimsData?.data ?? [];
 
   const { data: stations = [], isLoading: stationsLoading } = useQuery<BasicChargingStationInfo[]>({
     queryKey: ['locations', stationSearch],
@@ -360,6 +380,10 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
     setChargerName('');
     setChargerIsPrivate(false);
     setChargerHasCallCenter(false);
+    setChargerShareEnergy(false);
+    setChargerMaxRechargeTime('');
+    setChargerSimId('');
+    setServicesOpen(false);
     setChargerGroupId('');
     setGroupMode('existing');
     setNewGroupName('');
@@ -436,9 +460,17 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         location_id: locationId,
         chargerGroupId: resolvedGroupId,
         ...(chargerHasCallCenter && { has_call_center: true }),
+        share_energy: chargerShareEnergy,
+        max_recharge_time: chargerMaxRechargeTime.trim() !== '' ? Number(chargerMaxRechargeTime) : null,
       });
 
       const newId = res?.data?.id ?? res?.id ?? null;
+
+      // Si se eligió una SIM, se asigna al cargador recién creado.
+      if (newId != null && chargerSimId !== '') {
+        await put(endpoints.sims.update(Number(chargerSimId)), { chargepoint_id: newId });
+      }
+
       notifySuccess('Cargador creado con éxito');
       onSuccess?.(newId);
       handleClose();
@@ -911,29 +943,6 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
         onChange={(e) => setChargerName(e.target.value)}
         placeholder="Ej. Parking Centro 1"
       />
-      <FormControlLabel
-        control={
-          <Switch
-            checked={chargerIsPrivate}
-            onChange={(e) => setChargerIsPrivate(e.target.checked)}
-            size="small"
-          />
-        }
-        label="Acceso privado"
-      />
-
-      {callCenterUnitPrice !== undefined && (
-        <FormControlLabel
-          control={
-            <Switch
-              checked={chargerHasCallCenter}
-              onChange={(e) => setChargerHasCallCenter(e.target.checked)}
-              size="small"
-            />
-          }
-          label={`Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`}
-        />
-      )}
 
       {!isEurocharger && (
         <Box>
@@ -993,6 +1002,132 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
           )}
         </Box>
       )}
+
+      {/* ── Servicios adicionales (colapsable) ── */}
+      <Box>
+        <Button
+          fullWidth
+          variant="text"
+          color="inherit"
+          onClick={() => setServicesOpen((v) => !v)}
+          endIcon={
+            <Iconify icon={servicesOpen ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
+          }
+          sx={{ justifyContent: 'space-between', px: 1 }}
+        >
+          <Typography variant="subtitle2" fontWeight={700}>
+            Servicios adicionales
+          </Typography>
+        </Button>
+        <Collapse in={servicesOpen} unmountOnExit>
+          <Stack spacing={1.5} sx={{ pt: 1, px: 1 }}>
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Switch
+                  checked={chargerIsPrivate}
+                  onChange={(e) => setChargerIsPrivate(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Acceso privado"
+            />
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Switch
+                  checked={chargerHasCallCenter}
+                  onChange={(e) => setChargerHasCallCenter(e.target.checked)}
+                  size="small"
+                />
+              }
+              label={
+                callCenterUnitPrice !== undefined
+                  ? `Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`
+                  : 'Call Center'
+              }
+            />
+            <FormControlLabel
+              sx={{ ml: 0 }}
+              control={
+                <Switch
+                  checked={chargerShareEnergy}
+                  onChange={(e) => setChargerShareEnergy(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Comparte energía"
+            />
+            {canManageSim && (
+              <TextField
+                select
+                label="SIM"
+                size="small"
+                fullWidth
+                value={chargerSimId}
+                onChange={(e) =>
+                  setChargerSimId(e.target.value === '' ? '' : Number(e.target.value))
+                }
+                helperText={
+                  availableSims.length === 0 ? 'No hay SIMs disponibles' : 'Se asignará al crear'
+                }
+              >
+                <MenuItem value="">Sin SIM</MenuItem>
+                {availableSims.map((sim) => (
+                  <MenuItem key={sim.id} value={sim.id}>
+                    {sim.iccid}
+                    {sim.name ? ` — ${sim.name}` : ''}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+            <TextField
+              label="Tiempo máx. de recarga (min)"
+              size="small"
+              fullWidth
+              type="number"
+              value={chargerMaxRechargeTime}
+              onChange={(e) => setChargerMaxRechargeTime(e.target.value)}
+              placeholder="Opcional"
+            />
+
+            {(chargerHasCallCenter || chargerSimId !== '') && (
+              <Alert severity="info" sx={{ py: 0.5 }}>
+                <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
+                  Coste adicional en la suscripción:
+                </Typography>
+                {chargerHasCallCenter && (
+                  <Typography variant="caption" sx={{ display: 'block' }}>
+                    • Call Center:{' '}
+                    {callCenterUnitPrice !== undefined
+                      ? `+${formatPrice(callCenterUnitPrice)}`
+                      : 'según la suscripción'}
+                  </Typography>
+                )}
+                {chargerSimId !== '' && (
+                  <Typography variant="caption" sx={{ display: 'block' }}>
+                    • SIM:{' '}
+                    {simUnitPrice !== undefined
+                      ? `+${formatPrice(simUnitPrice)}`
+                      : 'según la suscripción'}
+                  </Typography>
+                )}
+                {(callCenterUnitPrice !== undefined || simUnitPrice !== undefined) && (
+                  <Typography variant="caption" fontWeight={700} sx={{ display: 'block', mt: 0.5 }}>
+                    Total: +
+                    {formatPrice(
+                      (chargerHasCallCenter && callCenterUnitPrice !== undefined
+                        ? callCenterUnitPrice
+                        : 0) +
+                        (chargerSimId !== '' && simUnitPrice !== undefined ? simUnitPrice : 0)
+                    )}
+                  </Typography>
+                )}
+              </Alert>
+            )}
+          </Stack>
+        </Collapse>
+      </Box>
     </Stack>
   );
 
