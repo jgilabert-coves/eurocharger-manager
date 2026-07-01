@@ -18,3 +18,30 @@ export type PendingSimRequest = {
   account_name: string;
   account_id: number;
 };
+
+export type SimOrderStatus = 'pending_assignment' | 'assigned' | 'canceled';
+
+export type SimOrder = {
+  id: string;
+  account_id: number;
+  requested_by_user_id: number;
+  quantity: number;
+  unit_price_cents: number;
+  total_cents: number;
+  shipping_name: string | null;
+  shipping_address: string | null;
+  shipping_postal_code: string | null;
+  shipping_city: string | null;
+  shipping_state_province_id: number | null;
+  shipping_country_id: number | null;
+  status: SimOrderStatus;
+  stripe_payment_intent_id: string | null;
+  saas_invoice_id: string | null;
+  created_at: string;
+};
+
+/** Pedido enriquecido para el panel eurocharger. */
+export type SimOrderWithAccount = SimOrder & {
+  account_name: string;
+  assigned_count: number;
+};

@@ -10,6 +10,7 @@ import { simsRoutes } from './sims';
 import { ratesRoutes } from './rates';
 import { plansRoutes } from './plans';
 import { alarmsRoutes } from './alarms';
+import { mySimsRoutes } from './my-sims';
 import { ticketsRoutes } from './tickets';
 import { appUsersRoutes } from './appusers';
 import { invoicesRoutes } from './invoices';
@@ -61,6 +62,7 @@ export const routesSection: RouteObject[] = [
   ...ticketsRoutes,
 
   ...simsRoutes,
+  ...mySimsRoutes,
 
   ...locationsRoutes,
 

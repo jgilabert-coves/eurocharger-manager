@@ -200,11 +200,22 @@ export const endpoints = {
     sync: '/sims/sync',
     requests: '/sims/requests',
     available: '/sims/available',
+    mine: '/sims/mine',
+    pricing: '/sims/pricing',
     update: (id: number) => `/sims/${id}`,
+    activate: (id: number) => `/sims/${id}/activate`,
+    deactivate: (id: number) => `/sims/${id}/deactivate`,
     simRequest: (chargepointId: number) => `/chargingstations/${chargepointId}/sim-request`,
     connectivity: (id: number) => `/sims/${id}/connectivity`,
     removeAssignment: (chargepointId: number) =>
       `/chargingstations/${chargepointId}/sim-assignment`,
+  },
+  simOrders: {
+    list: '/sim-orders',
+    create: '/sim-orders',
+    pricing: '/sim-orders/pricing',
+    requests: '/sim-orders/requests',
+    assign: (id: string) => `/sim-orders/${id}/assign`,
   },
   connectors: {
     create: (chargepointId: number) => `/chargingstations/${chargepointId}/connectors`,

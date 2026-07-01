@@ -1,9 +1,10 @@
-import type { PendingSimRequest } from 'src/types/sims';
+import type { SimOrderWithAccount } from 'src/types/sims';
 
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import TableRow from '@mui/material/TableRow';
@@ -18,33 +19,25 @@ import { fDateTime } from 'src/utils/format-time';
 
 import { fetcher, endpoints } from 'src/lib/axios';
 
-import { AssignSimDialog } from './components/assign-sim-dialog';
+import { AssignSimsToOrderDialog } from './components/assign-sims-to-order-dialog';
 
 // ----------------------------------------------------------------------
 
-type SimRequestsResponse = { data: PendingSimRequest[]; total: number };
+type SimOrdersResponse = { data: SimOrderWithAccount[]; total: number };
+
+const shippingLine = (o: SimOrderWithAccount) =>
+  [o.shipping_address, o.shipping_postal_code, o.shipping_city].filter(Boolean).join(', ') || '—';
 
 export function SimRequestsTab() {
   const queryClient = useQueryClient();
-  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [selectedChargepointId, setSelectedChargepointId] = useState<number | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<SimOrderWithAccount | null>(null);
 
-  const { data: res, isLoading } = useQuery<SimRequestsResponse>({
-    queryKey: ['sims', 'requests'],
-    queryFn: () => fetcher(endpoints.sims.requests),
+  const { data: res, isLoading } = useQuery<SimOrdersResponse>({
+    queryKey: ['sim-orders', 'requests'],
+    queryFn: () => fetcher(endpoints.simOrders.requests),
   });
 
   const rows = res?.data ?? [];
-
-  const handleOpenAssign = (chargepointId: number) => {
-    setSelectedChargepointId(chargepointId);
-    setAssignDialogOpen(true);
-  };
-
-  const handleCloseAssign = () => {
-    setAssignDialogOpen(false);
-    setSelectedChargepointId(null);
-  };
 
   return (
     <>
@@ -54,9 +47,10 @@ export function SimRequestsTab() {
             <TableHead>
               <TableRow>
                 <TableCell>Cuenta</TableCell>
-                <TableCell>Cargador</TableCell>
-                <TableCell>OCPP ID</TableCell>
-                <TableCell>Fecha solicitud</TableCell>
+                <TableCell>Cantidad</TableCell>
+                <TableCell>Asignadas</TableCell>
+                <TableCell>Envío</TableCell>
+                <TableCell>Fecha</TableCell>
                 <TableCell>Acción</TableCell>
               </TableRow>
             </TableHead>
@@ -64,49 +58,55 @@ export function SimRequestsTab() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                     <Typography variant="body2" color="text.secondary">
                       No hay solicitudes pendientes
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((request) => (
+                rows.map((order) => (
                   <TableRow
-                    key={request.id}
+                    key={order.id}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   >
                     <TableCell>
-                      <Typography variant="body2">{request.account_name}</Typography>
+                      <Typography variant="body2">{order.account_name}</Typography>
                     </TableCell>
 
                     <TableCell>
-                      <Typography variant="body2">{request.name ?? '—'}</Typography>
+                      <Typography variant="body2">{order.quantity}</Typography>
                     </TableCell>
 
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                        {request.ocpp_id ?? '—'}
-                      </Typography>
+                      <Chip
+                        size="small"
+                        label={`${order.assigned_count}/${order.quantity}`}
+                        color={order.assigned_count >= order.quantity ? 'success' : 'default'}
+                      />
                     </TableCell>
 
                     <TableCell>
-                      <Typography variant="body2">{fDateTime(request.sim_requested_at)}</Typography>
+                      <Typography variant="body2">{shippingLine(order)}</Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography variant="body2">{fDateTime(order.created_at)}</Typography>
                     </TableCell>
 
                     <TableCell>
                       <Button
                         size="small"
                         variant="contained"
-                        onClick={() => handleOpenAssign(request.id)}
+                        onClick={() => setSelectedOrder(order)}
                       >
-                        Asignar SIM
+                        Asignar tarjetas
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -117,13 +117,13 @@ export function SimRequestsTab() {
         </TableContainer>
       </Card>
 
-      {selectedChargepointId !== null && (
-        <AssignSimDialog
-          open={assignDialogOpen}
-          onClose={handleCloseAssign}
-          chargepointId={selectedChargepointId}
+      {selectedOrder !== null && (
+        <AssignSimsToOrderDialog
+          open
+          onClose={() => setSelectedOrder(null)}
+          order={selectedOrder}
           onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['sims', 'requests'] });
+            queryClient.invalidateQueries({ queryKey: ['sim-orders', 'requests'] });
           }}
         />
       )}

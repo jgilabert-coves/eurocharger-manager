@@ -43,6 +43,7 @@ import { useRouter } from 'src/routes/hooks';
 import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { del, put, post, fetcher, endpoints } from 'src/lib/axios';
+import { RequestSimsDialog } from 'src/pages/sims-account/components/request-sims-dialog';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -813,8 +814,6 @@ export default function ChargerDetailV2() {
   });
   const callCenterItem = subscriptionData?.data?.items?.find((i) => i.type === 'call_center');
   const callCenterUnitPrice = callCenterItem?.unit_price_cents;
-  const simItem = subscriptionData?.data?.items?.find((i) => i.type === 'sim');
-  const simUnitPrice = simItem?.unit_price_cents;
 
   const formatPrice = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €/mes`;
 
@@ -832,27 +831,9 @@ export default function ChargerDetailV2() {
   };
 
   // ── SIM mutations ──────────────────────────────────────────────────────────
-  const { mutate: requestSim, isPending: isRequestingMutation } = useMutation({
-    mutationFn: () => post(endpoints.sims.simRequest(Number(id)), {}),
-    onSuccess: () => {
-      loadChargepoint();
-      notifySuccess('Solicitud de SIM enviada');
-    },
-    onError: () => {
-      notifyError('Ha ocurrido un error al lanzar la acción');
-    },
-  });
-
-  const { mutate: cancelSimRequest } = useMutation({
-    mutationFn: () => del(endpoints.sims.simRequest(Number(id))),
-    onSuccess: () => {
-      loadChargepoint();
-      notifySuccess('Solicitud de SIM cancelada');
-    },
-    onError: () => {
-      notifyError('Ha ocurrido un error al lanzar la acción');
-    },
-  });
+  // El pedido de tarjetas es a nivel de cuenta (diálogo RequestSimsDialog), ya no
+  // una solicitud por cargador.
+  const [requestSimsOpen, setRequestSimsOpen] = useState(false);
 
   const { mutate: removeSimAssignment, isPending: isRemovingSimMutation } = useMutation({
     mutationFn: () => del(endpoints.sims.removeAssignment(Number(id))),
@@ -870,25 +851,25 @@ export default function ChargerDetailV2() {
   }>({
     queryKey: ['sim-connectivity', chargepoint?.sim_card],
     queryFn: () => fetcher(endpoints.sims.connectivity(chargepoint!.sim_card!)),
-    enabled: !!chargepoint?.sim_card && hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']),
+    enabled: !!chargepoint?.sim_card && hasAnyRole(['eurocharger']),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
   const simConnectivity = simConnectivityData?.data?.status ?? 'UNKNOWN';
 
-  const handleRequestSim = () => requestSim();
-  const handleCancelSimRequest = () => cancelSimRequest();
+  // SIMs ocultas a clientes por ahora: solo rol eurocharger. Ampliar a
+  // saas_admin/saas_owner cuando se abra el flujo de SIMs a las cuentas.
+  const canManageSim = hasAnyRole(['eurocharger']);
 
-  const canManageSim = hasAnyRole(['saas_admin', 'saas_owner', 'eurocharger']);
-
-  // SIMs disponibles (sin asignar) para el selector del formulario de servicios.
-  const { data: availableSimsData } = useQuery<{ data: Sim[]; total: number }>({
-    queryKey: ['sims', 'available'],
-    queryFn: () => fetcher(endpoints.sims.available),
-    enabled: servicesEditOpen && canManageSim,
+  // SIMs asignables = las de la cuenta sin cargador asignado (el eurocharger las
+  // asigna primero a la cuenta desde el panel /sims; aquí se asignan a un cargador).
+  const { data: mySimsData } = useQuery<{ data: Sim[] }>({
+    queryKey: ['sims', 'mine'],
+    queryFn: () => fetcher(endpoints.sims.mine),
+    enabled: servicesEditOpen && hasAnyRole(['eurocharger']),
     staleTime: 30 * 1000,
   });
-  const availableSims = availableSimsData?.data ?? [];
+  const availableSims = (mySimsData?.data ?? []).filter((s) => s.chargepoint_id == null);
 
   const { mutate: assignSim, isPending: isAssigningSim } = useMutation({
     mutationFn: (simId: number) =>
@@ -1821,59 +1802,45 @@ export default function ChargerDetailV2() {
                       Quitar SIM
                     </Button>
                   </Stack>
-                ) : chargepoint.sim_requested ? (
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    spacing={1}
-                  >
-                    <Chip size="small" color="warning" label="SIM solicitada · Pendiente" />
-                    <Button size="small" onClick={handleCancelSimRequest}>
-                      Cancelar solicitud
+                ) : availableSims.length > 0 ? (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField
+                      select
+                      size="small"
+                      fullWidth
+                      label="SIM de la cuenta"
+                      value={simToAssign}
+                      onChange={(e) => setSimToAssign(Number(e.target.value))}
+                    >
+                      {availableSims.map((sim) => (
+                        <MenuItem key={sim.id} value={sim.id}>
+                          {sim.iccid}
+                          {sim.name ? ` — ${sim.name}` : ''}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => simToAssign !== '' && assignSim(Number(simToAssign))}
+                      disabled={simToAssign === '' || isAssigningSim}
+                    >
+                      Asignar
                     </Button>
                   </Stack>
                 ) : (
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <TextField
-                        select
-                        size="small"
-                        fullWidth
-                        label="SIM disponible"
-                        value={simToAssign}
-                        onChange={(e) => setSimToAssign(Number(e.target.value))}
-                      >
-                        {availableSims.length === 0 && (
-                          <MenuItem value="" disabled>
-                            No hay SIMs disponibles
-                          </MenuItem>
-                        )}
-                        {availableSims.map((sim) => (
-                          <MenuItem key={sim.id} value={sim.id}>
-                            {sim.iccid}
-                            {sim.name ? ` — ${sim.name}` : ''}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => simToAssign !== '' && assignSim(Number(simToAssign))}
-                        disabled={simToAssign === '' || isAssigningSim}
-                      >
-                        Asignar
-                      </Button>
-                    </Stack>
+                  <Stack spacing={1} alignItems="flex-start">
+                    <Typography variant="caption" color="text.secondary">
+                      No tienes tarjetas libres en la cuenta.
+                    </Typography>
                     <Button
                       size="small"
                       variant="outlined"
                       startIcon={<Iconify icon="solar:sim-card-bold" />}
-                      onClick={handleRequestSim}
-                      disabled={isRequestingMutation}
+                      onClick={() => setRequestSimsOpen(true)}
                       sx={{ alignSelf: 'flex-start' }}
                     >
-                      Solicitar SIM
+                      Solicitar tarjetas
                     </Button>
                   </Stack>
                 )}
@@ -1906,50 +1873,31 @@ export default function ChargerDetailV2() {
                   size="small"
                 />
               }
-              label="Comparte energía"
+              label="Potencia limitada"
             />
             <TextField
-              label="Tiempo máx. de recarga (min)"
+              label="Tiempo limitado (min)"
               size="small"
               fullWidth
               type="number"
               value={editMaxRechargeTime}
-              onChange={(e) => setEditMaxRechargeTime(e.target.value)}
+              onChange={(e) => setEditMaxRechargeTime(e.target.value.replace(/[^\d]/g, ''))}
+              slotProps={{ htmlInput: { min: 0, step: 1, inputMode: 'numeric' } }}
               placeholder="Opcional"
             />
 
-            {((editHasCallCenter &&
+            {editHasCallCenter &&
               !chargepoint.has_call_center &&
-              callCenterUnitPrice !== undefined) ||
-              (simToAssign !== '' && simUnitPrice !== undefined)) && (
-              <Alert severity="info" sx={{ py: 0.5 }}>
-                <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
-                  Coste adicional en tu suscripción:
-                </Typography>
-                {editHasCallCenter &&
-                  !chargepoint.has_call_center &&
-                  callCenterUnitPrice !== undefined && (
-                    <Typography variant="caption" sx={{ display: 'block' }}>
-                      • Call Center: +{formatPrice(callCenterUnitPrice)}
-                    </Typography>
-                  )}
-                {simToAssign !== '' && simUnitPrice !== undefined && (
-                  <Typography variant="caption" sx={{ display: 'block' }}>
-                    • SIM: +{formatPrice(simUnitPrice)}
+              callCenterUnitPrice !== undefined && (
+                <Alert severity="info" sx={{ py: 0.5 }}>
+                  <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 0.5 }}>
+                    Coste adicional en tu suscripción:
                   </Typography>
-                )}
-                <Typography variant="caption" fontWeight={700} sx={{ display: 'block', mt: 0.5 }}>
-                  Total: +
-                  {formatPrice(
-                    (editHasCallCenter &&
-                    !chargepoint.has_call_center &&
-                    callCenterUnitPrice !== undefined
-                      ? callCenterUnitPrice
-                      : 0) + (simToAssign !== '' && simUnitPrice !== undefined ? simUnitPrice : 0)
-                  )}
-                </Typography>
-              </Alert>
-            )}
+                  <Typography variant="caption" sx={{ display: 'block' }}>
+                    • Call Center: +{formatPrice(callCenterUnitPrice)}
+                  </Typography>
+                </Alert>
+              )}
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -2075,6 +2023,12 @@ export default function ChargerDetailV2() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <RequestSimsDialog
+        open={requestSimsOpen}
+        onClose={() => setRequestSimsOpen(false)}
+        onSuccess={() => loadChargepoint()}
+      />
     </>
   );
 }

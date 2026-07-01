@@ -74,6 +74,14 @@ export const navData: NavSectionProps['data'] = [
     icon: <Gear />,
     children: [
       {
+        title: 'SIMs',
+        path: paths.mySims.list,
+        caption: 'Gestiona tus tarjetas SIM: activa, asigna a cargadores y solicita nuevas',
+        // Oculto a clientes por ahora: solo rol eurocharger. Cambiar a 'saas_owner'
+        // cuando se abra el flujo de SIMs a las cuentas.
+        roles: ['eurocharger'],
+      },
+      {
         title: 'Propietarios',
         path: paths.chargerGroups.list,
         caption: 'Agrupa cargadores por propietarios',
