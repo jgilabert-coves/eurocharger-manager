@@ -47,9 +47,15 @@ export function LocationPicker({
   height = 300,
 }: Props) {
   const mapRef = useRef<MapRef>(null);
-  const [mapSearch, setMapSearch] = useState('');
+  const coordsText = (lat: string, lng: string) =>
+    lat !== '' && lng !== '' ? `${lat}, ${lng}` : '';
+  // Por defecto el buscador muestra la lat/lng del valor recibido (p.ej. la del cargador).
+  const [mapSearch, setMapSearch] = useState(() => coordsText(value.latitude, value.longitude));
   const [mapOptions, setMapOptions] = useState<GeocodingFeature[]>([]);
   const [mapSearchLoading, setMapSearchLoading] = useState(false);
+  // Evita que un texto de coordenadas puesto por código (valor por defecto o cambio
+  // externo de value) dispare la búsqueda/reverse-geocode automática.
+  const skipSearchRef = useRef(value.latitude !== '' && value.longitude !== '');
 
   const { latitude, longitude } = value;
 
@@ -81,14 +87,31 @@ export function LocationPicker({
   function handleGeocodingSelect(feature: GeocodingFeature | null) {
     if (!feature) return;
     applyGeocodingFeature(feature);
-    setMapSearch('');
+    // El buscador reflejará las coordenadas resultantes vía el efecto de sync.
     setMapOptions([]);
   }
+
+  // Refleja en el buscador la lat/lng del valor recibido (por defecto y ante
+  // cambios externos), sin disparar búsqueda.
+  useEffect(() => {
+    const text = coordsText(value.latitude, value.longitude);
+    if (!text) return;
+    setMapSearch((prev) => {
+      if (prev === text) return prev;
+      skipSearchRef.current = true;
+      return text;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.latitude, value.longitude]);
 
   // Búsqueda geocodificada con debounce para la barra del mapa.
   useEffect(() => {
     if (!mapSearch.trim()) {
       setMapOptions([]);
+      return undefined;
+    }
+    if (skipSearchRef.current) {
+      skipSearchRef.current = false;
       return undefined;
     }
     const timer = setTimeout(async () => {
