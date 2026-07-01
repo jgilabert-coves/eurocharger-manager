@@ -1232,6 +1232,7 @@ export default function ChargerDetailV2() {
                       }}
                       mapStyle="mapbox://styles/mapbox/streets-v12"
                       style={{ width: '100%', height: '100%' }}
+                      dragPan={false}
                     >
                       <Marker
                         longitude={chargepoint.longitude ?? 0}
