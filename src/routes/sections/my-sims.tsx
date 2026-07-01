@@ -27,9 +27,7 @@ const dashboardLayout = () => (
 );
 
 const mySimsLayout = () => (
-  // Oculto a clientes por ahora: solo rol eurocharger. Cambiar a 'saas_owner'
-  // cuando se abra el flujo de SIMs a las cuentas.
-  <RoleGuard roles={['eurocharger']}>
+  <RoleGuard roles={['saas_owner', 'eurocharger']}>
     <MySimsView />
   </RoleGuard>
 );

@@ -1,4 +1,4 @@
-import type { Sim } from 'src/types/sims';
+import type { Sim, SimOrderStatus, SimOrderWithProgress } from 'src/types/sims';
 
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -17,6 +17,8 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { fDateTime } from 'src/utils/format-time';
+
 import { DashboardContent } from 'src/layouts/dashboard';
 import { put, post, fetcher, endpoints } from 'src/lib/axios';
 
@@ -34,6 +36,15 @@ import { AssignChargerDialog } from './components/assign-charger-dialog';
 const metadata = { title: `Mis SIMs | ${CONFIG.appName}` };
 
 type SimsResponse = { data: (Sim & { chargepoint_name: string | null })[] };
+type OrdersResponse = { data: SimOrderWithProgress[] };
+
+const ORDER_STATUS: Record<SimOrderStatus, { label: string; color: 'default' | 'warning' | 'success' | 'error' }> = {
+  pending_assignment: { label: 'Pendiente de asignación', color: 'warning' },
+  assigned: { label: 'Asignado', color: 'success' },
+  canceled: { label: 'Cancelado', color: 'error' },
+};
+
+const fmtEur = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export default function MySimsPage() {
   const queryClient = useQueryClient();
@@ -50,7 +61,16 @@ export default function MySimsPage() {
   });
   const sims = res?.data ?? [];
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['sims', 'mine'] });
+  const { data: ordersRes } = useQuery<OrdersResponse>({
+    queryKey: ['sim-orders', 'mine'],
+    queryFn: () => fetcher(endpoints.simOrders.list),
+  });
+  const orders = ordersRes?.data ?? [];
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['sims', 'mine'] });
+    queryClient.invalidateQueries({ queryKey: ['sim-orders', 'mine'] });
+  };
 
   const { mutate: setActive, isPending: toggling } = useMutation({
     mutationFn: ({ id, active }: { id: number; active: boolean }) =>
@@ -93,6 +113,47 @@ export default function MySimsPage() {
           </Button>
         </Stack>
 
+        {orders.length > 0 && (
+          <>
+            <Typography variant="h6" sx={{ mb: 1.5 }}>
+              Mis pedidos
+            </Typography>
+            <Card sx={{ borderRadius: 2, overflow: 'hidden', mb: 4 }}>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Cantidad</TableCell>
+                      <TableCell>Asignadas</TableCell>
+                      <TableCell>Total</TableCell>
+                      <TableCell>Estado</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {orders.map((order) => {
+                      const st = ORDER_STATUS[order.status];
+                      return (
+                        <TableRow key={order.id}>
+                          <TableCell>{fDateTime(order.created_at)}</TableCell>
+                          <TableCell>{order.quantity}</TableCell>
+                          <TableCell>
+                            {order.assigned_count}/{order.quantity}
+                          </TableCell>
+                          <TableCell>{fmtEur(order.total_cents)}</TableCell>
+                          <TableCell>
+                            <Chip size="small" label={st.label} color={st.color} />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Card>
+          </>
+        )}
+
         <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <TableContainer>
             <Table>
@@ -116,7 +177,9 @@ export default function MySimsPage() {
                   <TableRow>
                     <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
                       <Typography variant="body2" color="text.secondary">
-                        No tienes tarjetas asignadas. Solicita nuevas con el botón superior.
+                        {orders.some((o) => o.status === 'pending_assignment')
+                          ? 'Tu pedido está en preparación; podrás activar las tarjetas cuando te las asignemos.'
+                          : 'No tienes tarjetas asignadas. Solicita nuevas con el botón superior.'}
                       </Typography>
                     </TableCell>
                   </TableRow>

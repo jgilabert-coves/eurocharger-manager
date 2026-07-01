@@ -40,7 +40,7 @@ export const navData: NavSectionProps['data'] = [
         title: 'Autofacturas',
         path: paths.invoices.list,
         caption: 'Visualiza los importes recaudados en los cargadores',
-        roles: ['eurocharger'],
+        roles: ['eurocharger','saas_owner'],
       },
     ],
   },
@@ -77,9 +77,7 @@ export const navData: NavSectionProps['data'] = [
         title: 'SIMs',
         path: paths.mySims.list,
         caption: 'Gestiona tus tarjetas SIM: activa, asigna a cargadores y solicita nuevas',
-        // Oculto a clientes por ahora: solo rol eurocharger. Cambiar a 'saas_owner'
-        // cuando se abra el flujo de SIMs a las cuentas.
-        roles: ['eurocharger'],
+        roles: ['saas_owner', 'eurocharger'],
       },
       {
         title: 'Propietarios',

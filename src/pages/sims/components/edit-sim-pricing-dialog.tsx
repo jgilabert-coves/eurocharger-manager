@@ -70,7 +70,7 @@ export function EditSimPricingDialog({ open, onClose }: Props) {
       <DialogContent>
         <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            label="Precio por tarjeta (€, IVA incl.)"
+            label="Precio por tarjeta (€, sin IVA)"
             size="small"
             fullWidth
             type="number"
@@ -79,7 +79,7 @@ export function EditSimPricingDialog({ open, onClose }: Props) {
             slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
           />
           <TextField
-            label="Gastos de envío (€, IVA incl.)"
+            label="Gastos de envío (€, sin IVA)"
             size="small"
             fullWidth
             type="number"

@@ -851,22 +851,21 @@ export default function ChargerDetailV2() {
   }>({
     queryKey: ['sim-connectivity', chargepoint?.sim_card],
     queryFn: () => fetcher(endpoints.sims.connectivity(chargepoint!.sim_card!)),
-    enabled: !!chargepoint?.sim_card && hasAnyRole(['eurocharger']),
+    enabled: !!chargepoint?.sim_card && hasAnyRole(['saas_owner', 'eurocharger']),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
   const simConnectivity = simConnectivityData?.data?.status ?? 'UNKNOWN';
 
-  // SIMs ocultas a clientes por ahora: solo rol eurocharger. Ampliar a
-  // saas_admin/saas_owner cuando se abra el flujo de SIMs a las cuentas.
-  const canManageSim = hasAnyRole(['eurocharger']);
+  // SIMs visibles solo para saas_owner o eurocharger.
+  const canManageSim = hasAnyRole(['saas_owner', 'eurocharger']);
 
   // SIMs asignables = las de la cuenta sin cargador asignado (el eurocharger las
   // asigna primero a la cuenta desde el panel /sims; aquí se asignan a un cargador).
   const { data: mySimsData } = useQuery<{ data: Sim[] }>({
     queryKey: ['sims', 'mine'],
     queryFn: () => fetcher(endpoints.sims.mine),
-    enabled: servicesEditOpen && hasAnyRole(['eurocharger']),
+    enabled: servicesEditOpen && hasAnyRole(['saas_owner', 'eurocharger']),
     staleTime: 30 * 1000,
   });
   const availableSims = (mySimsData?.data ?? []).filter((s) => s.chargepoint_id == null);

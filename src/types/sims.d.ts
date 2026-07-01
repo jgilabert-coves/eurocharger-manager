@@ -45,3 +45,8 @@ export type SimOrderWithAccount = SimOrder & {
   account_name: string;
   assigned_count: number;
 };
+
+/** Pedido con progreso de asignación, para la vista de cuenta (saas_owner). */
+export type SimOrderWithProgress = SimOrder & {
+  assigned_count: number;
+};

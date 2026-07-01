@@ -47,10 +47,13 @@ export function RequestSimsDialog({ open, onClose, onSuccess }: Props) {
     queryFn: () => fetcher(endpoints.simOrders.pricing),
     enabled: open,
   });
+  // Los precios vienen SIN IVA (netos); se añade el 21% para el total a pagar.
   const unitPriceCents = pricingRes?.data?.unit_price_cents ?? 0;
   const shippingPriceCents = pricingRes?.data?.shipping_price_cents ?? 0;
   const simsCents = useMemo(() => unitPriceCents * (quantity || 0), [unitPriceCents, quantity]);
-  const totalCents = simsCents + shippingPriceCents;
+  const subtotalCents = simsCents + shippingPriceCents;
+  const taxCents = Math.round(subtotalCents * 0.21);
+  const totalCents = subtotalCents + taxCents;
 
   const { mutate: submit, isPending } = useMutation({
     mutationFn: () =>
@@ -171,8 +174,14 @@ export function RequestSimsDialog({ open, onClose, onSuccess }: Props) {
               </Typography>
               <Typography variant="body2">{fmtEur(shippingPriceCents)}</Typography>
             </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                IVA (21%)
+              </Typography>
+              <Typography variant="body2">{fmtEur(taxCents)}</Typography>
+            </Stack>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 0.5 }}>
-              <Typography variant="subtitle1">Total</Typography>
+              <Typography variant="subtitle1">Total (IVA incl.)</Typography>
               <Typography variant="h6">{fmtEur(totalCents)}</Typography>
             </Stack>
           </Stack>
