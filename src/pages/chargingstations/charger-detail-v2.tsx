@@ -1351,15 +1351,15 @@ export default function ChargerDetailV2() {
                 {showOcppConfig && (
                   <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <SectionCard
-                      title="Servicios adicionales"
+                      title="Configuración adicional"
                       action={
                         !hasRole('saas_guest') ? (
                           <IconButton
                             size="small"
-                            title="Editar servicios"
+                            title="Editar configuración adicional"
                             onClick={openEditServices}
                           >
-                            <Iconify icon="mdi:pencil-outline" width={16} />
+                            <PencilSimpleIcon width={16} />
                           </IconButton>
                         ) : undefined
                       }
@@ -1368,12 +1368,6 @@ export default function ChargerDetailV2() {
                         label="Call Center"
                         value={chargepoint.has_call_center ? 'Activo' : 'Inactivo'}
                       />
-                      {callCenterUnitPrice !== undefined && (
-                        <InfoRow
-                          label="Coste Call Center"
-                          value={formatPrice(callCenterUnitPrice)}
-                        />
-                      )}
                       <InfoRow
                         label="Comparte energía"
                         value={chargepoint.share_energy ? 'Sí' : 'No'}
@@ -1664,7 +1658,7 @@ export default function ChargerDetailV2() {
       <Dialog
         open={editChargerOpen}
         onClose={() => !editSaving && setEditChargerOpen(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>Editar cargador</DialogTitle>
@@ -1767,7 +1761,7 @@ export default function ChargerDetailV2() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Editar servicios adicionales</DialogTitle>
+        <DialogTitle>Editar configuración adicional</DialogTitle>
         <DialogContent>
           <Stack spacing={2.5} sx={{ pt: 1 }}>
             {servicesError && <Alert severity="error">{servicesError}</Alert>}
