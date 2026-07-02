@@ -18,6 +18,7 @@ import TableContainer from '@mui/material/TableContainer';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { fDateTime } from 'src/utils/format-time';
+import { formatCents } from 'src/utils/format-number';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { put, post, fetcher, endpoints } from 'src/lib/axios';
@@ -43,8 +44,6 @@ const ORDER_STATUS: Record<SimOrderStatus, { label: string; color: 'default' | '
   assigned: { label: 'Asignado', color: 'success' },
   canceled: { label: 'Cancelado', color: 'error' },
 };
-
-const fmtEur = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export default function MySimsPage() {
   const queryClient = useQueryClient();
@@ -140,7 +139,7 @@ export default function MySimsPage() {
                           <TableCell>
                             {order.assigned_count}/{order.quantity}
                           </TableCell>
-                          <TableCell>{fmtEur(order.total_cents)}</TableCell>
+                          <TableCell>{formatCents(order.total_cents)}</TableCell>
                           <TableCell>
                             <Chip size="small" label={st.label} color={st.color} />
                           </TableCell>

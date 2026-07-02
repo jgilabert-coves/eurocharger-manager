@@ -34,6 +34,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import DialogContentText from '@mui/material/DialogContentText';
 
 import { fDate } from 'src/utils/format-time';
+import { formatCents } from 'src/utils/format-number';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import axiosInstance, { fetcher, endpoints } from 'src/lib/axios';
@@ -256,7 +257,7 @@ export default function SubscriptionView() {
     const value =
       d.discount_type === 'percent'
         ? `${d.discount_value}%`
-        : `${(d.discount_value / 100).toFixed(2)} €`;
+        : formatCents(d.discount_value);
     if (d.duration === 'forever') return `${d.coupon_name} (${value})`;
     if (d.duration === 'once') return `${d.coupon_name} (${value}, una vez)`;
     return `${d.coupon_name} (${value}, ${d.duration_months} meses)`;
@@ -290,9 +291,9 @@ export default function SubscriptionView() {
                 <TableRow>
                   <TableCell>{ITEM_LABEL[item.type] ?? item.type}</TableCell>
                   <TableCell align="right">{item.quantity}</TableCell>
-                  <TableCell align="right">{(item.unit_price_cents / 100).toFixed(2)} €</TableCell>
+                  <TableCell align="right">{formatCents(item.unit_price_cents)}</TableCell>
                   <TableCell align="right">
-                    {((item.unit_price_cents * item.quantity) / 100).toFixed(2)} €
+                    {formatCents(item.unit_price_cents * item.quantity)}
                   </TableCell>
                 </TableRow>
                 {discountsFor(item.type).map((d) => {
@@ -306,7 +307,7 @@ export default function SubscriptionView() {
                       </TableCell>
                       <TableCell align="right" sx={{ py: 0.5, borderBottom: 'none' }}>
                         <Typography variant="caption" color="success.dark">
-                          -{(amount / 100).toFixed(2)} €
+                          -{formatCents(amount)}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -325,7 +326,7 @@ export default function SubscriptionView() {
                   </TableCell>
                   <TableCell align="right" sx={{ py: 0.5, borderBottom: 'none' }}>
                     <Typography variant="caption" color="success.dark">
-                      -{(amount / 100).toFixed(2)} €
+                      -{formatCents(amount)}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -387,18 +388,18 @@ export default function SubscriptionView() {
                     {invoice.tax_cents > 0 ? (
                       <Stack alignItems="flex-end" spacing={0}>
                         <Typography variant="caption" color="text.secondary">
-                          Base: {(invoice.subtotal_cents / 100).toFixed(2)} €
+                          Base: {formatCents(invoice.subtotal_cents)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          IVA 21%: {(invoice.tax_cents / 100).toFixed(2)} €
+                          IVA 21%: {formatCents(invoice.tax_cents)}
                         </Typography>
                         <Typography variant="body2" fontWeight={600}>
-                          {(invoice.total_cents / 100).toFixed(2)} €
+                          {formatCents(invoice.total_cents)}
                         </Typography>
                       </Stack>
                     ) : (
                       <Typography variant="body2" fontWeight={600}>
-                        {(invoice.total_cents / 100).toFixed(2)} €
+                        {formatCents(invoice.total_cents)}
                       </Typography>
                     )}
                   </TableCell>
@@ -499,10 +500,10 @@ export default function SubscriptionView() {
                   <Typography variant="subtitle1">Total estimado / mes</Typography>
                   <Stack alignItems="flex-end" spacing={0.25}>
                     <Typography variant="caption" color="text.secondary">
-                      IVA 21%: {((discountedCents * 0.21) / 100).toFixed(2)} €
+                      IVA 21%: {formatCents(discountedCents * 0.21)}
                     </Typography>
-                    <Typography variant="h5" color="primary">
-                      {((discountedCents * 1.21) / 100).toFixed(2)} €
+                    <Typography variant="h5" color="text.primary" fontWeight={700}>
+                      {formatCents(discountedCents * 1.21)}
                     </Typography>
                   </Stack>
                 </Stack>

@@ -40,6 +40,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { del, put, post, fetcher, endpoints } from 'src/lib/axios';
@@ -815,8 +817,6 @@ export default function ChargerDetailV2() {
   const callCenterItem = subscriptionData?.data?.items?.find((i) => i.type === 'call_center');
   const callCenterUnitPrice = callCenterItem?.unit_price_cents;
 
-  const formatPrice = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €/mes`;
-
   const loadChargepoint = async () => {
     try {
       const response: ChargingStationResponse = await fetcher(
@@ -922,12 +922,12 @@ export default function ChargerDetailV2() {
   // ── Servicios adicionales ──────────────────────────────────────────────────
   const openEditServices = () => {
     if (!chargepoint) return;
-    setEditHasCallCenter(chargepoint.has_call_center ?? false);
+    setEditHasCallCenter(Boolean(chargepoint.has_call_center));
     setEditSimCard(chargepoint.sim_card != null ? String(chargepoint.sim_card) : '');
     setEditMaxRechargeTime(
       chargepoint.max_recharge_time != null ? String(chargepoint.max_recharge_time) : ''
     );
-    setEditShareEnergy(chargepoint.share_energy ?? false);
+    setEditShareEnergy(Boolean(chargepoint.share_energy));
     setSimToAssign('');
     setServicesError(null);
     setServicesEditOpen(true);
@@ -936,8 +936,13 @@ export default function ChargerDetailV2() {
   // El cambio de SIM / Call Center conlleva coste en la suscripción: pedimos
   // confirmación antes de aplicar.
   const requestSaveServices = () => {
+    const activatingPaidService = editHasCallCenter && !chargepoint?.has_call_center;
     setServicesEditOpen(false);
-    setServicesConfirmOpen(true);
+    if (activatingPaidService) {
+      setServicesConfirmOpen(true);
+    } else {
+      confirmSaveServices();
+    }
   };
 
   const confirmSaveServices = async () => {
@@ -1854,7 +1859,7 @@ export default function ChargerDetailV2() {
               }
               label={
                 callCenterUnitPrice !== undefined
-                  ? `Call Center – ${formatPrice(callCenterUnitPrice)}`
+                  ? `Call Center – ${formatCents(callCenterUnitPrice, { unit: '/mes' })}`
                   : 'Call Center'
               }
             />
@@ -1888,7 +1893,7 @@ export default function ChargerDetailV2() {
                     Coste adicional en tu suscripción:
                   </Typography>
                   <Typography variant="caption" sx={{ display: 'block' }}>
-                    • Call Center: +{formatPrice(callCenterUnitPrice)}
+                    • Call Center: +{formatCents(callCenterUnitPrice, { unit: '/mes' })}
                   </Typography>
                 </Alert>
               )}
@@ -1917,7 +1922,7 @@ export default function ChargerDetailV2() {
             Estos servicios tienen un coste en tu suscripción:
             <Box component="ul" sx={{ mt: 1, mb: 1, pl: 2.5 }}>
               {editHasCallCenter && callCenterUnitPrice !== undefined ? (
-                <li>Call Center: {formatPrice(callCenterUnitPrice)}</li>
+                <li>Call Center: {formatCents(callCenterUnitPrice, { unit: '/mes' })}</li>
               ) : (
                 <li>Sin servicios de pago activos.</li>
               )}

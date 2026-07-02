@@ -11,6 +11,8 @@ import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
+import { formatEuros } from 'src/utils/format-number';
+
 import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -143,10 +145,6 @@ const DATE_FILTER_OPTIONS: { value: DateFilter; label: string }[] = [
 ];
 
 // ----------------------------------------------------------------------
-
-function formatEur(amount: number): string {
-  return amount.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
-}
 
 function formatPeriodLabel(start: Date, end: Date): string {
   const s = new Date(start);
@@ -286,7 +284,7 @@ export default function InvoicesView() {
                     Total Ingresos
                   </Typography>
                   <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
-                    {formatEur(CURRENT_MONTH_SUMMARY.ingresos)}
+                    {formatEuros(CURRENT_MONTH_SUMMARY.ingresos)}
                   </Typography>
                 </Box>
               </Stack>
@@ -323,7 +321,7 @@ export default function InvoicesView() {
                     Total Pagado
                   </Typography>
                   <Typography variant="h4" fontWeight={700} lineHeight={1.2}>
-                    {formatEur(CURRENT_MONTH_SUMMARY.pagado)}
+                    {formatEuros(CURRENT_MONTH_SUMMARY.pagado)}
                   </Typography>
                 </Box>
               </Stack>
@@ -396,7 +394,7 @@ export default function InvoicesView() {
                             Saldo final
                           </Typography>
                           <Typography variant="subtitle1" fontWeight={700}>
-                            {formatEur(inv.total)}
+                            {formatEuros(inv.total)}
                           </Typography>
                         </Stack>
                         <IconButton

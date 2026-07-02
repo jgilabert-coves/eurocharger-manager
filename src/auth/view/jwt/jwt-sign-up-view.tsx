@@ -33,6 +33,8 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -211,9 +213,7 @@ function PaymentForm({ plan, billingPeriod, accountData, onSuccess, onBack }: Pa
             </Box>
             {basePrice != null && (
               <Typography variant="subtitle2">
-                {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
-                  basePrice / 100
-                )}
+                {formatCents(basePrice)}
                 <Typography component="span" variant="caption" color="text.secondary">
                   /{billingPeriod === 'annual' ? 'año' : 'mes'}
                 </Typography>

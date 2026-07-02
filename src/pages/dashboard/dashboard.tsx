@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
 
-import { formatNumber } from 'src/utils/format-number';
+import { formatEuros, formatNumber } from 'src/utils/format-number';
 
 import { CONFIG } from 'src/global-config';
 import { fetcher, endpoints } from 'src/lib/axios';
@@ -117,12 +117,12 @@ export default function DashboardV6Page() {
               title="Ingresos"
               value={
                 revenueStats
-                  ? formatNumber(revenueStats.totalRevenue, { decimals: 2, suffix: '€' })
+                  ? formatEuros(revenueStats.totalRevenue)
                   : '...'
               }
               subtitle={
                 revenueStats
-                  ? `Promedio por recarga: ${formatNumber(revenueStats.avgRevenuePerCharge, { decimals: 2, suffix: '€' })}`
+                  ? `Promedio por recarga: ${formatEuros(revenueStats.avgRevenuePerCharge)}`
                   : '...'
               }
               icon={<Wallet size={18} weight="fill" />}

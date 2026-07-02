@@ -15,6 +15,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { post, endpoints } from 'src/lib/axios';
 
 import { PlanSelector } from 'src/components/plans/plan-selector';
@@ -105,9 +107,7 @@ function PaymentForm({ plan, billingPeriod, onBack }: PaymentFormProps) {
             </Box>
             {basePrice != null && (
               <Typography variant="subtitle2">
-                {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
-                  basePrice / 100
-                )}
+                {formatCents(basePrice)}
                 <Typography component="span" variant="caption" color="text.secondary">
                   /{billingPeriod === 'annual' ? 'año' : 'mes'}
                 </Typography>

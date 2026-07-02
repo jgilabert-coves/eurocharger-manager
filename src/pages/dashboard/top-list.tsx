@@ -8,6 +8,8 @@ import Avatar from '@mui/material/Avatar';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
+import { formatEuros } from 'src/utils/format-number';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { type TopUser, type TopChargepoint } from 'src/types/dashboard';
@@ -42,13 +44,13 @@ export function TopList({ title, isClient }: TopListProps) {
         key: u.id,
         name: u.name,
         line1: `↻ ${u.totalCharges} recargas`,
-        line2: `≈ ${u.totalSpent.toFixed(2)} €`,
+        line2: `≈ ${formatEuros(u.totalSpent)}`,
       }))
     : ((res?.data as TopChargepoint[]) ?? []).map((cp) => ({
         key: cp.id,
         name: cp.name,
         line1: `↻ ${cp.totalCharges} recargas`,
-        line2: `≈ ${cp.totalRevenue.toFixed(2)} €`,
+        line2: `≈ ${formatEuros(cp.totalRevenue)}`,
       }));
 
   return (

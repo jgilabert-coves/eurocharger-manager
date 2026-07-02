@@ -1,6 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 import type { Charge, ChargeType } from 'src/types/charges';
 
+import { formatCents } from 'src/utils/format-number';
+
 // ----------------------------------------------------------------------
 
 export const CHARGE_TYPE_LABELS: Record<ChargeType, string> = {
@@ -37,7 +39,7 @@ export function chargeDescription(charge: Charge): string {
       return charge.reservationId ? `#${charge.reservationId} · ${chargepoint}` : chargepoint;
     case 'wallet':
       return context.walletTopupCents != null
-        ? `${(context.walletTopupCents / 100).toFixed(2)} €`
+        ? formatCents(context.walletTopupCents)
         : 'Recarga de saldo';
     case 'rfid':
       return context.rfidTag ?? 'RFID';

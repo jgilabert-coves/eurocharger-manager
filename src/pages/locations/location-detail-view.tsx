@@ -35,6 +35,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { paths } from 'src/routes/paths';
 
+import { formatDecimal } from 'src/utils/format-number';
+
 import { DashboardContent } from 'src/layouts/dashboard';
 import { put, post, fetcher, endpoints } from 'src/lib/axios';
 import { parseLatLon, geocodeQuery, extractAddressComponents } from 'src/lib/geocoding';
@@ -712,7 +714,7 @@ export default function LocationDetailView() {
                   <TextValue
                     value={
                       location.minPrice != null && location.maxPrice != null
-                        ? `${location.minPrice} – ${location.maxPrice} €/kWh`
+                        ? `${formatDecimal(location.minPrice, { decimals: 3 })} – ${formatDecimal(location.maxPrice, { decimals: 3 })} €/kWh`
                         : null
                     }
                   />

@@ -33,6 +33,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { CONFIG } from 'src/global-config';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 import {
@@ -229,8 +231,6 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
   });
   const callCenterItem = subscriptionData?.data?.items?.find((i) => i.type === 'call_center');
   const callCenterUnitPrice = callCenterItem?.unit_price_cents;
-
-  const formatPrice = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €/mes`;
 
   const { data: stations = [], isLoading: stationsLoading } = useQuery<BasicChargingStationInfo[]>({
     queryKey: ['locations', stationSearch],
@@ -1027,7 +1027,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
               }
               label={
                 callCenterUnitPrice !== undefined
-                  ? `Call Center – ${(callCenterUnitPrice / 100).toFixed(2).replace('.', ',')} €/mes`
+                  ? `Call Center – ${formatCents(callCenterUnitPrice, { unit: '/mes' })}`
                   : 'Call Center'
               }
             />
@@ -1065,7 +1065,7 @@ export function NewChargepointDialog({ open, onClose, onSuccess }: NewChargepoin
                 <Typography variant="caption" sx={{ display: 'block' }}>
                   • Call Center:{' '}
                   {callCenterUnitPrice !== undefined
-                    ? `+${formatPrice(callCenterUnitPrice)}`
+                    ? `+${formatCents(callCenterUnitPrice, { unit: '/mes' })}`
                     : 'según la suscripción'}
                 </Typography>
               </Alert>

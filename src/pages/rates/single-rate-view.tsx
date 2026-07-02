@@ -16,6 +16,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+import { formatDecimal } from 'src/utils/format-number';
+
 import { CONFIG } from 'src/global-config';
 import { fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -93,7 +95,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
                 Precio
               </Typography>
               <Typography variant="h6" color="primary.darkest" fontWeight="bold">
-                {stretch.price?.toFixed(3)} {typeName}
+                {formatDecimal(stretch.price, { decimals: 3 })} {typeName}
               </Typography>
             </Box>
           </Grid>
@@ -124,7 +126,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
                 }
               >
                 {stretch.inactivity_fee && stretch.inactivity_fee > 0
-                  ? `${stretch.inactivity_fee.toFixed(3)} €/min`
+                  ? `${formatDecimal(stretch.inactivity_fee, { decimals: 3 })} €/min`
                   : '—'}
               </Typography>
             </Box>
@@ -152,7 +154,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
                 }
               >
                 {stretch.fixed_price && stretch.fixed_price > 0
-                  ? `${stretch.fixed_price.toFixed(3)} €`
+                  ? `${formatDecimal(stretch.fixed_price, { decimals: 3 })} €`
                   : '—'}
               </Typography>
             </Box>
@@ -181,7 +183,7 @@ function StretchCard({ stretch, typeName }: { stretch: RateStretch; typeName: st
                 }
               >
                 {stretch.parking_price && stretch.parking_price > 0
-                  ? `${stretch.parking_price.toFixed(3)} €/min`
+                  ? `${formatDecimal(stretch.parking_price, { decimals: 3 })} €/min`
                   : '—'}
               </Typography>
             </Box>

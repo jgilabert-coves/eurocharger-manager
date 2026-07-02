@@ -14,6 +14,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { useNotification } from 'src/components/notification';
@@ -29,8 +31,6 @@ type Props = {
 type PricingResponse = { data: { unit_price_cents: number; shipping_price_cents: number } };
 
 const PACKS = [5, 10, 25, 50];
-
-const fmtEur = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export function RequestSimsDialog({ open, onClose, onSuccess }: Props) {
   const queryClient = useQueryClient();
@@ -164,25 +164,25 @@ export function RequestSimsDialog({ open, onClose, onSuccess }: Props) {
           <Stack spacing={0.5}>
             <Stack direction="row" justifyContent="space-between">
               <Typography variant="body2" color="text.secondary">
-                Tarjetas: {quantity} × {fmtEur(unitPriceCents)}
+                Tarjetas: {quantity} × {formatCents(unitPriceCents)}
               </Typography>
-              <Typography variant="body2">{fmtEur(simsCents)}</Typography>
+              <Typography variant="body2">{formatCents(simsCents)}</Typography>
             </Stack>
             <Stack direction="row" justifyContent="space-between">
               <Typography variant="body2" color="text.secondary">
                 Gastos de envío
               </Typography>
-              <Typography variant="body2">{fmtEur(shippingPriceCents)}</Typography>
+              <Typography variant="body2">{formatCents(shippingPriceCents)}</Typography>
             </Stack>
             <Stack direction="row" justifyContent="space-between">
               <Typography variant="body2" color="text.secondary">
                 IVA (21%)
               </Typography>
-              <Typography variant="body2">{fmtEur(taxCents)}</Typography>
+              <Typography variant="body2">{formatCents(taxCents)}</Typography>
             </Stack>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 0.5 }}>
               <Typography variant="subtitle1">Total (IVA incl.)</Typography>
-              <Typography variant="h6">{fmtEur(totalCents)}</Typography>
+              <Typography variant="h6">{formatCents(totalCents)}</Typography>
             </Stack>
           </Stack>
           <Typography variant="caption" color="text.secondary">

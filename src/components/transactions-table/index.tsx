@@ -28,6 +28,7 @@ import { paths } from 'src/routes/paths';
 import { useDebounce } from 'src/hooks/use-debounce';
 
 import { fDateTime } from 'src/utils/format-time';
+import { formatEuros } from 'src/utils/format-number';
 
 import { post, patch, fetcher, endpoints } from 'src/lib/axios';
 
@@ -375,7 +376,7 @@ export function TransactionsTable({
                     {/* Coste */}
                     <TableCell align="center">
                       <Typography variant="body2" fontWeight={600}>
-                        {tx.total ? `${round(tx.total, 2)} €` : '-'}
+                        {tx.total ? formatEuros(tx.total) : '-'}
                       </Typography>
                     </TableCell>
 

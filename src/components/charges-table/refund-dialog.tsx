@@ -11,6 +11,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { post, endpoints } from 'src/lib/axios';
 
 import { useNotification } from 'src/components/notification';
@@ -58,7 +60,7 @@ export function RefundDialog({ open, appUserId, charge, onClose, onSuccess }: Re
           </Typography>
           {charge.walletDeductCents > 0 && (
             <Typography variant="caption" color="text.secondary">
-              Importe wallet aplicado: {(charge.walletDeductCents / 100).toFixed(2)} €
+              Importe wallet aplicado: {formatCents(charge.walletDeductCents)}
             </Typography>
           )}
         </Stack>

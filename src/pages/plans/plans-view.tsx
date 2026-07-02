@@ -20,6 +20,8 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { DashboardContent } from 'src/layouts/dashboard';
 import { patch, fetcher, endpoints } from 'src/lib/axios';
 
@@ -34,11 +36,6 @@ import { CONFIG } from '../../global-config';
 // ----------------------------------------------------------------------
 
 const metadata = { title: `Planes | ${CONFIG.appName}` };
-
-function formatCents(cents: number | null | undefined): string {
-  if (cents == null) return '—';
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100);
-}
 
 // ----------------------------------------------------------------------
 

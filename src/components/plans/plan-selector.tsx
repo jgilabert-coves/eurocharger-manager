@@ -14,6 +14,8 @@ import ToggleButton from '@mui/material/ToggleButton';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { fetcher, endpoints } from 'src/lib/axios';
 
 import { Label } from 'src/components/label';
@@ -22,10 +24,6 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export type BillingPeriod = 'monthly' | 'annual';
-
-function fCents(cents: number): string {
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(cents / 100);
-}
 
 // ----------------------------------------------------------------------
 
@@ -90,7 +88,7 @@ function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
                   fontWeight={700}
                   color={selected ? 'primary.main' : 'text.primary'}
                 >
-                  {fCents(basePrice)}
+                  {formatCents(basePrice)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   /{period === 'annual' ? 'año' : 'mes'}
@@ -98,7 +96,7 @@ function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
               </Stack>
               {annualMonthlyEquiv != null && (
                 <Typography variant="caption" color="success.main">
-                  ~{fCents(annualMonthlyEquiv)}/mes
+                  ~{formatCents(annualMonthlyEquiv, { unit: '/mes' })}
                 </Typography>
               )}
             </>
@@ -114,17 +112,17 @@ function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
         <Stack spacing={0.5}>
           {chargersPrice != null && (
             <Typography variant="caption" color="text.secondary">
-              + {fCents(chargersPrice)} por cargador/mes
+              + {formatCents(chargersPrice)} por cargador/mes
             </Typography>
           )}
           {simPrice != null && (
             <Typography variant="caption" color="text.secondary">
-              + {fCents(simPrice)} por SIM/mes
+              + {formatCents(simPrice)} por SIM/mes
             </Typography>
           )}
           {guestsPrice != null && (
             <Typography variant="caption" color="text.secondary">
-              + {fCents(guestsPrice)} por usuario/mes
+              + {formatCents(guestsPrice)} por usuario/mes
             </Typography>
           )}
           <Typography variant="caption" color="text.secondary">

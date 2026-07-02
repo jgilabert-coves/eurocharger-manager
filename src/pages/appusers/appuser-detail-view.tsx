@@ -27,6 +27,8 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { formatEuros } from 'src/utils/format-number';
+
 import { CONFIG } from 'src/global-config';
 import { COUNTRIES } from 'src/assets/data/countries';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -752,10 +754,7 @@ function WalletCard({ user, onSaved }: { user: AppUser; onSaved: () => void }) {
               </Typography>
             </Stack>
             <Typography variant="h5" fontWeight={700} color="primary.main">
-              {(user.walletBalance ?? 0).toLocaleString('es-ES', {
-                style: 'currency',
-                currency: 'EUR',
-              })}
+              {formatEuros(user.walletBalance ?? 0)}
             </Typography>
           </Stack>
 

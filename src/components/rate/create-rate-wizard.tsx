@@ -38,6 +38,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
+import { formatDecimal } from 'src/utils/format-number';
+
 import { put, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -89,7 +91,7 @@ const DEFAULT_STRETCH: StretchDraft = {
 };
 
 function formatPrice(value: number): string {
-  return value.toFixed(4);
+  return formatDecimal(value, { decimals: 4 });
 }
 
 // ----------------------------------------------------------------------

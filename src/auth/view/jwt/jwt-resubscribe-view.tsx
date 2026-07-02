@@ -1,13 +1,14 @@
 import type { Plan } from 'src/types/billing';
 import type { BillingPeriod } from 'src/components/plans/plan-selector';
 
-import { useState } from 'react';
 import { Navigate } from 'react-router';
+import { useState, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { useQuery } from '@tanstack/react-query';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -17,9 +18,13 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { formatCents } from 'src/utils/format-number';
+
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
 import { PlanSelector } from 'src/components/plans/plan-selector';
+
+import { signOut } from 'src/auth/context/jwt/action';
 
 import { useAuthContext } from '../../hooks';
 import { FormHead } from '../../components/form-head';
@@ -108,9 +113,7 @@ function PaymentForm({ plan, billingPeriod, onBack }: PaymentFormProps) {
             </Box>
             {basePrice != null && (
               <Typography variant="subtitle2">
-                {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(
-                  basePrice / 100
-                )}
+                {formatCents(basePrice)}
                 <Typography component="span" variant="caption" color="text.secondary">
                   /{billingPeriod === 'annual' ? 'año' : 'mes'}
                 </Typography>
@@ -155,7 +158,8 @@ function PaymentForm({ plan, billingPeriod, onBack }: PaymentFormProps) {
 // ----------------------------------------------------------------------
 
 export function JwtResubscribeView() {
-  const { user } = useAuthContext();
+  const router = useRouter();
+  const { user, checkUserSession } = useAuthContext();
   const [step, setStep] = useState<'plan' | 'payment'>('plan');
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
@@ -170,6 +174,17 @@ export function JwtResubscribeView() {
   });
 
   const couponInfo = resubscribeInfo?.data;
+
+  const handleBackToLogin = useCallback(async () => {
+    try {
+      await signOut();
+      await checkUserSession?.();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      router.replace(paths.auth.jwt.signIn);
+    }
+  }, [checkUserSession, router]);
 
   // Already active → go to dashboard
   if (user && ACTIVE_STATUSES.includes(user.subscription_status)) {
@@ -243,6 +258,18 @@ export function JwtResubscribeView() {
           )}
         </>
       )}
+
+      <Box sx={{ mt: 3, textAlign: { xs: 'center', md: 'left' } }}>
+        <Link
+          component="button"
+          type="button"
+          variant="body2"
+          color="text.secondary"
+          onClick={handleBackToLogin}
+        >
+          Volver al inicio de sesión
+        </Link>
+      </Box>
     </>
   );
 }
