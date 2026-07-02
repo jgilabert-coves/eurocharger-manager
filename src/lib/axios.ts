@@ -205,6 +205,7 @@ export const endpoints = {
     update: (id: number) => `/sims/${id}`,
     activate: (id: number) => `/sims/${id}/activate`,
     deactivate: (id: number) => `/sims/${id}/deactivate`,
+    resetConnectivity: (id: number) => `/sims/${id}/reset-connectivity`,
     simRequest: (chargepointId: number) => `/chargingstations/${chargepointId}/sim-request`,
     connectivity: (id: number) => `/sims/${id}/connectivity`,
     removeAssignment: (chargepointId: number) =>

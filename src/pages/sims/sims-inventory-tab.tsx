@@ -13,13 +13,20 @@ import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import ToggleButton from '@mui/material/ToggleButton';
+import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+
+import { useDebounce } from 'src/hooks/use-debounce';
 
 import { put, post, fetcher, endpoints } from 'src/lib/axios';
 
+import { Iconify } from 'src/components/iconify';
 import { useNotification } from 'src/components/notification';
 
 import { AssignSimDialog } from './components/assign-sim-dialog';
@@ -28,18 +35,48 @@ import { AssignSimDialog } from './components/assign-sim-dialog';
 
 type SimsResponse = { data: Sim[]; total: number };
 
+const STATUS_FILTERS = [
+  { value: 'ALL', label: 'Todas' },
+  { value: '1', label: 'Activa' },
+  { value: '2', label: 'Inactiva' },
+];
+
+const ASSIGNED_FILTERS = [
+  { value: 'ALL', label: 'Todas' },
+  { value: 'assigned', label: 'Asignada' },
+  { value: 'unassigned', label: 'Sin asignar' },
+];
+
 export function SimsInventoryTab() {
   const queryClient = useQueryClient();
   const { notifySuccess, notifyError } = useNotification();
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [localSearch, setLocalSearch] = useState('');
+  const debouncedSearch = useDebounce(localSearch);
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [assignedFilter, setAssignedFilter] = useState('ALL');
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedChargepointId, setSelectedChargepointId] = useState<number | null>(null);
 
   const { data: res, isLoading } = useQuery<SimsResponse>({
-    queryKey: ['sims', 'list', { page, pageSize }],
-    queryFn: () => fetcher([endpoints.sims.list, { params: { page, pageSize } }]),
+    queryKey: ['sims', 'list', { page, pageSize, debouncedSearch, statusFilter, assignedFilter }],
+    queryFn: () =>
+      fetcher([
+        endpoints.sims.list,
+        {
+          params: {
+            page,
+            pageSize,
+            ...(debouncedSearch ? { search: debouncedSearch } : {}),
+            ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
+            ...(assignedFilter !== 'ALL'
+              ? { assigned: assignedFilter === 'assigned' ? 'true' : 'false' }
+              : {}),
+          },
+        },
+      ]),
   });
 
   const rows = res?.data ?? [];
@@ -59,11 +96,11 @@ export function SimsInventoryTab() {
   const { mutate: unassignSim } = useMutation({
     mutationFn: (simId: number) => put(endpoints.sims.update(simId), { chargepoint_id: null }),
     onSuccess: () => {
-      notifySuccess('SIM desasignada con éxito');
+      notifySuccess('SIM quitada del cargador con éxito');
       queryClient.invalidateQueries({ queryKey: ['sims'] });
     },
     onError: () => {
-      notifyError('Ha ocurrido un error al desasignar la SIM');
+      notifyError('Ha ocurrido un error al quitar la SIM');
     },
   });
 
@@ -79,7 +116,69 @@ export function SimsInventoryTab() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        alignItems={{ md: 'center' }}
+        sx={{ mb: 2 }}
+      >
+        <TextField
+          placeholder="Buscar por ICCID o nombre..."
+          value={localSearch}
+          onChange={(e) => {
+            setLocalSearch(e.target.value);
+            setPage(0);
+          }}
+          size="small"
+          sx={{ flex: 1, maxWidth: { md: 360 } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon="eva:search-fill" width={18} sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <ToggleButtonGroup
+          value={statusFilter}
+          exclusive
+          size="small"
+          onChange={(_, v) => {
+            if (v !== null) {
+              setStatusFilter(v);
+              setPage(0);
+            }
+          }}
+        >
+          {STATUS_FILTERS.map((f) => (
+            <ToggleButton key={f.value} value={f.value} sx={{ px: 1.5, py: 0.5 }}>
+              <Typography variant="caption" fontWeight={600}>
+                {f.label}
+              </Typography>
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <ToggleButtonGroup
+          value={assignedFilter}
+          exclusive
+          size="small"
+          onChange={(_, v) => {
+            if (v !== null) {
+              setAssignedFilter(v);
+              setPage(0);
+            }
+          }}
+        >
+          {ASSIGNED_FILTERS.map((f) => (
+            <ToggleButton key={f.value} value={f.value} sx={{ px: 1.5, py: 0.5 }}>
+              <Typography variant="caption" fontWeight={600}>
+                {f.label}
+              </Typography>
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
         <Button variant="outlined" disabled={syncing} onClick={() => syncSims()}>
           {syncing ? 'Sincronizando…' : 'Sincronizar con EMnify'}
         </Button>
@@ -157,7 +256,7 @@ export function SimsInventoryTab() {
                             color="warning"
                             onClick={() => unassignSim(sim.id)}
                           >
-                            Desasignar
+                            Quitar
                           </Button>
                         ) : (
                           <Button

@@ -15,7 +15,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid2';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
@@ -33,6 +32,7 @@ import CardContent from '@mui/material/CardContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import InputAdornment from '@mui/material/InputAdornment';
 import CircularProgress from '@mui/material/CircularProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import DialogContentText from '@mui/material/DialogContentText';
@@ -796,6 +796,8 @@ export default function ChargerDetailV2() {
   const [servicesSaving, setServicesSaving] = useState(false);
   const [servicesError, setServicesError] = useState<string | null>(null);
   const [simToAssign, setSimToAssign] = useState<number | ''>('');
+  const [simSearch, setSimSearch] = useState('');
+  const [simResetOpen, setSimResetOpen] = useState(false);
 
   // ── Asignar estación (rol eurocharger) ──────────────────────────────────────
   const [assignStationOpen, setAssignStationOpen] = useState(false);
@@ -863,8 +865,9 @@ export default function ChargerDetailV2() {
   // SIMs asignables = las de la cuenta sin cargador asignado (el eurocharger las
   // asigna primero a la cuenta desde el panel /sims; aquí se asignan a un cargador).
   const { data: mySimsData } = useQuery<{ data: Sim[] }>({
-    queryKey: ['sims', 'mine'],
-    queryFn: () => fetcher(endpoints.sims.mine),
+    queryKey: ['sims', 'mine', 'available'],
+    queryFn: () =>
+      fetcher([endpoints.sims.mine, { params: { assigned: 'false', pageSize: 1000 } }]),
     enabled: servicesEditOpen && hasAnyRole(['saas_owner', 'eurocharger']),
     staleTime: 30 * 1000,
   });
@@ -880,6 +883,30 @@ export default function ChargerDetailV2() {
       notifySuccess('SIM asignada con éxito');
     },
     onError: () => notifyError('Ha ocurrido un error al asignar la SIM'),
+  });
+
+  const { mutate: setSimActive, isPending: isTogglingSim } = useMutation({
+    mutationFn: ({ simId, active }: { simId: number; active: boolean }) =>
+      post(active ? endpoints.sims.activate(simId) : endpoints.sims.deactivate(simId), {}),
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['sims'] });
+      queryClient.invalidateQueries({ queryKey: ['account-subscription', accountId] });
+      loadChargepoint();
+      notifySuccess(vars.active ? 'SIM activada' : 'SIM desactivada');
+    },
+    onError: (err: unknown) =>
+      notifyError(err instanceof Error ? err.message : 'Error al cambiar el estado de la SIM'),
+  });
+
+  const { mutate: resetSimConnectivity, isPending: isResettingSim } = useMutation({
+    mutationFn: (simId: number) => post(endpoints.sims.resetConnectivity(simId), {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sim-connectivity'] });
+      notifySuccess('Conectividad reiniciada');
+      setSimResetOpen(false);
+    },
+    onError: (err: unknown) =>
+      notifyError(err instanceof Error ? err.message : 'Error al reiniciar la conectividad'),
   });
 
   const openEditCharger = () => {
@@ -1107,7 +1134,7 @@ export default function ChargerDetailV2() {
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" useFlexGap>
                 <Typography variant="h5" noWrap>
-                  {chargepoint.name ?? '-'}
+                  ID: {chargepoint.id} - {chargepoint.name ?? '-'}
                 </Typography>
                 {chargepoint.is_private && (
                   <Label color="default" variant="outlined">
@@ -1391,7 +1418,9 @@ export default function ChargerDetailV2() {
                           label="SIM"
                           value={
                             chargepoint.sim_card != null
-                              ? (chargepoint.sim_iccid ?? `SIM #${chargepoint.sim_card}`)
+                              ? (chargepoint.sim_name ??
+                                chargepoint.sim_iccid ??
+                                `SIM #${chargepoint.sim_card}`)
                               : chargepoint.sim_requested
                                 ? 'Pendiente'
                                 : 'No asignada'
@@ -1774,54 +1803,126 @@ export default function ChargerDetailV2() {
             {/* ── SIM ── */}
             {canManageSim && chargepoint && (
               <>
-                <Typography variant="subtitle2" fontWeight={700}>
-                  SIM
-                </Typography>
-
                 {chargepoint.sim_card != null ? (
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    spacing={1}
-                  >
-                    <Chip
-                      size="small"
-                      color="success"
-                      icon={<Iconify icon="solar:sim-card-bold" />}
-                      label={chargepoint.sim_iccid ?? `SIM #${chargepoint.sim_card}`}
-                    />
-                    <Button
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      onClick={() => removeSimAssignment()}
-                      disabled={isRemovingSimMutation}
-                    >
-                      Quitar SIM
-                    </Button>
+                  <Stack spacing={1}>
+                    <Typography variant="body2">
+                      <strong>SIM: {chargepoint.sim_name ?? '—'}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      ICCID: {chargepoint.sim_iccid ?? `SIM #${chargepoint.sim_card}`}
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ pt: 0.5 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color={chargepoint.sim_status === 1 ? 'warning' : 'success'}
+                        disabled={isTogglingSim}
+                        onClick={() =>
+                          setSimActive({
+                            simId: chargepoint.sim_card!,
+                            active: chargepoint.sim_status !== 1,
+                          })
+                        }
+                      >
+                        {chargepoint.sim_status === 1 ? 'Desactivar' : 'Activar'}
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                        startIcon={<Iconify icon="mingcute:refresh-2-line" width={16} />}
+                        disabled={isResettingSim}
+                        onClick={() => setSimResetOpen(true)}
+                      >
+                        Reiniciar
+                      </Button>
+                      <Button
+                        size="small"
+                        color="error"
+                        variant="outlined"
+                        onClick={() => removeSimAssignment()}
+                        disabled={isRemovingSimMutation}
+                      >
+                        Quitar
+                      </Button>
+                    </Stack>
                   </Stack>
                 ) : availableSims.length > 0 ? (
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack spacing={1}>
                     <TextField
-                      select
                       size="small"
                       fullWidth
-                      label="SIM de la cuenta"
-                      value={simToAssign}
-                      onChange={(e) => setSimToAssign(Number(e.target.value))}
-                    >
-                      {availableSims.map((sim) => (
-                        <MenuItem key={sim.id} value={sim.id}>
-                          {sim.iccid}
-                          {sim.name ? ` — ${sim.name}` : ''}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                      placeholder="Buscar por nombre o ICCID..."
+                      value={simSearch}
+                      onChange={(e) => setSimSearch(e.target.value)}
+                      slotProps={{
+                        input: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Iconify
+                                icon="eva:search-fill"
+                                width={18}
+                                sx={{ color: 'text.disabled' }}
+                              />
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
+                    />
+                    {(() => {
+                      const q = simSearch.trim().toLowerCase();
+                      const matches = availableSims
+                        .filter(
+                          (s) =>
+                            !q ||
+                            s.iccid.toLowerCase().includes(q) ||
+                            (s.name ?? '').toLowerCase().includes(q)
+                        )
+                        .slice(0, 3);
+                      if (matches.length === 0) {
+                        return (
+                          <Typography variant="caption" color="text.secondary">
+                            No hay SIMs que coincidan con la búsqueda.
+                          </Typography>
+                        );
+                      }
+                      return (
+                        <Stack spacing={0.5}>
+                          {matches.map((sim) => (
+                            <MenuItem
+                              key={sim.id}
+                              selected={simToAssign === sim.id}
+                              onClick={() => setSimToAssign(sim.id)}
+                              sx={{ borderRadius: 1, border: '1px solid', borderColor: 'divider' }}
+                            >
+                              <Stack sx={{ minWidth: 0 }}>
+                                <Typography variant="body2" noWrap>
+                                  {sim.name ?? 'Sin nombre'}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ fontFamily: 'monospace' }}
+                                  noWrap
+                                >
+                                  {sim.iccid}
+                                </Typography>
+                              </Stack>
+                            </MenuItem>
+                          ))}
+                        </Stack>
+                      );
+                    })()}
                     <Button
                       variant="contained"
                       size="small"
-                      onClick={() => simToAssign !== '' && assignSim(Number(simToAssign))}
+                      sx={{ alignSelf: 'flex-end' }}
+                      onClick={() => {
+                        if (simToAssign !== '') {
+                          assignSim(Number(simToAssign));
+                          setSimSearch('');
+                        }
+                      }}
                       disabled={simToAssign === '' || isAssigningSim}
                     >
                       Asignar
@@ -1905,6 +2006,34 @@ export default function ChargerDetailV2() {
           </Button>
           <Button variant="contained" onClick={requestSaveServices} disabled={servicesSaving}>
             Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmación de reinicio de conectividad de la SIM */}
+      <Dialog
+        open={simResetOpen}
+        onClose={() => !isResettingSim && setSimResetOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>¿Restablecer la conectividad del dispositivo?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            La red desconectará su dispositivo y esperará a que el modem se conecte de nuevo.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSimResetOpen(false)} disabled={isResettingSim}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            disabled={isResettingSim}
+            onClick={() => chargepoint?.sim_card && resetSimConnectivity(chargepoint.sim_card)}
+            startIcon={isResettingSim ? <CircularProgress size={14} color="inherit" /> : undefined}
+          >
+            Resetear
           </Button>
         </DialogActions>
       </Dialog>

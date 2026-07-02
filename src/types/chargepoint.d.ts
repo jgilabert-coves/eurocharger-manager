@@ -35,6 +35,8 @@ export type Chargepoint = {
   sim_requested?: boolean | null;
   sim_requested_at?: string | null;
   sim_iccid?: string | null;
+  sim_name?: string | null;
+  sim_status?: number | null;
   share_energy?: boolean | null;
   max_recharge_time?: number | null;
   connectors: Connector[];

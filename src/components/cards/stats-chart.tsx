@@ -81,7 +81,7 @@ const EMPTY: StatsPeriodData = { labels: ['—'], series: [] };
 export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartProps) {
   const [sel, setSel] = useState(0);
   const [period, setPeriod] = useState<Period>('Semana');
-  const [chartType, setChartType] = useState<ChartType>('line');
+  const [chartType, setChartType] = useState<ChartType>('bar');
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -204,11 +204,11 @@ export function StatsChart({ icon, label, endpoint, cacheKey = '' }: StatsChartP
             onChange={handleChartTypeChange}
             sx={toggleGroupSx}
           >
-            <ToggleButton value="line" sx={{ px: 1 }} aria-label="Línea">
-              <Iconify icon="mdi:chart-line" width={18} />
-            </ToggleButton>
             <ToggleButton value="bar" sx={{ px: 1 }} aria-label="Barras">
               <Iconify icon="mdi:chart-bar" width={18} />
+            </ToggleButton>
+            <ToggleButton value="line" sx={{ px: 1 }} aria-label="Línea">
+              <Iconify icon="mdi:chart-line" width={18} />
             </ToggleButton>
           </ToggleButtonGroup>
         </Stack>
