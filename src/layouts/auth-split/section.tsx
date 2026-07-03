@@ -33,7 +33,7 @@ export function AuthSplitSection({
   methods,
   layoutQuery = 'md',
   title = 'Bienvenido a Eurocharger',
-  imgUrl = `${CONFIG.assetsDir}/assets/images/coche.svg`,
+  imgUrl = `${CONFIG.assetsDir}/assets/images/Coche_Conectado.png`,
   subtitle = 'Automatiza, controla y optimiza tus ingresos con nuestro software. La mejor solución para gestionar tus estaciones de carga eléctrica.',
   ...other
 }: AuthSplitSectionProps) {

@@ -143,7 +143,7 @@ export function JwtSignInView() {
           <>
             {`¿No tienes cuenta? `}
             <Link component={RouterLink} href={paths.auth.jwt.signUp} variant="subtitle2" color="info">
-              Crear cuenta
+              Prueba 14 días gratis
             </Link>
           </>
         }

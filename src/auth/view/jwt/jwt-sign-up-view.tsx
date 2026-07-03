@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
 import Link from '@mui/material/Link';
 import Step from '@mui/material/Step';
 import Alert from '@mui/material/Alert';
@@ -37,6 +38,7 @@ import { formatCents } from 'src/utils/format-number';
 
 import { post, fetcher, endpoints } from 'src/lib/axios';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 import { PlanSelector } from 'src/components/plans/plan-selector';
@@ -89,11 +91,12 @@ type PaymentFormProps = {
   plan: Plan;
   billingPeriod: BillingPeriod;
   accountData: SignUpSchemaType;
+  discount?: { active: boolean; percentOff?: number; durationInMonths?: number } | null;
   onSuccess: () => void;
   onBack: () => void;
 };
 
-function PaymentForm({ plan, billingPeriod, accountData, onSuccess, onBack }: PaymentFormProps) {
+function PaymentForm({ plan, billingPeriod, accountData, discount, onSuccess, onBack }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -116,6 +119,23 @@ function PaymentForm({ plan, billingPeriod, accountData, onSuccess, onBack }: Pa
     billingPeriod === 'annual'
       ? plan.items.base.annual?.priceCents
       : plan.items.base.monthly?.priceCents;
+
+  const percentOff = typeof discount?.percentOff === 'number' ? discount.percentOff : null;
+  const durationInMonths = typeof discount?.durationInMonths === 'number' ? discount.durationInMonths : null;
+
+  const discountActive =
+    discount?.active === true &&
+    percentOff != null &&
+    durationInMonths != null &&
+    durationInMonths > 0 &&
+    billingPeriod === 'monthly';
+
+  const discountAmountPerMonth =
+    discountActive && basePrice != null ? Math.round((basePrice * percentOff) / 100) : 0;
+  const discountedBasePrice =
+    discountActive && basePrice != null ? basePrice - discountAmountPerMonth : basePrice;
+  const totalSavings =
+    discountActive && basePrice != null ? discountAmountPerMonth * durationInMonths : 0;
 
   const handleSubmit = billingForm.handleSubmit(async (billingData) => {
     if (!stripe || !elements) return;
@@ -195,32 +215,57 @@ function PaymentForm({ plan, billingPeriod, accountData, onSuccess, onBack }: Pa
     <form onSubmit={handleSubmit}>
       <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
         {/* Selected plan summary */}
-        <Box
+        <Card
           sx={{
-            p: 2,
+            p: 2.5,
             borderRadius: 1.5,
-            bgcolor: 'background.neutral',
+            bgcolor: 'background.paper',
             border: '1px solid',
             borderColor: 'divider',
           }}
         >
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Box>
-              <Typography variant="subtitle2">{plan.name}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {billingPeriod === 'annual' ? 'Facturación anual' : 'Facturación mensual'}
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Typography variant="subtitle2">{plan.name}</Typography>
+                
+              </Stack>
+              {plan.trialDays > 0 && (
+                  <Label color="success" variant="soft">
+                    {plan.trialDays} días gratis
+                  </Label>
+              )}
             </Box>
             {basePrice != null && (
-              <Typography variant="subtitle2">
-                {formatCents(basePrice)}
-                <Typography component="span" variant="caption" color="text.secondary">
-                  /{billingPeriod === 'annual' ? 'año' : 'mes'}
-                </Typography>
-              </Typography>
+              <Box sx={{ textAlign: 'right' }}>
+                <Stack direction="row" alignItems="baseline" spacing={1} justifyContent="flex-end">
+                  {discountActive ? (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ textDecoration: 'line-through' }}
+                    >
+                      {formatCents(basePrice)}
+                    </Typography>
+                  ) : null}
+
+                  <Typography
+                    variant="subtitle2"
+                    color="text.primary"
+                  >
+                    {formatCents(discountedBasePrice)}/{billingPeriod === 'annual' ? 'año' : 'mes'}
+                  </Typography>
+                </Stack>
+
+                {discountActive ? (
+                  <Typography variant="caption" color="info" sx={{ display: 'block', mt: 0.5 }}>
+                    <strong>Ahorra {formatCents(totalSavings)} en {durationInMonths} meses</strong>
+                  </Typography>
+                ) : null}
+              </Box>
             )}
           </Stack>
-        </Box>
+        </Card>
 
         <PaymentElement />
 
@@ -407,6 +452,10 @@ export function JwtSignUpView() {
           : selectedPlan.items.base.monthly?.priceCents) ?? 0)
       : 0;
 
+  const signupPercentOff = typeof discount?.percentOff === 'number' ? discount.percentOff : null;
+  const signupDurationInMonths =
+    typeof discount?.durationInMonths === 'number' ? discount.durationInMonths : null;
+
   const renderAccountForm = () => (
     <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
       <Field.Text
@@ -477,9 +526,16 @@ export function JwtSignUpView() {
           icon={<Iconify icon="eva:gift-fill" width={20} />}
           sx={{ mb: 3 }}
         >
-          Oferta de bienvenida: <strong>{discount.percentOff}% de descuento</strong> durante los
-          primeros <strong>{discount.durationInMonths} meses</strong>. Se aplica automáticamente al
-          suscribirte.
+          Oferta de bienvenida:{' '}
+          {signupPercentOff != null ? (
+            <>
+              <strong>{signupPercentOff}% de descuento</strong> durante los
+              primeros <strong>{signupDurationInMonths ?? 0} meses</strong>.
+            </>
+          ) : (
+            ' descuento especial durante los primeros meses.'
+          )}{' '}
+          Se aplica automáticamente al suscribirte.
         </Alert>
       )}
 
@@ -520,6 +576,7 @@ export function JwtSignUpView() {
           <PaymentForm
             plan={selectedPlan}
             billingPeriod={billingPeriod}
+            discount={discount}
             accountData={methods.getValues()}
             onSuccess={handlePaymentSuccess}
             onBack={() => setStep(1)}
