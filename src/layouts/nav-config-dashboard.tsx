@@ -92,7 +92,7 @@ export const navData: NavSectionProps['data'] = [
         roles: ['eurocharger', 'saas_owner'],
       },
       {
-        title: 'Roles y permisos',
+        title: 'Invitaciones',
         path: paths.invitations.list,
         caption: 'Invita a colaboradores a trabajar en este sitio y asígnales roles',
         roles: ['saas_owner', 'eurocharger'],
