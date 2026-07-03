@@ -122,6 +122,7 @@ export function TransactionsTable({
         signal: controller.signal,
       };
       const result: TransactionsDataTableResponse = await fetcher([endpoint, queryArgs]);
+      console.log('Fetched transactions:', result.data);
       setRows(result.data);
     } catch (err: any) {
       if (err?.code === 'ERR_CANCELED') return;

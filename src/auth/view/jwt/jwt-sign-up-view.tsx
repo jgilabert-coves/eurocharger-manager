@@ -459,7 +459,7 @@ export function JwtSignUpView() {
   return (
     <>
       <FormHead
-        title="Crea tu cuenta"
+        title="Prueba Eurocharger 14 días gratis"
         description={
           <>
             {`¿Ya tienes cuenta? `}

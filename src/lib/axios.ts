@@ -316,6 +316,7 @@ export const endpoints = {
       `/accounts/${accountId}/charger-groups/${groupId}/chargers/${chargerId}`,
   },
   invitations: {
+    listAll: '/invitations',
     list: (accountId: number) => `/accounts/${accountId}/invitations`,
     create: (accountId: number) => `/accounts/${accountId}/invitations`,
     revoke: (accountId: number, id: string) => `/accounts/${accountId}/invitations/${id}`,

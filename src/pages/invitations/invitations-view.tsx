@@ -24,6 +24,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import TableContainer from '@mui/material/TableContainer';
+import TablePagination from '@mui/material/TablePagination';
 import CircularProgress from '@mui/material/CircularProgress';
 import DialogContentText from '@mui/material/DialogContentText';
 
@@ -99,7 +100,12 @@ export default function InvitationsView() {
     staleTime: 30 * 1000,
   });
 
-  const accountId = isEurocharger ? selectedAccount?.id : user?.account_id;
+  // Cuenta concreta seleccionada (eurocharger) o la del propio usuario (saas_owner).
+  // Para eurocharger es un FILTRO opcional: si es undefined, se listan todas las de la plataforma.
+  const filterAccountId = isEurocharger ? selectedAccount?.id : user?.account_id;
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -110,20 +116,35 @@ export default function InvitationsView() {
   const { notifySuccess, notifyError } = useNotification();
 
   const { data, isFetching, refetch } = useQuery<InvitationsResponse>({
-    queryKey: ['invitations', accountId],
-    queryFn: () => fetcher(endpoints.invitations.list(accountId!)),
-    enabled: !!accountId,
+    queryKey: isEurocharger
+      ? ['invitations', 'all', selectedAccount?.id ?? null, page, rowsPerPage]
+      : ['invitations', 'account', user?.account_id, page, rowsPerPage],
+    queryFn: () =>
+      isEurocharger
+        ? fetcher([
+            endpoints.invitations.listAll,
+            { params: { accountId: selectedAccount?.id, page, pageSize: rowsPerPage } },
+          ])
+        : fetcher([
+            endpoints.invitations.list(user!.account_id!),
+            { params: { page, pageSize: rowsPerPage } },
+          ]),
+    enabled: isEurocharger ? !!user : !!user?.account_id,
     staleTime: 2 * 60 * 1000,
   });
 
   const rows = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const colSpan = isEurocharger ? 8 : 7;
 
   const handleRevoke = async (inv: Invitation) => {
-    if (!accountId) return;
+    // La revocación es siempre a nivel de cuenta: usar la cuenta de la propia invitación
+    // para que funcione también en el listado platform-wide de eurocharger.
+    if (!inv.account_id) return;
     try {
       setRevoking(inv.id);
       setRevokeTarget(null);
-      await del(endpoints.invitations.revoke(accountId, inv.id));
+      await del(endpoints.invitations.revoke(inv.account_id, inv.id));
       refetch();
       notifySuccess('Acción realizada con éxito');
     } catch {
@@ -158,7 +179,7 @@ export default function InvitationsView() {
           <Button
             variant="contained"
             startIcon={<Iconify icon="mdi:plus" width={18} />}
-            disabled={!accountId}
+            disabled={!filterAccountId}
             onClick={() => setCreateOpen(true)}
           >
             Nueva invitación
@@ -171,7 +192,10 @@ export default function InvitationsView() {
               options={accountsData?.data ?? []}
               getOptionLabel={(o) => o.business_name}
               value={selectedAccount}
-              onChange={(_, v) => setSelectedAccount(v)}
+              onChange={(_, v) => {
+                setSelectedAccount(v);
+                setPage(0);
+              }}
               inputValue={accountSearch}
               onInputChange={(_, v) => setAccountSearch(v)}
               loading={accountsLoading}
@@ -205,6 +229,7 @@ export default function InvitationsView() {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ pl: 3 }}>Email</TableCell>
+                  {isEurocharger && <TableCell>Cuenta</TableCell>}
                   <TableCell>Rol</TableCell>
                   <TableCell>Estado</TableCell>
                   <TableCell>Propietarios</TableCell>
@@ -217,30 +242,15 @@ export default function InvitationsView() {
               </TableHead>
 
               <TableBody>
-                {isEurocharger && !accountId ? (
+                {isFetching ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
-                      <Stack alignItems="center" spacing={1.5}>
-                        <Iconify
-                          icon="mdi:account-search-outline"
-                          width={40}
-                          sx={{ color: 'text.disabled' }}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          Selecciona una cuenta para ver sus invitaciones
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ) : isFetching ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                    <TableCell colSpan={colSpan} align="center" sx={{ py: 10 }}>
                       <CircularProgress size={32} />
                     </TableCell>
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                    <TableCell colSpan={colSpan} align="center" sx={{ py: 10 }}>
                       <Stack alignItems="center" spacing={1.5}>
                         <Iconify
                           icon="mdi:email-outline"
@@ -262,6 +272,14 @@ export default function InvitationsView() {
                       <TableCell sx={{ pl: 3 }}>
                         <Typography variant="body2">{inv.email}</Typography>
                       </TableCell>
+
+                      {isEurocharger && (
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {inv.business_name ?? '—'}
+                          </Typography>
+                        </TableCell>
+                      )}
 
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
@@ -344,21 +362,35 @@ export default function InvitationsView() {
               </TableBody>
             </Table>
           </TableContainer>
+
+          <TablePagination
+            component="div"
+            count={total}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 25, 50]}
+            labelRowsPerPage="Filas por página"
+          />
         </Card>
       </DashboardContent>
 
-      {accountId && (
+      {filterAccountId && (
         <CreateInvitationDialog
-          accountId={accountId}
+          accountId={filterAccountId}
           open={createOpen}
           onClose={() => setCreateOpen(false)}
           onSuccess={() => refetch()}
         />
       )}
 
-      {accountId && editTarget && (
+      {filterAccountId && editTarget && (
         <EditGuestGroupsDialog
-          accountId={accountId}
+          accountId={filterAccountId}
           invitation={editTarget}
           open={!!editTarget}
           onClose={() => setEditTarget(null)}

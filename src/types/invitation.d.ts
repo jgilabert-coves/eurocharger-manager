@@ -26,6 +26,8 @@ type Invitation = {
   expires_at: string;
   accepted_at: string | null;
   groups: InvitationGroup[];
+  /** Presente solo en el listado platform-wide (rol eurocharger). */
+  business_name?: string | null;
 };
 
 type InvitationsResponse = {
