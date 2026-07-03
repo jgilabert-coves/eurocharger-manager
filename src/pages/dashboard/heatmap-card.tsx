@@ -1,7 +1,13 @@
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import utc from 'dayjs/plugin/utc';
 import { useQuery } from '@tanstack/react-query';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
@@ -10,11 +16,15 @@ import { themeConfig } from 'src/theme';
 import { IcClock } from 'src/assets/icons';
 import { fetcher, endpoints } from 'src/lib/axios';
 
+import { DateRangeFilter } from 'src/components/date-range-filter';
+
 import { type HeatmapResponse } from 'src/types/dashboard';
 
 import { CardHeader } from './primitives';
 
 // ----------------------------------------------------------------------
+
+dayjs.extend(utc);
 
 const g = themeConfig.palette.grey;
 
@@ -30,9 +40,20 @@ function getColor(v: number, maxV: number) {
 // ----------------------------------------------------------------------
 
 export function HeatmapCard() {
+  // Selector de fechas propio de esta tarjeta. Default: última semana (7 días).
+  const [from, setFrom] = useState<Dayjs | null>(() => dayjs().subtract(7, 'day').startOf('day'));
+  const [to, setTo] = useState<Dayjs | null>(() => dayjs());
+  // UTC porque transactions.started se guarda en UTC (driver mysql timezone: 'Z').
+  const fromStr = from?.utc().format('YYYY-MM-DD HH:mm:ss');
+  const toStr = to?.utc().format('YYYY-MM-DD HH:mm:ss');
+
+  const url =
+    fromStr && toStr
+      ? `${endpoints.dashboard.heatmap}?from=${encodeURIComponent(fromStr)}&to=${encodeURIComponent(toStr)}`
+      : endpoints.dashboard.heatmap;
   const { data: res, isLoading } = useQuery({
-    queryKey: ['dashboard', 'heatmap'],
-    queryFn: () => fetcher(endpoints.dashboard.heatmap),
+    queryKey: ['dashboard', 'heatmap', fromStr, toStr],
+    queryFn: () => fetcher(url),
   });
   const heatmap = res?.data as HeatmapResponse | undefined;
 
@@ -43,7 +64,17 @@ export function HeatmapCard() {
 
   return (
     <Card sx={{ p: 3 }}>
-      <CardHeader icon={<IcClock sx={{ fontSize: 18 }} />} label="Horarios de afluencia" />
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+        <CardHeader icon={<IcClock sx={{ fontSize: 18 }} />} label="Horarios de afluencia" />
+        <DateRangeFilter
+          from={from}
+          to={to}
+          onChange={(f, t) => {
+            setFrom(f);
+            setTo(t);
+          }}
+        />
+      </Stack>
       {isLoading ? (
         <Box sx={{ display: 'grid', gridTemplateColumns: '40px repeat(7,1fr)', gap: '4px' }}>
           <Box />

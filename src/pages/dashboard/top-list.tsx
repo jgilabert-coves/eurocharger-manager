@@ -1,3 +1,8 @@
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import utc from 'dayjs/plugin/utc';
 import { useQuery } from '@tanstack/react-query';
 import { User, ChargingStation } from '@phosphor-icons/react';
 
@@ -12,12 +17,16 @@ import { formatEuros } from 'src/utils/format-number';
 
 import { fetcher, endpoints } from 'src/lib/axios';
 
+import { DateRangeFilter } from 'src/components/date-range-filter';
+
 import { type TopUser, type TopChargepoint } from 'src/types/dashboard';
 
 import { tk } from './tokens';
 import { CardHeader } from './primitives';
 
 // ----------------------------------------------------------------------
+
+dayjs.extend(utc);
 
 const trophies = ['🥇', '🥈', '🥉'];
 
@@ -27,10 +36,21 @@ type TopListProps = {
 };
 
 export function TopList({ title, isClient }: TopListProps) {
+  // Selector de fechas propio de esta tarjeta. Default: última semana (7 días).
+  const [from, setFrom] = useState<Dayjs | null>(() => dayjs().subtract(7, 'day').startOf('day'));
+  const [to, setTo] = useState<Dayjs | null>(() => dayjs());
+  // UTC porque transactions.started se guarda en UTC (driver mysql timezone: 'Z').
+  const fromStr = from?.utc().format('YYYY-MM-DD HH:mm:ss');
+  const toStr = to?.utc().format('YYYY-MM-DD HH:mm:ss');
+
   const endpoint = isClient ? endpoints.dashboard.topUsers : endpoints.dashboard.topChargepoints;
+  const url =
+    fromStr && toStr
+      ? `${endpoint}?from=${encodeURIComponent(fromStr)}&to=${encodeURIComponent(toStr)}`
+      : endpoint;
   const { data: res, isLoading } = useQuery({
-    queryKey: ['dashboard', isClient ? 'topUsers' : 'topChargepoints'],
-    queryFn: () => fetcher(endpoint),
+    queryKey: ['dashboard', isClient ? 'topUsers' : 'topChargepoints', fromStr, toStr],
+    queryFn: () => fetcher(url),
   });
 
   const icon = isClient ? (
@@ -55,8 +75,16 @@ export function TopList({ title, isClient }: TopListProps) {
 
   return (
     <Card sx={{ p: 3 }}>
-      <Stack direction="row" alignItems="baseline" justifyContent="space-between" sx={{ mb: 1.5 }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
         <CardHeader icon={icon} label={title} />
+        <DateRangeFilter
+          from={from}
+          to={to}
+          onChange={(f, t) => {
+            setFrom(f);
+            setTo(t);
+          }}
+        />
       </Stack>
 
       {isLoading
