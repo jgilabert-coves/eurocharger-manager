@@ -32,15 +32,42 @@ type PlanCardProps = {
   period: BillingPeriod;
   selected: boolean;
   onSelect: () => void;
+  discount?: { active: boolean; percentOff?: number; durationInMonths?: number } | null;
 };
 
-function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
-  const basePrice =
-    period === 'annual' ? plan.items.base.annual?.priceCents : plan.items.base.monthly?.priceCents;
+function PlanCard({ plan, period, selected, onSelect, discount }: PlanCardProps) {
+  const monthlyBasePrice = plan.items.base.monthly?.priceCents ?? null;
+  const annualBasePrice = plan.items.base.annual?.priceCents ?? null;
+  const listPrice = period === 'annual' ? annualBasePrice : monthlyBasePrice;
+
+  const discountActive =
+    discount?.active === true &&
+    typeof discount.percentOff === 'number' &&
+    typeof discount.durationInMonths === 'number' &&
+    discount.durationInMonths > 0 &&
+    period === 'monthly';
+
+  const percentOff = typeof discount?.percentOff === 'number' ? discount.percentOff : 0;
+  const durationInMonths = typeof discount?.durationInMonths === 'number' ? discount.durationInMonths : 0;
+
+  const discountAmountPerMonth =
+    discountActive && monthlyBasePrice != null
+      ? Math.round((monthlyBasePrice * percentOff) / 100)
+      : 0;
+
+  const discountedBasePrice =
+    discountActive && period === 'monthly' && monthlyBasePrice != null
+      ? monthlyBasePrice - discountAmountPerMonth
+      : listPrice;
+
+  const totalSavings =
+    discountActive && period === 'monthly' && monthlyBasePrice != null
+      ? discountAmountPerMonth * durationInMonths
+      : 0;
 
   const annualMonthlyEquiv =
-    period === 'annual' && plan.items.base.annual
-      ? Math.round(plan.items.base.annual.priceCents / 12)
+    period === 'annual' && annualBasePrice
+      ? Math.round(annualBasePrice / 12)
       : null;
 
   const chargersPrice = plan.items.chargers.monthly?.priceCents;
@@ -53,12 +80,12 @@ function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
       sx={{
         p: 2.5,
         cursor: 'pointer',
-        border: '2px solid',
-        borderColor: selected ? 'primary.main' : 'divider',
-        bgcolor: selected ? 'primary.lighter' : 'background.paper',
-        transition: 'border-color 0.15s ease, background-color 0.15s ease',
         position: 'relative',
-        '&:hover': { borderColor: 'primary.light' },
+        // Mismo estilo que las KPI cards del dashboard: Card por defecto (fondo
+        // background.paper + customShadows.card + borderRadius del tema). El estado
+        // seleccionado se marca solo con el check de la esquina y el precio en verde.
+        transition: 'box-shadow 0.15s ease',
+        '&:hover': { boxShadow: 6 },
       }}
     >
       {selected && (
@@ -80,25 +107,35 @@ function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
         </Box>
 
         <Box>
-          {basePrice != null ? (
+          {listPrice != null ? (
             <>
               <Stack direction="row" alignItems="baseline" spacing={0.5}>
                 <Typography
                   variant="h5"
                   fontWeight={700}
-                  color={selected ? 'primary.main' : 'text.primary'}
+                  color="text.primary"
                 >
-                  {formatCents(basePrice)}
+                  {formatCents(discountActive ? discountedBasePrice : listPrice)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   /{period === 'annual' ? 'año' : 'mes'}
                 </Typography>
               </Stack>
-              {annualMonthlyEquiv != null && (
-                <Typography variant="caption" color="success.main">
+
+              {discountActive ? (
+                <Stack direction="column" spacing={0.5}>
+                  <Typography variant="caption" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                    {formatCents(listPrice)}
+                  </Typography>
+                  <Typography variant="caption" color="info">
+                    <strong>Ahorra {formatCents(totalSavings)} en {discount.durationInMonths} meses</strong>
+                  </Typography>
+                </Stack>
+              ) : annualMonthlyEquiv != null ? (
+                <Typography variant="caption" color="text.secondary">
                   ~{formatCents(annualMonthlyEquiv, { unit: '/mes' })}
                 </Typography>
-              )}
+              ) : null}
             </>
           ) : (
             <Typography variant="body2" color="text.disabled">
@@ -112,22 +149,24 @@ function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
         <Stack spacing={0.5}>
           {chargersPrice != null && (
             <Typography variant="caption" color="text.secondary">
-              + {formatCents(chargersPrice)} por cargador/mes
+              + {formatCents(chargersPrice)}/mes por cargador
             </Typography>
           )}
           {simPrice != null && (
             <Typography variant="caption" color="text.secondary">
-              + {formatCents(simPrice)} por SIM/mes
+              + {formatCents(simPrice)}/mes por SIM
             </Typography>
           )}
           {guestsPrice != null && (
             <Typography variant="caption" color="text.secondary">
-              + {formatCents(guestsPrice)} por usuario/mes
+              + {formatCents(guestsPrice)}/mes por usuario
             </Typography>
           )}
+          {/*
           <Typography variant="caption" color="text.secondary">
             {plan.maxGuests != null ? `Hasta ${plan.maxGuests} usuarios` : 'Usuarios ilimitados'}
           </Typography>
+          */}
         </Stack>
       </Stack>
     </Card>
@@ -137,11 +176,12 @@ function PlanCard({ plan, period, selected, onSelect }: PlanCardProps) {
 // ----------------------------------------------------------------------
 
 type Props = {
+  discount?: { active: boolean; percentOff?: number; durationInMonths?: number } | null;
   onConfirm: (plan: Plan, billingPeriod: BillingPeriod) => void;
   confirmLoading?: boolean;
 };
-
-export function PlanSelector({ onConfirm, confirmLoading }: Props) {
+  
+export function PlanSelector({ discount, onConfirm, confirmLoading }: Props) {
   const [selected, setSelected] = useState<Plan | null>(null);
   const [period, setPeriod] = useState<BillingPeriod>('monthly');
 
@@ -214,6 +254,7 @@ export function PlanSelector({ onConfirm, confirmLoading }: Props) {
             period={period}
             selected={selected?.id === plan.id}
             onSelect={() => setSelected(plan)}
+            discount={discount}
           />
         ))}
       </Box>

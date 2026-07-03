@@ -142,7 +142,7 @@ export function JwtSignInView() {
         description={
           <>
             {`¿No tienes cuenta? `}
-            <Link component={RouterLink} href={paths.auth.jwt.signUp} variant="subtitle2">
+            <Link component={RouterLink} href={paths.auth.jwt.signUp} variant="subtitle2" color="info">
               Crear cuenta
             </Link>
           </>

@@ -463,7 +463,7 @@ export function JwtSignUpView() {
         description={
           <>
             {`¿Ya tienes cuenta? `}
-            <Link component={RouterLink} href={paths.auth.jwt.signIn} variant="subtitle2">
+            <Link component={RouterLink} href={paths.auth.jwt.signIn} variant="subtitle2" color="info">
               Inicia sesión
             </Link>
           </>
@@ -472,7 +472,11 @@ export function JwtSignUpView() {
       />
 
       {discount && (
-        <Alert severity="success" sx={{ mb: 3 }}>
+        <Alert
+          severity="success"
+          icon={<Iconify icon="eva:gift-fill" width={20} />}
+          sx={{ mb: 3 }}
+        >
           Oferta de bienvenida: <strong>{discount.percentOff}% de descuento</strong> durante los
           primeros <strong>{discount.durationInMonths} meses</strong>. Se aplica automáticamente al
           suscribirte.
@@ -499,7 +503,9 @@ export function JwtSignUpView() {
         </Form>
       )}
 
-      {step === 1 && <PlanSelector onConfirm={handlePlanConfirmed} confirmLoading={false} />}
+      {step === 1 && (
+        <PlanSelector discount={discount} onConfirm={handlePlanConfirmed} confirmLoading={false} />
+      )}
 
       {step === 2 && selectedPlan && (
         <Elements

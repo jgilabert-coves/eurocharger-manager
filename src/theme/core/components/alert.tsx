@@ -110,9 +110,10 @@ const MuiAlert: Components<Theme>['MuiAlert'] = {
             backgroundColor: theme.vars.palette[color].darker,
           }),
           [`& .${alertClasses.icon}`]: {
-            color: theme.vars.palette[color].main,
+            // El icono de check (success) va en negro; el resto mantiene su color semántico.
+            color: color === 'success' ? theme.vars.palette.text.primary : theme.vars.palette[color].main,
             ...theme.applyStyles('dark', {
-              color: theme.vars.palette[color].light,
+              color: color === 'success' ? theme.vars.palette.text.primary : theme.vars.palette[color].light,
             }),
           },
         })),
@@ -144,7 +145,9 @@ const MuiAlert: Components<Theme>['MuiAlert'] = {
           ...theme.applyStyles('dark', {
             color: theme.vars.palette[color].light,
           }),
-          [`& .${alertClasses.icon}`]: { color: theme.vars.palette[color].main },
+          [`& .${alertClasses.icon}`]: {
+            color: color === 'success' ? theme.vars.palette.text.primary : theme.vars.palette[color].main,
+          },
         })),
       };
 
