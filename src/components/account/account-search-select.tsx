@@ -58,6 +58,7 @@ export function AccountSearchSelect({
       fullWidth
       size={size}
       disabled={disabled}
+      noOptionsText="No hay resultados"
       options={options}
       value={value}
       onChange={(_, v) => onChange(v)}
