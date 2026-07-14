@@ -1,8 +1,8 @@
 import type { ChangeEvent } from 'react';
-import type { Client } from 'src/types/clients';
 import type { Operator } from 'src/types/operators';
 import type { Chargepoint } from 'src/types/chargepoint';
 import type { RateDraft, CreateStretchRequest } from 'src/types/rates';
+import type { AccountOption } from 'src/components/account/account-search-select';
 
 import { useState, useEffect, useCallback } from 'react';
 
@@ -44,6 +44,7 @@ import { put, post, fetcher, endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 import { useNotification } from 'src/components/notification';
+import { AccountSearchSelect } from 'src/components/account/account-search-select';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -55,6 +56,11 @@ type AssignmentMethod = 'power' | 'excel';
 type StationAssignmentType = 'power' | 'chargers' | null;
 
 export const HUBJECT_CLIENT_ID = 18;
+
+const HUBJECT_OPTION: AccountOption = {
+  id: HUBJECT_CLIENT_ID,
+  business_name: 'Eurocharger (Hubject/OCPI)',
+};
 
 const MANUAL_STEPS = ['Método', 'Información básica', 'Tramos', 'Asignación', 'Resumen'];
 const MANUAL_STEPS_HUBJECT = ['Método', 'Información básica', 'Tramos', 'Resumen'];
@@ -154,8 +160,7 @@ function MethodStep({
 // ----------------------------------------------------------------------
 
 function ManualBasicInfoStep({
-  clients,
-  clientId,
+  selectedAccount,
   setClientId,
   operatorId,
   setOperatorId,
@@ -166,9 +171,8 @@ function ManualBasicInfoStep({
   isHubject,
   isEurocharger,
 }: {
-  clients: Client[];
-  clientId: number | null;
-  setClientId: (id: number | null, isHubject: boolean) => void;
+  selectedAccount: AccountOption | null;
+  setClientId: (account: AccountOption | null) => void;
   operatorId: number | null;
   setOperatorId: (id: number | null) => void;
   rateName: string;
@@ -198,28 +202,12 @@ function ManualBasicInfoStep({
       <Grid container spacing={3}>
         {isEurocharger && (
           <Grid size={{ xs: 12, sm: 4 }}>
-            <TextField
-              select
-              fullWidth
-              label="Cuenta"
-              value={clientId ?? ''}
-              onChange={(e) => {
-                const val = e.target.value === '' ? null : Number(e.target.value);
-                setClientId(val, val === HUBJECT_CLIENT_ID);
-              }}
+            <AccountSearchSelect
+              value={selectedAccount}
+              onChange={setClientId}
+              extraOptions={[HUBJECT_OPTION]}
               helperText="Selecciona una cuenta o crea una tarifa Eurocharger (Hubject/OCPI)"
-            >
-              <MenuItem value={HUBJECT_CLIENT_ID}>
-                <em>Eurocharger (Hubject/OCPI)</em>
-              </MenuItem>
-              {clients
-                .filter((c) => c.id !== HUBJECT_CLIENT_ID)
-                .map((c) => (
-                  <MenuItem key={c.id} value={c.id}>
-                    {c.business_name}
-                  </MenuItem>
-                ))}
-            </TextField>
+            />
           </Grid>
         )}
         <Grid size={{ xs: 12, sm: isEurocharger ? 6 : 10 }}>
@@ -759,8 +747,7 @@ function StationsStep({
 // ----------------------------------------------------------------------
 
 function ExcelClientStep({
-  clients,
-  clientId,
+  selectedAccount,
   setClientId,
   commission,
   setCommission,
@@ -768,9 +755,8 @@ function ExcelClientStep({
   operatorId,
   setOperatorId,
 }: {
-  clients: Client[];
-  clientId: number | null;
-  setClientId: (id: number | null) => void;
+  selectedAccount: AccountOption | null;
+  setClientId: (account: AccountOption | null) => void;
   commission: number;
   setCommission: (v: number) => void;
   isHubject: boolean;
@@ -799,25 +785,12 @@ function ExcelClientStep({
       </Typography>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            select
-            fullWidth
-            label="Cuenta"
-            value={clientId ?? ''}
-            onChange={(e) => setClientId(e.target.value === '' ? null : Number(e.target.value))}
+          <AccountSearchSelect
+            value={selectedAccount}
+            onChange={setClientId}
+            extraOptions={[HUBJECT_OPTION]}
             helperText="Selecciona una cuenta o crea una tarifa Eurocharger (Hubject/OCPI)"
-          >
-            <MenuItem value={HUBJECT_CLIENT_ID}>
-              <em>Eurocharger (Hubject/OCPI)</em>
-            </MenuItem>
-            {clients
-              .filter((c) => c.id !== HUBJECT_CLIENT_ID)
-              .map((c) => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.business_name}
-                </MenuItem>
-              ))}
-          </TextField>
+          />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
@@ -1144,11 +1117,10 @@ export function CreateRateWizard({
 
   const [stepIndex, setStepIndex] = useState(firstStep);
   const [method, setMethod] = useState<Method | null>(isEurocharger ? null : 'manual');
-  const [clients, setClients] = useState<Client[]>([]);
-  const [clientsLoading, setClientsLoading] = useState(isEurocharger);
 
   // Manual
   const [clientId, setClientIdRaw] = useState<number | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<AccountOption | null>(null);
   const [isHubject, setIsHubject] = useState(false);
   const [operatorId, setOperatorId] = useState<number | null>(null);
   const [rateName, setRateName] = useState('');
@@ -1161,6 +1133,7 @@ export function CreateRateWizard({
 
   // Excel
   const [excelClientId, setExcelClientId] = useState<number | null>(null);
+  const [excelSelectedAccount, setExcelSelectedAccount] = useState<AccountOption | null>(null);
   const [excelOperatorId, setExcelOperatorId] = useState<number | null>(null);
   const [excelCommission, setExcelCommission] = useState<number>(0);
   const excelIsHubject = excelClientId === HUBJECT_CLIENT_ID;
@@ -1173,13 +1146,13 @@ export function CreateRateWizard({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const activeClientId = method === 'excel' ? excelClientId : clientId;
-  const activeClientName = clients.find((c) => c.id === activeClientId)?.business_name ?? '';
+  const activeAccount = method === 'excel' ? excelSelectedAccount : selectedAccount;
   // Nombre a mostrar en el resumen: cuenta 18 = tarifa Eurocharger; no-eurocharger
   // ve el nombre de su propia cuenta (del JWT).
   const summaryClientName = isEurocharger
     ? activeClientId === HUBJECT_CLIENT_ID
       ? 'Eurocharger (Hubject/OCPI)'
-      : activeClientName
+      : (activeAccount?.business_name ?? '')
     : (user?.account_name ?? '');
 
   const allSteps =
@@ -1193,20 +1166,10 @@ export function CreateRateWizard({
   // Para roles no-eurocharger ocultamos el paso "Método" del stepper.
   const steps = allSteps.slice(firstStep);
 
-  useEffect(() => {
-    if (!isEurocharger) return;
-    fetcher(endpoints.accounts.list)
-      .then((res: { data: Client[] }) => setClients(res.data ?? []))
-      .catch(() => {
-        setClients([]);
-        notifyError('No se pudieron cargar las cuentas');
-      })
-      .finally(() => setClientsLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEurocharger]);
-
-  const setClientId = (id: number | null, hubject: boolean) => {
-    setClientIdRaw(id);
+  const setClientId = (account: AccountOption | null) => {
+    const hubject = account?.id === HUBJECT_CLIENT_ID;
+    setClientIdRaw(account?.id ?? null);
+    setSelectedAccount(account);
     setIsHubject(hubject);
     if (!hubject) setOperatorId(null);
   };
@@ -1335,8 +1298,7 @@ export function CreateRateWizard({
       if (stepIndex === 1) {
         return (
           <ManualBasicInfoStep
-            clients={clients}
-            clientId={clientId}
+            selectedAccount={selectedAccount}
             setClientId={setClientId}
             operatorId={operatorId}
             setOperatorId={setOperatorId}
@@ -1380,11 +1342,11 @@ export function CreateRateWizard({
       if (stepIndex === 1) {
         return (
           <ExcelClientStep
-            clients={clients}
-            clientId={excelClientId}
-            setClientId={(id) => {
-              setExcelClientId(id);
-              if (id !== HUBJECT_CLIENT_ID) setExcelOperatorId(null);
+            selectedAccount={excelSelectedAccount}
+            setClientId={(account) => {
+              setExcelClientId(account?.id ?? null);
+              setExcelSelectedAccount(account);
+              if (account?.id !== HUBJECT_CLIENT_ID) setExcelOperatorId(null);
             }}
             commission={excelCommission}
             setCommission={setExcelCommission}
@@ -1430,15 +1392,7 @@ export function CreateRateWizard({
         ))}
       </Stepper>
 
-      <Box>
-        {clientsLoading && stepIndex === 1 ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          renderStepContent()
-        )}
-      </Box>
+      <Box>{renderStepContent()}</Box>
 
       {submitError && <Alert severity="error">{submitError}</Alert>}
 
