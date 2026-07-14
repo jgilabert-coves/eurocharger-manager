@@ -269,7 +269,7 @@ export default function TicketsListView() {
                   <TableCell>Ticket</TableCell>
                   <TableCell>Tipo</TableCell>
                   <TableCell>Estado</TableCell>
-                  <TableCell>Estación</TableCell>
+                  <TableCell>Cargador</TableCell>
                   <TableCell>Usuario</TableCell>
                   <TableCell>Creado</TableCell>
                   <TableCell>Motivo</TableCell>
@@ -366,7 +366,27 @@ export default function TicketsListView() {
                       </TableCell>
 
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        {ticket.chargingStation ? (
+                        {ticket.chargepoint ? (
+                          <Link
+                            to={paths.chargingstations.detail(String(ticket.chargepoint.id))}
+                            style={{ textDecoration: 'none' }}
+                          >
+                            <Stack direction="row" alignItems="center" spacing={0.75}>
+                              <Iconify
+                                icon="mdi:ev-station"
+                                width={16}
+                                sx={{ color: 'common.black' }}
+                              />
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ '&:hover': { textDecoration: 'underline' } }}
+                              >
+                                {ticket.chargepoint.name || ticket.chargepoint.id}
+                              </Typography>
+                            </Stack>
+                          </Link>
+                        ) : ticket.chargingStation ? (
                           <Link
                             to={paths.locations.detail(String(ticket.chargingStation.id))}
                             style={{ textDecoration: 'none' }}

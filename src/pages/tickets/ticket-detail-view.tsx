@@ -337,32 +337,56 @@ export default function TicketDetailView() {
                       <Typography variant="body2">{fDateTime(ticket.updatedAt)}</Typography>
                     </Stack>
 
-                    {ticket.chargingStation && (
+                    {(ticket.chargepoint || ticket.chargingStation) && (
                       <>
                         <Divider />
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
                           <Typography variant="caption" color="text.secondary">
-                            Estación
+                            Cargador
                           </Typography>
-                          <Link
-                            to={paths.locations.detail(String(ticket.chargingStation.id))}
-                            style={{ textDecoration: 'none' }}
-                          >
-                            <Stack direction="row" alignItems="center" spacing={0.75}>
-                              <Iconify
-                                icon="mdi:ev-station"
-                                width={16}
-                                sx={{ color: 'common.black' }}
-                              />
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ '&:hover': { textDecoration: 'underline' } }}
+                          {ticket.chargepoint ? (
+                            <Link
+                              to={paths.chargingstations.detail(String(ticket.chargepoint.id))}
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <Stack direction="row" alignItems="center" spacing={0.75}>
+                                <Iconify
+                                  icon="mdi:ev-station"
+                                  width={16}
+                                  sx={{ color: 'common.black' }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                >
+                                  {ticket.chargepoint.name || ticket.chargepoint.id}
+                                </Typography>
+                              </Stack>
+                            </Link>
+                          ) : (
+                            ticket.chargingStation && (
+                              <Link
+                                to={paths.locations.detail(String(ticket.chargingStation.id))}
+                                style={{ textDecoration: 'none' }}
                               >
-                                {ticket.chargingStation.name}
-                              </Typography>
-                            </Stack>
-                          </Link>
+                                <Stack direction="row" alignItems="center" spacing={0.75}>
+                                  <Iconify
+                                    icon="mdi:ev-station"
+                                    width={16}
+                                    sx={{ color: 'common.black' }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{ '&:hover': { textDecoration: 'underline' } }}
+                                  >
+                                    {ticket.chargingStation.name}
+                                  </Typography>
+                                </Stack>
+                              </Link>
+                            )
+                          )}
                         </Stack>
                       </>
                     )}

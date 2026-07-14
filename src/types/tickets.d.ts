@@ -12,6 +12,7 @@ export type TicketTracking = {
 export type Ticket = {
   id: number;
   chargingStationId: number | null;
+  chargepointId: number | null;
   appUserId: number | null;
   reason: string;
   description: string;
@@ -20,6 +21,7 @@ export type Ticket = {
   createdAt: string;
   updatedAt: string;
   chargingStation: { id: number; name: string } | null;
+  chargepoint: { id: number; name: string } | null;
   appUser: {
     id: number;
     name: string;
