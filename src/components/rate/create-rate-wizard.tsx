@@ -45,6 +45,9 @@ import { put, post, fetcher, endpoints } from 'src/lib/axios';
 import { Iconify } from 'src/components/iconify';
 import { useNotification } from 'src/components/notification';
 
+import { useAuthContext } from 'src/auth/hooks';
+
+
 // ----------------------------------------------------------------------
 
 type Method = 'manual' | 'excel';
@@ -101,17 +104,20 @@ function formatPrice(value: number): string {
 function MethodStep({
   selected,
   onChange,
+  allowExcel,
 }: {
   selected: Method | null;
   onChange: (m: Method) => void;
+  allowExcel: boolean;
 }) {
+  const methods: Method[] = allowExcel ? ['manual', 'excel'] : ['manual'];
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 3 }}>
         ¿Cómo quieres crear las tarifas?
       </Typography>
       <Grid container spacing={3}>
-        {(['manual', 'excel'] as Method[]).map((m) => (
+        {methods.map((m) => (
           <Grid key={m} size={{ xs: 12, sm: 6 }}>
             <Card
               variant="outlined"
@@ -158,6 +164,7 @@ function ManualBasicInfoStep({
   rateType,
   setRateType,
   isHubject,
+  isEurocharger,
 }: {
   clients: Client[];
   clientId: number | null;
@@ -169,6 +176,7 @@ function ManualBasicInfoStep({
   rateType: number;
   setRateType: (v: number) => void;
   isHubject: boolean;
+  isEurocharger: boolean;
 }) {
   const [operators, setOperators] = useState<Operator[]>([]);
   const [opLoading, setOpLoading] = useState(false);
@@ -188,30 +196,33 @@ function ManualBasicInfoStep({
         Información básica
       </Typography>
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            select
-            fullWidth
-            label="Cliente"
-            value={clientId ?? ''}
-            onChange={(e) => {
-              const val = e.target.value === '' ? null : Number(e.target.value);
-              const client = clients.find((c) => c.id === val);
-              setClientId(val, client?.id === HUBJECT_CLIENT_ID);
-            }}
-            helperText="Déjalo vacío para crear una tarifa Eurocharger"
-          >
-            <MenuItem value="">
-              <em>Sin cliente (Eurocharger)</em>
-            </MenuItem>
-            {clients.map((c) => (
-              <MenuItem key={c.id} value={c.id}>
-                {c.business_name}
+        {isEurocharger && (
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              select
+              fullWidth
+              label="Cuenta"
+              value={clientId ?? ''}
+              onChange={(e) => {
+                const val = e.target.value === '' ? null : Number(e.target.value);
+                setClientId(val, val === HUBJECT_CLIENT_ID);
+              }}
+              helperText="Selecciona una cuenta o crea una tarifa Eurocharger (Hubject/OCPI)"
+            >
+              <MenuItem value={HUBJECT_CLIENT_ID}>
+                <em>Eurocharger (Hubject/OCPI)</em>
               </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+              {clients
+                .filter((c) => c.id !== HUBJECT_CLIENT_ID)
+                .map((c) => (
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.business_name}
+                  </MenuItem>
+                ))}
+            </TextField>
+          </Grid>
+        )}
+        <Grid size={{ xs: 12, sm: isEurocharger ? 6 : 10 }}>
           <TextField
             fullWidth
             label="Nombre de la tarifa"
@@ -791,19 +802,21 @@ function ExcelClientStep({
           <TextField
             select
             fullWidth
-            label="Cliente"
+            label="Cuenta"
             value={clientId ?? ''}
             onChange={(e) => setClientId(e.target.value === '' ? null : Number(e.target.value))}
-            helperText="Déjalo vacío para tarifas Eurocharger"
+            helperText="Selecciona una cuenta o crea una tarifa Eurocharger (Hubject/OCPI)"
           >
-            <MenuItem value="">
-              <em>Sin cliente (Eurocharger)</em>
+            <MenuItem value={HUBJECT_CLIENT_ID}>
+              <em>Eurocharger (Hubject/OCPI)</em>
             </MenuItem>
-            {clients.map((c) => (
-              <MenuItem key={c.id} value={c.id}>
-                {c.business_name}
-              </MenuItem>
-            ))}
+            {clients
+              .filter((c) => c.id !== HUBJECT_CLIENT_ID)
+              .map((c) => (
+                <MenuItem key={c.id} value={c.id}>
+                  {c.business_name}
+                </MenuItem>
+              ))}
           </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -1122,11 +1135,17 @@ export function CreateRateWizard({
   const isConnectorMode = connectorId != null && chargepointId != null;
 
   const { notifySuccess, notifyError } = useNotification();
+  const { user } = useAuthContext();
+  const isEurocharger = user?.roles?.includes('eurocharger') ?? false;
 
-  const [stepIndex, setStepIndex] = useState(0);
-  const [method, setMethod] = useState<Method | null>(null);
+  // Los roles no-eurocharger solo crean tarifas manuales para su propia cuenta:
+  // se salta el selector de método (paso 0) y arranca directamente en el manual.
+  const firstStep = isEurocharger ? 0 : 1;
+
+  const [stepIndex, setStepIndex] = useState(firstStep);
+  const [method, setMethod] = useState<Method | null>(isEurocharger ? null : 'manual');
   const [clients, setClients] = useState<Client[]>([]);
-  const [clientsLoading, setClientsLoading] = useState(true);
+  const [clientsLoading, setClientsLoading] = useState(isEurocharger);
 
   // Manual
   const [clientId, setClientIdRaw] = useState<number | null>(null);
@@ -1155,8 +1174,15 @@ export function CreateRateWizard({
 
   const activeClientId = method === 'excel' ? excelClientId : clientId;
   const activeClientName = clients.find((c) => c.id === activeClientId)?.business_name ?? '';
+  // Nombre a mostrar en el resumen: cuenta 18 = tarifa Eurocharger; no-eurocharger
+  // ve el nombre de su propia cuenta (del JWT).
+  const summaryClientName = isEurocharger
+    ? activeClientId === HUBJECT_CLIENT_ID
+      ? 'Eurocharger (Hubject/OCPI)'
+      : activeClientName
+    : (user?.account_name ?? '');
 
-  const steps =
+  const allSteps =
     method === 'excel'
       ? EXCEL_STEPS
       : isConnectorMode
@@ -1164,13 +1190,20 @@ export function CreateRateWizard({
         : isHubject
           ? MANUAL_STEPS_HUBJECT
           : MANUAL_STEPS;
+  // Para roles no-eurocharger ocultamos el paso "Método" del stepper.
+  const steps = allSteps.slice(firstStep);
 
   useEffect(() => {
-    fetcher(endpoints.clients.list)
+    if (!isEurocharger) return;
+    fetcher(endpoints.accounts.list)
       .then((res: { data: Client[] }) => setClients(res.data ?? []))
-      .catch(() => setClients([]))
+      .catch(() => {
+        setClients([]);
+        notifyError('No se pudieron cargar las cuentas');
+      })
       .finally(() => setClientsLoading(false));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEurocharger]);
 
   const setClientId = (id: number | null, hubject: boolean) => {
     setClientIdRaw(id);
@@ -1184,7 +1217,7 @@ export function CreateRateWizard({
       const formData = new FormData();
       formData.append('file', file);
       formData.append('assignmentMethod', aMethod);
-      if (excelClientId) formData.append('clientId', String(excelClientId));
+      if (excelClientId) formData.append('accountId', String(excelClientId));
       formData.append('commission', String(excelCommission));
       const res = await post(endpoints.rates.previewExcel, formData);
       setExcelPreview(res.data?.rates ?? []);
@@ -1210,7 +1243,15 @@ export function CreateRateWizard({
   const canContinue = (): boolean => {
     if (stepIndex === 0) return method !== null;
     if (method === 'manual') {
-      if (stepIndex === 1) return rateName.trim().length > 0;
+      if (stepIndex === 1) {
+        if (rateName.trim().length === 0) return false;
+        // eurocharger debe elegir cuenta; si es Eurocharger/Hubject (18) exige operador.
+        if (isEurocharger) {
+          if (clientId === null) return false;
+          if (isHubject && operatorId === null) return false;
+        }
+        return true;
+      }
       if (stepIndex === 2) return stretches.length > 0;
       if (!isConnectorMode && !isHubject && stepIndex === 3) {
         if (stationAssignmentType === null) return false;
@@ -1220,14 +1261,18 @@ export function CreateRateWizard({
       return true;
     }
     if (method === 'excel') {
-      if (stepIndex === 1) return true;
+      if (stepIndex === 1) {
+        if (excelClientId === null) return false;
+        if (excelIsHubject && excelOperatorId === null) return false;
+        return true;
+      }
       if (stepIndex === 2) return excelFile !== null && assignmentMethod !== null;
       return true;
     }
     return true;
   };
 
-  const isLastStep = stepIndex === steps.length - 1;
+  const isLastStep = stepIndex === allSteps.length - 1;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -1238,7 +1283,8 @@ export function CreateRateWizard({
         const res = await post(endpoints.rates.create, {
           rateName,
           rateType,
-          clientId,
+          // Solo eurocharger elige cuenta; el resto la hereda del JWT en el backend.
+          accountId: isEurocharger ? clientId : null,
           operatorId: isHubject ? operatorId : null,
           stretches,
           ...(isConnectorMode
@@ -1252,7 +1298,7 @@ export function CreateRateWizard({
         newRateId = res?.data?.id ?? res?.id;
       } else {
         const formData = new FormData();
-        if (excelClientId) formData.append('clientId', String(excelClientId));
+        if (excelClientId) formData.append('accountId', String(excelClientId));
         if (excelIsHubject && excelOperatorId)
           formData.append('operatorId', String(excelOperatorId));
         formData.append('commission', String(excelCommission));
@@ -1280,7 +1326,10 @@ export function CreateRateWizard({
   };
 
   const renderStepContent = () => {
-    if (stepIndex === 0) return <MethodStep selected={method} onChange={(m) => setMethod(m)} />;
+    if (stepIndex === 0)
+      return (
+        <MethodStep selected={method} onChange={(m) => setMethod(m)} allowExcel={isEurocharger} />
+      );
 
     if (method === 'manual') {
       if (stepIndex === 1) {
@@ -1296,6 +1345,7 @@ export function CreateRateWizard({
             rateType={rateType}
             setRateType={setRateType}
             isHubject={isHubject}
+            isEurocharger={isEurocharger}
           />
         );
       }
@@ -1320,7 +1370,7 @@ export function CreateRateWizard({
         <SummaryStep
           method="manual"
           drafts={summaryDrafts}
-          clientName={activeClientName}
+          clientName={summaryClientName}
           stretches={stretches}
         />
       );
@@ -1361,7 +1411,7 @@ export function CreateRateWizard({
         <SummaryStep
           method="excel"
           drafts={summaryDrafts}
-          clientName={activeClientName}
+          clientName={summaryClientName}
           commission={excelCommission}
         />
       );
@@ -1372,7 +1422,7 @@ export function CreateRateWizard({
 
   return (
     <Stack spacing={3}>
-      <Stepper activeStep={stepIndex}>
+      <Stepper activeStep={stepIndex - firstStep}>
         {steps.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
@@ -1395,9 +1445,9 @@ export function CreateRateWizard({
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Button
           variant="outlined"
-          onClick={stepIndex === 0 ? onCancel : () => setStepIndex((s) => s - 1)}
+          onClick={stepIndex === firstStep ? onCancel : () => setStepIndex((s) => s - 1)}
         >
-          {stepIndex === 0 ? 'Cancelar' : 'Atrás'}
+          {stepIndex === firstStep ? 'Cancelar' : 'Atrás'}
         </Button>
         <Button
           variant="contained"
