@@ -21,10 +21,10 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
-import Autocomplete from '@mui/material/Autocomplete';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 
 import { paths } from 'src/routes/paths';
 
@@ -39,6 +39,13 @@ import { PlanSelector } from 'src/components/plans/plan-selector';
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '');
 
 type Client = { id: number; business_name: string };
+
+// Busca por nombre y por id ("orirenting", "28" o "#28"). createFilterOptions
+// ignora mayúsculas y acentos, así que "almassera" encuentra "Almàssera".
+const filterAccounts = createFilterOptions<Client>({
+  trim: true,
+  stringify: (option) => `${option.business_name} #${option.id}`,
+});
 
 type StripeInfo = { hasStripeCustomer: boolean; hasPaymentMethod: boolean };
 
@@ -166,7 +173,7 @@ export function CreateSubscriptionDialog({ open, onClose, onCreated }: Props) {
 
   const { data: accountsData, isLoading: accountsLoading } = useQuery<{ data: Client[] }>({
     queryKey: ['accounts-list'],
-    queryFn: () => fetcher(endpoints.accounts.list),
+    queryFn: () => fetcher([endpoints.accounts.list, { params: { pageSize: 1000 } }]),
     staleTime: 2 * 60 * 1000,
     enabled: open,
   });
@@ -321,17 +328,38 @@ export function CreateSubscriptionDialog({ open, onClose, onCreated }: Props) {
       <Autocomplete<Client>
         options={accounts}
         loading={accountsLoading}
+        loadingText="Cargando cuentas..."
+        noOptionsText="Ninguna cuenta coincide"
         getOptionLabel={(o) => `${o.business_name} (#${o.id})`}
+        isOptionEqualToValue={(a, b) => a.id === b.id}
+        filterOptions={filterAccounts}
+        autoHighlight
+        openOnFocus
+        selectOnFocus
+        handleHomeEndKeys
         value={selectedAccount}
         onChange={handleAccountSelect}
         renderInput={(params) => (
           <TextField
             {...params}
             label="Cuenta"
-            placeholder="Buscar por nombre..."
+            placeholder="Buscar por nombre o id..."
+            helperText={
+              accountsLoading ? ' ' : `${accounts.length} cuenta(s) disponibles`
+            }
             slotProps={{
               input: {
                 ...params.InputProps,
+                startAdornment: (
+                  <>
+                    <Iconify
+                      icon="eva:search-fill"
+                      width={18}
+                      sx={{ ml: 0.5, mr: 0.5, color: 'text.disabled', flexShrink: 0 }}
+                    />
+                    {params.InputProps.startAdornment}
+                  </>
+                ),
                 endAdornment: (
                   <>
                     {accountsLoading ? <CircularProgress size={16} /> : null}
