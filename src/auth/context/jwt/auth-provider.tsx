@@ -40,6 +40,9 @@ export function AuthProvider({ children }: Props) {
               account_name: apiUser.account_name ?? 'Eurocharger',
               membership_id: apiUser.membership_id ?? null,
               subscription_status: apiUser.subscription_status ?? null,
+              // Viene del backend a propósito: `can()` devuelve true para
+              // cualquier `eurocharger` y no sirve como gate de autorización.
+              can_approve_invoices: apiUser.can_approve_invoices ?? false,
               accessToken,
             },
             loading: false,

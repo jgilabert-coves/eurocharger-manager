@@ -62,6 +62,8 @@ export type ApiUserResponse = {
   account_name: string | null;
   membership_id: string | null;
   subscription_status: string | null;
+  /** Puede autorizar el pago de autofacturas (rol eurocharger Y estar en la lista). */
+  can_approve_invoices?: boolean;
   exp: number;
   iat: number;
 };

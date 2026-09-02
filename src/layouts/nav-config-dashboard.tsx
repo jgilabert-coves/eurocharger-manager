@@ -37,10 +37,12 @@ export const navData: NavSectionProps['data'] = [
         roles: ['eurocharger', 'saas_owner', 'saas_admin'],
       },
       {
+        // El operador consulta su propia liquidación: la ruta ya deja pasar a
+        // saas_owner (routes/sections/invoices.tsx), el menú no lo mostraba.
         title: 'Autofacturas',
         path: paths.invoices.list,
         caption: 'Visualiza los importes recaudados en los cargadores',
-        roles: ['eurocharger'],
+        roles: ['eurocharger', 'saas_owner'],
       },
     ],
   },
@@ -137,6 +139,11 @@ export const navData: NavSectionProps['data'] = [
         title: 'Suscripciones',
         path: paths.adminSubscriptions.root,
         caption: 'Visualiza los clientes suscritos a la plataforma',
+      },
+      {
+        title: 'Liquidaciones',
+        path: paths.adminSelfInvoices.root,
+        caption: 'Revisa y autoriza el pago de las autofacturas a operadores',
       },
       {
         title: 'Usuarios gestor',
