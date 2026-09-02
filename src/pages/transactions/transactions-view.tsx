@@ -33,6 +33,7 @@ const metadata = { title: `Recargas | ${CONFIG.appName}` };
 
 type StatusFilter = 'CARGANDO' | 'FINALIZADO';
 type SourceFilter = 'ALL' | 'APP' | 'HUBJECT' | 'OCPI';
+type PriceFilter = 'ALL' | 'FREE' | 'PAID';
 
 // ----------------------------------------------------------------------
 
@@ -42,6 +43,7 @@ export default function TransactionsView() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('CARGANDO');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('ALL');
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Rango de fechas aplicado (lo que filtra). El componente gestiona su propio buffer.
@@ -52,11 +54,12 @@ export default function TransactionsView() {
     (): Record<string, string> => ({
       ...(statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
       ...(isEurocharger && sourceFilter !== 'ALL' ? { source: sourceFilter.toLowerCase() } : {}),
+      ...(isEurocharger && priceFilter !== 'ALL' ? { price: priceFilter.toLowerCase() } : {}),  
       // La hora se elige en local y se envía en UTC (t.started está en UTC en BD).
       ...(appliedFrom ? { start_date: appliedFrom.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
       ...(appliedTo ? { end_date: appliedTo.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
     }),
-    [statusFilter, sourceFilter, isEurocharger, appliedFrom, appliedTo]
+    [statusFilter, sourceFilter, priceFilter, isEurocharger, appliedFrom, appliedTo]
   );
 
   const showEndDate = statusFilter !== 'CARGANDO';
@@ -112,20 +115,35 @@ export default function TransactionsView() {
           </ToggleButtonGroup>
 
           {isEurocharger && (
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={sourceFilter}
-              onChange={(_, val) => {
-                if (val) setSourceFilter(val);
-              }}
-              sx={{ flexWrap: 'wrap', alignSelf: { xs: 'flex-start' } }}
-            >
-              <ToggleButton value="ALL">Todos</ToggleButton>
-              <ToggleButton value="APP">EuroCharger</ToggleButton>
-              <ToggleButton value="HUBJECT">Roaming</ToggleButton>
-              <ToggleButton value="OCPI">OCPI</ToggleButton>
-            </ToggleButtonGroup>
+            <>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={sourceFilter}
+                onChange={(_, val) => {
+                  if (val) setSourceFilter(val);
+                }}
+                sx={{ flexWrap: 'wrap', alignSelf: { xs: 'flex-start' } }}
+              >
+                <ToggleButton value="ALL">Todos</ToggleButton>
+                <ToggleButton value="APP">EuroCharger</ToggleButton>
+                <ToggleButton value="HUBJECT">Roaming</ToggleButton>
+                <ToggleButton value="OCPI">OCPI</ToggleButton>
+              </ToggleButtonGroup>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={priceFilter}
+                onChange={(_, val) => {
+                  if (val) setPriceFilter(val);
+                }}
+                sx={{ flexWrap: 'wrap', alignSelf: { xs: 'flex-start' } }}
+              >
+                <ToggleButton value="ALL">Todas</ToggleButton>
+                <ToggleButton value="FREE">Gratis</ToggleButton>
+                <ToggleButton value="PAID">De pago</ToggleButton>
+              </ToggleButtonGroup>
+            </>
           )}
 
           {/* Rango de fechas (sobre la fecha de inicio de la recarga) — todos los roles */}
