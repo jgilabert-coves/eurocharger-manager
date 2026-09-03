@@ -44,7 +44,7 @@ const STATUS_META: Record<ConnectStatusView['status'], StatusMeta> = {
     color: 'default',
     headline: 'Registra tu cuenta de cobro',
     description:
-      'Necesitamos una cuenta bancaria para ingresarte la liquidación trimestral de lo recaudado en tus cargadores. El registro se hace en Stripe: nosotros no vemos ni guardamos tu IBAN.',
+      'Necesitamos una cuenta bancaria para ingresarte la liquidación mensual de lo recaudado en tus cargadores. El registro se hace en Stripe: nosotros no vemos ni guardamos tu IBAN.',
   },
   onboarding: {
     label: 'Alta sin terminar',
@@ -64,7 +64,7 @@ const STATUS_META: Record<ConnectStatusView['status'], StatusMeta> = {
     label: 'Activa',
     color: 'success',
     headline: 'Tu cuenta de cobro está lista',
-    description: 'Las liquidaciones trimestrales se ingresarán en esta cuenta.',
+    description: 'Las liquidaciones se ingresarán en esta cuenta.',
   },
   disabled: {
     label: 'Bloqueada',
@@ -303,7 +303,7 @@ export default function PayoutAccountView() {
           <Box>
             <Typography variant="h4">Cuenta de cobro</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Dónde ingresamos tu liquidación trimestral
+              Dónde ingresamos tu liquidación
             </Typography>
           </Box>
 
