@@ -40,7 +40,7 @@ export type ClientInvoiceModel = {
 
   // Pago y liquidación (migración 035)
   period_key: string | null;
-  source: 'manual' | 'quarterly_cron';
+  source: 'manual' | 'quarterly_cron' | 'monthly_cron';
   run_id: number | null;
   payout_status: PayoutStatus;
   /** Importe autorizado en céntimos, congelado en la generación. */

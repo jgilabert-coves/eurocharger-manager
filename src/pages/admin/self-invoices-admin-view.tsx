@@ -83,20 +83,47 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   })),
 ];
 
-/** Últimos ocho trimestres, para el filtro de periodo. */
+/**
+ * Periodos que existen de verdad, del más reciente al más antiguo: los meses
+ * cerrados desde el corte de periodicidad, y trimestres antes de eso.
+ *
+ * Duplica a propósito la fecha del corte que vive en el backend
+ * (`MONTHLY_PERIODS_FROM` en period.utils.ts). Si allí cambia, aquí también.
+ */
+const MONTHLY_PERIODS_FROM_YEAR = 2026;
+const MONTHLY_PERIODS_FROM_MONTH = 10; // octubre de 2026, en base 1
+
 function recentPeriods(): string[] {
   const now = new Date();
   const periods: string[] = [];
-  let year = now.getFullYear();
-  let quarter = Math.floor(now.getMonth() / 3) + 1;
-  for (let i = 0; i < 8; i += 1) {
-    periods.push(`${year}-Q${quarter}`);
-    quarter -= 1;
-    if (quarter === 0) {
-      quarter = 4;
+
+  // Meses cerrados, del anterior a hoy hacia atrás, hasta el corte.
+  let year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  let month = now.getMonth() === 0 ? 12 : now.getMonth(); // base 1
+  while (
+    year > MONTHLY_PERIODS_FROM_YEAR ||
+    (year === MONTHLY_PERIODS_FROM_YEAR && month >= MONTHLY_PERIODS_FROM_MONTH)
+  ) {
+    periods.push(`${year}-${String(month).padStart(2, '0')}`);
+    month -= 1;
+    if (month === 0) {
+      month = 12;
       year -= 1;
     }
   }
+
+  // Trimestres anteriores al corte, hasta completar 12 entradas.
+  let qYear = MONTHLY_PERIODS_FROM_YEAR;
+  let quarter = Math.floor((MONTHLY_PERIODS_FROM_MONTH - 1) / 3); // el cerrado antes del corte
+  while (periods.length < 12) {
+    if (quarter === 0) {
+      quarter = 4;
+      qYear -= 1;
+    }
+    periods.push(`${qYear}-Q${quarter}`);
+    quarter -= 1;
+  }
+
   return periods;
 }
 
@@ -377,7 +404,7 @@ export default function SelfInvoicesAdminView() {
           <Box>
             <Typography variant="h4">Liquidaciones a operadores</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Revisa y autoriza el pago de las autofacturas trimestrales
+              Revisa y autoriza el pago de las autofacturas
             </Typography>
           </Box>
 
@@ -427,9 +454,9 @@ export default function SelfInvoicesAdminView() {
                 </Select>
               </FormControl>
               <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel>Trimestre</InputLabel>
+                <InputLabel>Periodo</InputLabel>
                 <Select
-                  label="Trimestre"
+                  label="Periodo"
                   value={periodKey}
                   onChange={(e) => updateParam('period_key', e.target.value)}
                 >
