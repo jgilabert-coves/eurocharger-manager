@@ -16,12 +16,17 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
+
 import { CONFIG } from 'src/global-config';
 import { post, fetcher, endpoints } from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { useNotification } from 'src/components/notification';
+
+import { useConnectOnboarding } from './use-connect-onboarding';
 
 // ----------------------------------------------------------------------
 
@@ -106,6 +111,7 @@ export default function PayoutAccountView() {
   const [pollAttempts, setPollAttempts] = useState(0);
   const [polling, setPolling] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
+  const onboarding = useConnectOnboarding();
 
   const connectParam = searchParams.get('connect');
 
@@ -261,24 +267,46 @@ export default function PayoutAccountView() {
           >
             {redirecting === 'update' ? 'Abriendo Stripe…' : 'Cambiar cuenta de cobro'}
           </Button>
+          {/*
+            "Ver mis pagos" es lo que el operador se pregunta el 95% de las
+            veces, y la respuesta está en casa: la vista de autofacturas ya
+            muestra importe, periodo, estado de pago y PDF. El Express Dashboard
+            contesta otra pregunta distinta —cuándo aterriza el dinero en el
+            banco, agrupando varios transfers— así que se queda como enlace
+            secundario y con un nombre que lo diga.
+          */}
           <Button
             variant="text"
-            startIcon={<Iconify icon="solar:chart-2-bold" />}
+            startIcon={<Iconify icon="solar:bill-list-bold" />}
+            component={RouterLink}
+            href={paths.invoices.list}
+          >
+            Ver mis pagos
+          </Button>
+          <Button
+            variant="text"
+            color="inherit"
+            startIcon={<Iconify icon="solar:bank-bold" />}
             onClick={() => goToStripe('dashboard')}
             disabled={redirecting !== null}
           >
-            {redirecting === 'dashboard' ? 'Abriendo Stripe…' : 'Ver mis pagos'}
+            {redirecting === 'dashboard' ? 'Abriendo Stripe…' : 'Ver ingresos en mi banco'}
           </Button>
         </Stack>
       );
     }
 
     // En el resto de estados lo que toca es terminar el alta, no cambiarla.
+    //
+    // El botón NO sale directo a Stripe: abre primero el formulario de datos.
+    // Generar el enlace de alta cierra la ventana de prefill de forma
+    // irreversible, así que todo lo que se le pueda ahorrar al operador hay que
+    // recogerlo antes. El backend lo exige igualmente con un 422.
     return (
       <Button
         variant="contained"
         startIcon={<Iconify icon="solar:arrow-right-bold" />}
-        onClick={() => goToStripe('onboarding')}
+        onClick={onboarding.start}
         disabled={redirecting !== null}
       >
         {redirecting === 'onboarding'
@@ -384,6 +412,8 @@ export default function PayoutAccountView() {
           </Typography>
         </Stack>
       </DashboardContent>
+
+      {onboarding.dialog}
     </>
   );
 }

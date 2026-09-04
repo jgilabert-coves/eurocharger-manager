@@ -41,6 +41,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useNotification } from 'src/components/notification';
+import { GenerateAutoInvoiceDialog } from 'src/components/admin/generate-auto-invoice-dialog';
 
 import { useAuthContext } from 'src/auth/hooks/use-auth-context';
 
@@ -63,7 +64,10 @@ type SummaryResponse = {
 
 type ListResponse = { data: ClientInvoiceModel[]; total: number };
 
-const STATUS_META: Record<PayoutStatus, { label: string; color: 'default' | 'info' | 'warning' | 'success' | 'error' }> = {
+const STATUS_META: Record<
+  PayoutStatus,
+  { label: string; color: 'default' | 'info' | 'warning' | 'success' | 'error' }
+> = {
   legacy: { label: 'Liquidada (manual)', color: 'default' },
   pending_review: { label: 'Pendiente de autorizar', color: 'info' },
   blocked: { label: 'Bloqueada', color: 'warning' },
@@ -148,7 +152,8 @@ export function getApproveBlockReason(
     return `Solo se autorizan las pendientes de autorizar (está en "${STATUS_META[invoice.payout_status].label}")`;
   }
   if (!invoice.connect_payouts_enabled) return 'El operador no tiene una cuenta de cobro operativa';
-  if (centsToEuros(invoice.payable_amount_cents) <= 0) return 'El importe a transferir no es positivo';
+  if (centsToEuros(invoice.payable_amount_cents) <= 0)
+    return 'El importe a transferir no es positivo';
   return null;
 }
 
@@ -190,11 +195,14 @@ export default function SelfInvoicesAdminView() {
   const debouncedSearch = useDebounce(search, 400);
 
   const [dialog, setDialog] = useState<DialogState>(null);
+  const [generateOpen, setGenerateOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [rowBusy, setRowBusy] = useState<number | null>(null);
   const [menu, setMenu] = useState<{ el: HTMLElement; invoice: ClientInvoiceModel } | null>(null);
 
-  const canApprove = Boolean((user as { can_approve_invoices?: boolean } | null)?.can_approve_invoices);
+  const canApprove = Boolean(
+    (user as { can_approve_invoices?: boolean } | null)?.can_approve_invoices
+  );
 
   const updateParam = (key: string, value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -230,8 +238,7 @@ export default function SelfInvoicesAdminView() {
   const invoices = useMemo(() => listRes?.data ?? [], [listRes?.data]);
   const total = listRes?.total ?? 0;
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: ['admin-client-invoices'] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['admin-client-invoices'] });
 
   const runAction = async (invoice: ClientInvoiceModel, action: 'retry' | 'resend') => {
     setRowBusy(invoice.id);
@@ -410,8 +417,8 @@ export default function SelfInvoicesAdminView() {
 
           {summary && !summary.transfers_enabled && (
             <Alert severity="info">
-              Las transferencias reales están desactivadas
-              (<code>AUTOINVOICE_TRANSFERS_ENABLED</code>). Autorizar registra el intento y la
+              Las transferencias reales están desactivadas (
+              <code>AUTOINVOICE_TRANSFERS_ENABLED</code>). Autorizar registra el intento y la
               auditoría, pero no se mueve dinero.
             </Alert>
           )}
@@ -468,6 +475,14 @@ export default function SelfInvoicesAdminView() {
                   ))}
                 </Select>
               </FormControl>
+              <Box sx={{ flexGrow: 1 }} />
+              <Button
+                variant="contained"
+                startIcon={<Iconify icon="solar:file-bold" width={18} />}
+                onClick={() => setGenerateOpen(true)}
+              >
+                Generar factura
+              </Button>
             </Stack>
 
             <TableContainer>
@@ -544,7 +559,9 @@ export default function SelfInvoicesAdminView() {
           disabled={
             !canApprove ||
             !menu ||
-            !['pending_review', 'blocked', 'approved', 'failed'].includes(menu.invoice.payout_status)
+            !['pending_review', 'blocked', 'approved', 'failed'].includes(
+              menu.invoice.payout_status
+            )
           }
           sx={{ color: 'error.main' }}
         >
@@ -647,6 +664,12 @@ export default function SelfInvoicesAdminView() {
           </Stack>
         </ConfirmDialog>
       )}
+
+      <GenerateAutoInvoiceDialog
+        open={generateOpen}
+        onClose={() => setGenerateOpen(false)}
+        onGenerated={refresh}
+      />
     </>
   );
 }

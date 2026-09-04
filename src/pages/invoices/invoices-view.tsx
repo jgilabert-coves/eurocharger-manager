@@ -1,3 +1,4 @@
+import type { ConnectStatusView } from 'src/types/connect';
 import type { PayoutStatus, ClientInvoiceModel } from 'src/types/invoice';
 
 import { useMemo, useState } from 'react';
@@ -29,6 +30,8 @@ import { Iconify } from 'src/components/iconify';
 import { useNotification } from 'src/components/notification';
 
 import { JWT_STORAGE_KEY } from 'src/auth/context/jwt';
+
+import { useConnectOnboarding } from '../payout-account/use-connect-onboarding';
 
 // ----------------------------------------------------------------------
 
@@ -191,7 +194,24 @@ export default function InvoicesView() {
     return { count: invoices.length, facturado, pendiente };
   }, [invoices]);
 
-  const sinCuentaDeCobro = invoices.some((inv) => inv.payout_status === 'blocked');
+  // Se pregunta el estado REAL de la cuenta de cobro en vez de deducirlo de
+  // tener facturas bloqueadas: un operador que todavía no ha recaudado nada no
+  // tiene ninguna bloqueada, y es justo el que más necesita el aviso. Misma
+  // queryKey que la pantalla de cuenta de cobro, así que react-query lo comparte.
+  const { data: connectRes } = useQuery<{ data: ConnectStatusView }>({
+    queryKey: ['connect-status'],
+    queryFn: () => fetcher(endpoints.connect.status),
+  });
+  const connect = connectRes?.data;
+
+  const onboarding = useConnectOnboarding();
+
+  const hayBloqueadas = invoices.some((inv) => inv.payout_status === 'blocked');
+  const sinCuentaDeCobro = connect ? !connect.can_receive_payouts : false;
+  // 'none' y 'onboarding' son los dos estados en los que el operador puede
+  // hacer algo desde aquí. En 'restricted' toca esperar a Stripe, y 'disabled'
+  // necesita la pantalla de cuenta de cobro, que da el motivo.
+  const puedeArrancarAlta = connect?.status === 'none' || connect?.status === 'onboarding';
 
   const handleDownloadPdf = async (invoice: ClientInvoiceModel) => {
     setDownloadingId(invoice.id);
@@ -346,20 +366,42 @@ export default function InvoicesView() {
 
           {sinCuentaDeCobro && (
             <Alert
-              severity="warning"
+              severity={hayBloqueadas ? 'warning' : 'info'}
               action={
-                <Button
-                  color="inherit"
-                  size="small"
-                  component={RouterLink}
-                  href={paths.payouts.root}
-                >
-                  Registrar
-                </Button>
+                puedeArrancarAlta ? (
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={onboarding.start}
+                    disabled={onboarding.redirecting}
+                  >
+                    {onboarding.redirecting
+                      ? 'Abriendo…'
+                      : connect?.status === 'none'
+                        ? 'Registrar'
+                        : 'Continuar'}
+                  </Button>
+                ) : (
+                  <Button
+                    color="inherit"
+                    size="small"
+                    component={RouterLink}
+                    href={paths.payouts.root}
+                  >
+                    Ver detalle
+                  </Button>
+                )
               }
             >
-              Tienes autofacturas sin cuenta de cobro asociada. Registra tu cuenta bancaria para
-              poder recibir la liquidación.
+              {connect?.status === 'none'
+                ? hayBloqueadas
+                  ? 'Tienes autofacturas esperando: registra tu cuenta de cobro para que podamos ingresarte la liquidación.'
+                  : 'Todavía no tienes cuenta de cobro. Regístrala para que podamos ingresarte lo recaudado en tus cargadores.'
+                : connect?.status === 'onboarding'
+                  ? 'Te falta terminar el alta de tu cuenta de cobro. Puedes continuar donde lo dejaste.'
+                  : connect?.status === 'restricted'
+                    ? 'Stripe está verificando tus datos. En cuanto los valide, podremos ingresarte las liquidaciones.'
+                    : 'Tu cuenta de cobro está bloqueada y no podemos ingresarte la liquidación.'}
             </Alert>
           )}
 
@@ -409,6 +451,8 @@ export default function InvoicesView() {
           {renderList()}
         </Stack>
       </DashboardContent>
+
+      {onboarding.dialog}
     </>
   );
 }

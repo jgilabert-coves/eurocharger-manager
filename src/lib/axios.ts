@@ -281,6 +281,11 @@ export const endpoints = {
     updateLink: '/billing/connect/update-link',
     dashboardLink: '/billing/connect/dashboard-link',
     refresh: '/billing/connect/refresh',
+    // El formulario y la confirmación van ANTES del enlace de alta: una vez
+    // creado, los datos de Stripe ya no se pueden modificar por API.
+    profile: '/billing/connect/profile',
+    profileConfirm: '/billing/connect/profile/confirm',
+    prepare: '/billing/connect/prepare',
   },
   adminClientInvoices: {
     list: '/admin/client-invoices',
@@ -291,6 +296,8 @@ export const endpoints = {
     pay: (id: number) => `/admin/client-invoices/${id}/pay`,
     retryPayment: (id: number) => `/admin/client-invoices/${id}/retry-payment`,
     resendEmail: (id: number) => `/admin/client-invoices/${id}/resend-email`,
+    preview: '/admin/client-invoices/preview',
+    generate: '/admin/client-invoices/generate',
     runs: '/admin/client-invoices/runs',
   },
   clientInvoices: {
