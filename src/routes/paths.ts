@@ -106,6 +106,9 @@ export const paths = {
   subscription: {
     root: `/subscription`,
   },
+  payouts: {
+    root: `/account/payouts`,
+  },
   plans: {
     list: `/plans`,
   },
@@ -121,6 +124,9 @@ export const paths = {
   },
   adminSubscriptions: {
     root: '/admin/subscriptions',
+  },
+  adminSelfInvoices: {
+    root: '/admin/self-invoices',
   },
   menuGroups: {
     ventas: '/menu/sales',

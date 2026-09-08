@@ -75,6 +75,10 @@ export const SignUpSchema = zod.object({
 type Country = { id: number; name: string; code_2: string };
 
 const BillingSchema = zod.object({
+  // Opcional a propósito: un autónomo factura con su propio nombre y no tiene
+  // razón social distinta. Cuando la hay, es la que se declara a Stripe y a la
+  // AEAT, y mezclarla con el nombre de la persona rompe la verificación.
+  businessName: zod.string().optional(),
   cif: zod.string().min(1, { message: 'El CIF/NIF es obligatorio' }),
   address: zod.string().min(1, { message: 'La dirección es obligatoria' }),
   city: zod.string().min(1, { message: 'La ciudad es obligatoria' }),
@@ -105,7 +109,7 @@ function PaymentForm({ plan, billingPeriod, accountData, discount, onSuccess, on
 
   const billingForm = useForm<BillingSchemaType>({
     resolver: zodResolver(BillingSchema),
-    defaultValues: { cif: '', address: '', city: '', postalCode: '', countryId: 0 },
+    defaultValues: { businessName: '', cif: '', address: '', city: '', postalCode: '', countryId: 0 },
   });
 
   const { data: countriesRes } = useQuery<{ data: Country[] }>({
@@ -180,6 +184,7 @@ function PaymentForm({ plan, billingPeriod, accountData, discount, onSuccess, on
         email: accountData.email,
         password: accountData.password,
         fullName: accountData.fullName,
+        businessName: billingData.businessName?.trim() || undefined,
         cif: billingData.cif,
         address: billingData.address,
         city: billingData.city,
@@ -273,6 +278,24 @@ function PaymentForm({ plan, billingPeriod, accountData, discount, onSuccess, on
 
         {/* Billing address section */}
         <Typography variant="subtitle2">Datos de facturación</Typography>
+
+        <Controller
+          name="businessName"
+          control={billingForm.control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              label="Razón social"
+              placeholder="Déjalo vacío si facturas con tu propio nombre"
+              error={!!fieldState.error}
+              helperText={
+                fieldState.error?.message ??
+                'El nombre fiscal de la empresa, tal como aparece en el CIF'
+              }
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          )}
+        />
 
         <Controller
           name="cif"

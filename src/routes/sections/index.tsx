@@ -24,9 +24,11 @@ import { transactionsRoutes } from './transactions';
 import { reservationsRoutes } from './reservations';
 import { subscriptionRoutes } from './subscription';
 import { managerUsersRoutes } from './manager-users';
+import { payoutAccountRoutes } from './payout-account';
 import { chargerGroupsRoutes } from './charger-groups';
 import { chargerTransferRoutes } from './charger-transfer';
 import { chargingStationsRoutes } from './chargingstations';
+import { adminSelfInvoicesRoutes } from './admin-self-invoices';
 import { adminSubscriptionsRoutes } from './admin-subscriptions';
 // ----------------------------------------------------------------------
 
@@ -67,6 +69,10 @@ export const routesSection: RouteObject[] = [
   ...locationsRoutes,
 
   ...subscriptionRoutes,
+
+  ...payoutAccountRoutes,
+
+  ...adminSelfInvoicesRoutes,
 
   ...invitationsRoutes,
 

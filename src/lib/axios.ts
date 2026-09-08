@@ -275,6 +275,36 @@ export const endpoints = {
     discountInfo: '/auth/discount-info',
   },
   countries: '/countries',
+  connect: {
+    status: '/billing/connect/status',
+    onboardingLink: '/billing/connect/onboarding-link',
+    updateLink: '/billing/connect/update-link',
+    dashboardLink: '/billing/connect/dashboard-link',
+    refresh: '/billing/connect/refresh',
+    // El formulario y la confirmación van ANTES del enlace de alta: una vez
+    // creado, los datos de Stripe ya no se pueden modificar por API.
+    profile: '/billing/connect/profile',
+    profileConfirm: '/billing/connect/profile/confirm',
+    prepare: '/billing/connect/prepare',
+  },
+  adminClientInvoices: {
+    list: '/admin/client-invoices',
+    summary: '/admin/client-invoices/summary',
+    single: (id: number) => `/admin/client-invoices/${id}`,
+    approve: (id: number) => `/admin/client-invoices/${id}/approve`,
+    cancel: (id: number) => `/admin/client-invoices/${id}/cancel`,
+    pay: (id: number) => `/admin/client-invoices/${id}/pay`,
+    retryPayment: (id: number) => `/admin/client-invoices/${id}/retry-payment`,
+    resendEmail: (id: number) => `/admin/client-invoices/${id}/resend-email`,
+    preview: '/admin/client-invoices/preview',
+    generate: '/admin/client-invoices/generate',
+    runs: '/admin/client-invoices/runs',
+  },
+  clientInvoices: {
+    list: '/client-invoices',
+    single: (id: number) => `/client-invoices/${id}`,
+    pdf: (id: number) => `/client-invoices/${id}/pdf`,
+  },
   billing: {
     setupIntent: '/billing/setup-intent',
     subscribe: '/billing/subscribe',
