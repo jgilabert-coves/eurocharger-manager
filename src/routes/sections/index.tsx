@@ -18,6 +18,7 @@ import { incidentsRoutes } from './incidents';
 import { dashboardRoutes } from './dashboard';
 import { locationsRoutes } from './locations';
 import { privilegesRoutes } from './privileges';
+import { appAccountRoutes } from './app-account';
 import { menuGroupsRoutes } from './menu-groups';
 import { invitationsRoutes } from './invitations';
 import { transactionsRoutes } from './transactions';
@@ -37,6 +38,9 @@ const Page404 = lazy(() => import('src/pages/error/404'));
 export const routesSection: RouteObject[] = [
   // Auth
   ...authRoutes,
+
+  // Cuenta de conductor (enlaces de los correos de la app)
+  ...appAccountRoutes,
 
   // Dashboard
   ...dashboardRoutes,
