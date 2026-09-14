@@ -159,7 +159,7 @@ function PlanCard({ plan, period, selected, onSelect, discount }: PlanCardProps)
           )}
           {guestsPrice != null && (
             <Typography variant="caption" color="text.secondary">
-              + {formatCents(guestsPrice)}/mes por usuario
+              + {formatCents(guestsPrice)}/mes por usuario invitado
             </Typography>
           )}
           {/*
