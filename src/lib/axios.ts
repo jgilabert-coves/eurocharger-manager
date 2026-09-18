@@ -296,6 +296,9 @@ export const endpoints = {
     pay: (id: number) => `/admin/client-invoices/${id}/pay`,
     retryPayment: (id: number) => `/admin/client-invoices/${id}/retry-payment`,
     resendEmail: (id: number) => `/admin/client-invoices/${id}/resend-email`,
+    // Previsualización de los adjuntos del correo, para revisarlos antes de autorizar.
+    pdf: (id: number) => `/admin/client-invoices/${id}/pdf`,
+    excel: (id: number) => `/admin/client-invoices/${id}/excel`,
     preview: '/admin/client-invoices/preview',
     generate: '/admin/client-invoices/generate',
     runs: '/admin/client-invoices/runs',

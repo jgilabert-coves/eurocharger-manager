@@ -43,6 +43,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useNotification } from 'src/components/notification';
 import { GenerateAutoInvoiceDialog } from 'src/components/admin/generate-auto-invoice-dialog';
 
+import { JWT_STORAGE_KEY } from 'src/auth/context/jwt';
 import { useAuthContext } from 'src/auth/hooks/use-auth-context';
 
 // ----------------------------------------------------------------------
@@ -254,6 +255,47 @@ export default function SelfInvoicesAdminView() {
       await refresh();
     } catch (error: any) {
       notifyError(error?.response?.data?.error ?? 'No se pudo completar la acción.');
+    } finally {
+      setRowBusy(null);
+    }
+  };
+
+  /**
+   * Abre el PDF o descarga el Excel que se le mandaría al operador.
+   *
+   * Son binarios, así que no pasan por el `fetcher` de axios: se piden a mano
+   * con el JWT y se sirven desde un blob local. No cambian el estado de la
+   * factura ni envían nada — están para revisar antes de autorizar.
+   */
+  const openDocument = async (invoice: ClientInvoiceModel, kind: 'pdf' | 'excel') => {
+    setRowBusy(invoice.id);
+    setMenu(null);
+    try {
+      const token = localStorage.getItem(JWT_STORAGE_KEY);
+      const path = endpoints.adminClientInvoices[kind](invoice.id);
+      const response = await fetch(`${CONFIG.serverUrl}${path}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error();
+
+      const url = URL.createObjectURL(await response.blob());
+      if (kind === 'pdf') {
+        window.open(url, '_blank');
+        // Se revoca tarde a propósito: la pestaña nueva necesita tiempo para cargar el blob.
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${invoice.client_code}${invoice.invoice_number}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      notifyError(
+        kind === 'pdf'
+          ? 'No se pudo abrir el PDF de la autofactura.'
+          : 'No se pudo descargar el Excel de la autofactura.'
+      );
     } finally {
       setRowBusy(null);
     }
@@ -535,6 +577,14 @@ export default function SelfInvoicesAdminView() {
       </DashboardContent>
 
       <Menu anchorEl={menu?.el ?? null} open={Boolean(menu)} onClose={() => setMenu(null)}>
+        <MenuItem onClick={() => menu && openDocument(menu.invoice, 'pdf')} disabled={!menu}>
+          <Iconify icon="solar:eye-bold" width={18} sx={{ mr: 1 }} />
+          Ver el PDF
+        </MenuItem>
+        <MenuItem onClick={() => menu && openDocument(menu.invoice, 'excel')} disabled={!menu}>
+          <Iconify icon="solar:download-minimalistic-bold" width={18} sx={{ mr: 1 }} />
+          Descargar el Excel
+        </MenuItem>
         <MenuItem
           onClick={() => menu && runAction(menu.invoice, 'resend')}
           disabled={!menu || menu.invoice.payout_status === 'legacy'}
