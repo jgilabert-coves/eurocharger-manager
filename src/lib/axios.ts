@@ -305,6 +305,7 @@ export const endpoints = {
   },
   clientInvoices: {
     list: '/client-invoices',
+    summary: '/client-invoices/summary',
     single: (id: number) => `/client-invoices/${id}`,
     pdf: (id: number) => `/client-invoices/${id}/pdf`,
   },

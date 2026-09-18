@@ -60,12 +60,6 @@ type SummaryResponse = {
     pending_approval_cents: number;
     platform_balance: { available: number; pending: number } | null;
     transfers_enabled: boolean;
-    invoiced?: {
-      this_month_cents: number;
-      last_month_cents: number;
-      this_year_cents: number;
-      current_year: number;
-    };
   };
 };
 
@@ -307,53 +301,56 @@ export default function SelfInvoicesAdminView() {
     }
   };
 
-  const renderHeader = () => {
-    const now = new Date();
-    const monthLabel = (date: Date) => {
-      const label = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-      return label.charAt(0).toUpperCase() + label.slice(1);
-    };
+  const renderHeader = () => (
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          PENDIENTE DE AUTORIZAR
+        </Typography>
+        <Typography variant="h4" fontWeight={700}>
+          {formatEuros(centsToEuros(summary?.pending_approval_cents))}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {summary?.by_status?.pending_review?.invoices ?? 0} autofactura(s)
+        </Typography>
+      </Card>
 
-    return (
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            FACTURADO ESTE MES
-          </Typography>
-          <Typography variant="h4" fontWeight={700}>
-            {formatEuros(centsToEuros(summary?.invoiced?.this_month_cents))}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {monthLabel(now)}
-          </Typography>
-        </Card>
+      <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          SALDO DISPONIBLE EN STRIPE
+        </Typography>
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          color={
+            summary?.platform_balance &&
+            summary.platform_balance.available * 100 < (summary?.pending_approval_cents ?? 0)
+              ? 'error.main'
+              : 'text.primary'
+          }
+        >
+          {summary?.platform_balance ? formatEuros(summary.platform_balance.available) : '—'}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {summary?.platform_balance
+            ? `${formatEuros(summary.platform_balance.pending)} pendiente de liquidar`
+            : 'No disponible'}
+        </Typography>
+      </Card>
 
-        <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            FACTURADO MES ANTERIOR
-          </Typography>
-          <Typography variant="h4" fontWeight={700}>
-            {formatEuros(centsToEuros(summary?.invoiced?.last_month_cents))}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {monthLabel(new Date(now.getFullYear(), now.getMonth() - 1, 1))}
-          </Typography>
-        </Card>
-
-        <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            FACTURADO AÑO {now.getFullYear()}
-          </Typography>
-          <Typography variant="h4" fontWeight={700}>
-            {formatEuros(centsToEuros(summary?.invoiced?.this_year_cents))}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Acumulado del año
-          </Typography>
-        </Card>
-      </Stack>
-    );
-  };
+      <Card variant="outlined" sx={{ flex: 1, p: 2.5 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          YA PAGADAS
+        </Typography>
+        <Typography variant="h4" fontWeight={700}>
+          {summary?.by_status?.paid?.invoices ?? 0}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {formatEuros(centsToEuros(summary?.by_status?.paid?.amount_cents))}
+        </Typography>
+      </Card>
+    </Stack>
+  );
 
   const renderRow = (invoice: ClientInvoiceModel) => {
     const blockReason = getApproveBlockReason(invoice, canApprove);

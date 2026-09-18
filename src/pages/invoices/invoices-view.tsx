@@ -47,6 +47,17 @@ const DATE_FILTER_OPTIONS: { value: DateFilter; label: string }[] = [
 
 type ClientInvoicesResponse = { data: ClientInvoiceModel[]; total: number };
 
+type ClientInvoicesSummaryResponse = {
+  data: {
+    invoiced: {
+      this_month_cents: number;
+      last_month_cents: number;
+      this_year_cents: number;
+      current_year: number;
+    };
+  };
+};
+
 /**
  * Etiqueta y color de cada estado de pago.
  * `legacy` son las autofacturas anteriores al sistema de pagos: se liquidaron
@@ -67,17 +78,6 @@ const PAYOUT_STATUS_META: Record<
   reversed: { label: 'Revertida', color: 'error' },
   canceled: { label: 'Anulada', color: 'default' },
 };
-
-/** Estados en los que el dinero todavía no ha salido. */
-const OUTSTANDING_STATUSES: PayoutStatus[] = [
-  'pending_review',
-  'blocked',
-  'approved',
-  'paying',
-  'failed',
-];
-
-// ----------------------------------------------------------------------
 
 function formatPeriodLabel(start: string, end: string): string {
   const s = new Date(start);
@@ -118,6 +118,11 @@ function filterToFromDate(filter: DateFilter): string {
 
 function centsToEuros(cents: number | null): number {
   return (cents ?? 0) / 100;
+}
+
+function monthLabel(date: Date): string {
+  const label = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 // ----------------------------------------------------------------------
@@ -186,13 +191,11 @@ export default function InvoicesView() {
 
   const invoices = useMemo(() => res?.data ?? [], [res?.data]);
 
-  const kpis = useMemo(() => {
-    const facturado = invoices.reduce((acc, inv) => acc + Number(inv.total ?? 0), 0);
-    const pendiente = invoices
-      .filter((inv) => OUTSTANDING_STATUSES.includes(inv.payout_status))
-      .reduce((acc, inv) => acc + centsToEuros(inv.payable_amount_cents), 0);
-    return { count: invoices.length, facturado, pendiente };
-  }, [invoices]);
+  const { data: summaryRes } = useQuery<ClientInvoicesSummaryResponse>({
+    queryKey: ['client-invoices', 'summary'],
+    queryFn: () => fetcher(endpoints.clientInvoices.summary),
+  });
+  const summary = summaryRes?.data;
 
   // Se pregunta el estado REAL de la cuenta de cobro en vez de deducirlo de
   // tener facturas bloqueadas: un operador que todavía no ha recaudado nada no
@@ -408,19 +411,25 @@ export default function InvoicesView() {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <KpiCard
               icon="solar:document-bold"
-              label="Total Facturas"
-              value={isLoading ? '—' : String(kpis.count)}
+              label="Facturado este mes"
+              value={
+                summary ? formatEuros(centsToEuros(summary.invoiced.this_month_cents)) : '—'
+              }
+              hint={monthLabel(new Date())}
             />
             <KpiCard
               icon="solar:chart-2-bold"
-              label="Total Facturado"
-              value={isLoading ? '—' : formatEuros(kpis.facturado)}
+              label="Facturado mes anterior"
+              value={
+                summary ? formatEuros(centsToEuros(summary.invoiced.last_month_cents)) : '—'
+              }
+              hint={monthLabel(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1))}
             />
             <KpiCard
               icon="solar:card-bold"
-              label="Pendiente de cobro"
-              value={isLoading ? '—' : formatEuros(kpis.pendiente)}
-              hint="Importe autorizado aún no transferido"
+              label={`Facturado año ${summary?.invoiced.current_year ?? new Date().getFullYear()}`}
+              value={summary ? formatEuros(centsToEuros(summary.invoiced.this_year_cents)) : '—'}
+              hint="Acumulado del año"
             />
           </Stack>
 
