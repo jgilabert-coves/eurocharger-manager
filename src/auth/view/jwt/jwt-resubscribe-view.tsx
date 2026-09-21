@@ -235,7 +235,7 @@ export function JwtResubscribeView() {
             </Alert>
           )}
 
-          <PlanSelector discount={couponInfo?.welcomeCouponAvailable ? couponInfo : null} onConfirm={handlePlanConfirmed} confirmLoading={planLoading} />
+          <PlanSelector discount={null} onConfirm={handlePlanConfirmed} confirmLoading={planLoading} />
         </>
       )}
 
