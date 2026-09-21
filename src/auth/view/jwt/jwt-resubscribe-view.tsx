@@ -37,6 +37,18 @@ const ACTIVE_STATUSES = ['trialing', 'active', 'past_due'];
 
 // ----------------------------------------------------------------------
 
+type ResubscribeInfo = {
+  welcomeCouponAvailable: boolean;
+  percentOff?: number;
+  durationInMonths?: number;
+  /** Plan que tenía el cliente, para preseleccionarlo y recuperar su suscripción. */
+  currentPlanId?: string | null;
+  /** Periodicidad actual ('month' | 'year'), para preseleccionarla. */
+  currentBillingInterval?: 'month' | 'year' | null;
+};
+
+// ----------------------------------------------------------------------
+
 type PaymentFormProps = {
   plan: Plan;
   billingPeriod: BillingPeriod;
@@ -77,11 +89,22 @@ function PaymentForm({ plan, billingPeriod, onBack }: PaymentFormProps) {
       }
 
       const paymentMethodId = setupIntent?.payment_method as string;
-      await post(endpoints.billing.resubscribe, {
+      const res = await post(endpoints.billing.resubscribe, {
         paymentMethodId,
         planId: plan.id,
         billingPeriod,
       });
+
+      // La reactivación puede exigir SCA/3DS sobre la factura pendiente.
+      if (res.data?.requiresAction && res.data?.clientSecret) {
+        const { error: actionError } = await stripe.handleNextAction({
+          clientSecret: res.data.clientSecret,
+        });
+        if (actionError) {
+          setErrorMessage(actionError.message ?? 'Error al autenticar el pago');
+          return;
+        }
+      }
 
       await checkUserSession?.();
       router.push(paths.dashboard.root);
@@ -167,7 +190,7 @@ export function JwtResubscribeView() {
   const [planLoading, setPlanLoading] = useState(false);
   const [intentError, setIntentError] = useState<string | null>(null);
 
-  const { data: resubscribeInfo } = useQuery({
+  const { data: resubscribeInfo, isLoading: infoLoading } = useQuery<{ data: ResubscribeInfo }>({
     queryKey: ['resubscribe-info'],
     queryFn: () => fetcher(endpoints.billing.resubscribeInfo),
     enabled: !!user?.account_id,
@@ -235,7 +258,33 @@ export function JwtResubscribeView() {
             </Alert>
           )}
 
-          <PlanSelector discount={couponInfo?.welcomeCouponAvailable ? couponInfo : null} onConfirm={handlePlanConfirmed} confirmLoading={planLoading} />
+          {infoLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <PlanSelector
+              discount={
+                couponInfo?.welcomeCouponAvailable
+                  ? {
+                      active: true,
+                      percentOff: couponInfo.percentOff,
+                      durationInMonths: couponInfo.durationInMonths,
+                    }
+                  : null
+              }
+              onConfirm={handlePlanConfirmed}
+              confirmLoading={planLoading}
+              defaultPlanId={couponInfo?.currentPlanId ?? null}
+              defaultBillingPeriod={
+                couponInfo?.currentBillingInterval === 'year'
+                  ? 'annual'
+                  : couponInfo?.currentBillingInterval === 'month'
+                    ? 'monthly'
+                    : null
+              }
+            />
+          )}
         </>
       )}
 

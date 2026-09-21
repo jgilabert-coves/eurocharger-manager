@@ -179,9 +179,19 @@ type Props = {
   discount?: { active: boolean; percentOff?: number; durationInMonths?: number } | null;
   onConfirm: (plan: Plan, billingPeriod: BillingPeriod) => void;
   confirmLoading?: boolean;
+  /** Plan que ya tenía el cliente: se preselecciona para recuperar su suscripción. */
+  defaultPlanId?: string | null;
+  /** Periodicidad actual del cliente: se preselecciona junto al plan. */
+  defaultBillingPeriod?: BillingPeriod | null;
 };
   
-export function PlanSelector({ discount, onConfirm, confirmLoading }: Props) {
+export function PlanSelector({
+  discount,
+  onConfirm,
+  confirmLoading,
+  defaultPlanId,
+  defaultBillingPeriod,
+}: Props) {
   const [selected, setSelected] = useState<Plan | null>(null);
   const [period, setPeriod] = useState<BillingPeriod>('monthly');
 
@@ -196,9 +206,19 @@ export function PlanSelector({ discount, onConfirm, confirmLoading }: Props) {
 
   useEffect(() => {
     if (plans.length > 0 && !selected) {
-      setSelected(plans.find((p) => Boolean(p.isDefault)) ?? plans[0]);
+      // El plan del cliente manda sobre el marcado por defecto: es lo que hace
+      // que «Reactivar» recupere la suscripción existente en vez de crear otra.
+      setSelected(
+        (defaultPlanId ? plans.find((p) => p.id === defaultPlanId) : undefined) ??
+          plans.find((p) => Boolean(p.isDefault)) ??
+          plans[0]
+      );
     }
-  }, [plans, selected]);
+  }, [plans, selected, defaultPlanId]);
+
+  useEffect(() => {
+    if (defaultBillingPeriod) setPeriod(defaultBillingPeriod);
+  }, [defaultBillingPeriod]);
 
   if (isLoading) {
     return (
