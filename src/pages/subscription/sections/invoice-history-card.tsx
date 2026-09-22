@@ -43,7 +43,7 @@ type Props = {
 
 export function InvoiceHistoryCard({ invoices, loading }: Props) {
   const { notifyError } = useNotification();
-  const { payInvoice, payingId } = usePayInvoice();
+  const { payInvoice, payingId, lastError } = usePayInvoice();
 
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
@@ -97,7 +97,16 @@ export function InvoiceHistoryCard({ invoices, loading }: Props) {
         Historial de facturas
       </Typography>
 
-      {!loading && <UnpaidInvoiceAlert invoices={invoices} />}
+      {/* Una sola instancia del hook para toda la pantalla: así el motivo del
+          fallo se ve en el aviso aunque el intento saliera del botón de una fila. */}
+      {!loading && (
+        <UnpaidInvoiceAlert
+          invoices={invoices}
+          payingId={payingId}
+          lastError={lastError}
+          onPay={payInvoice}
+        />
+      )}
 
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

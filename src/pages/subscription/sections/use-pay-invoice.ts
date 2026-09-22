@@ -16,15 +16,41 @@ import type { PayInvoiceResponse } from './subscription-constants';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '');
 
+/** Motivo del último cobro fallido, ya clasificado por la API. */
+export type PayInvoiceError = {
+  /** Vocabulario estable: `card_no_funds`, `card_expired`, `card_blocked`… */
+  code: string | null;
+  message: string;
+};
+
+/** La API responde 402 con `{ code, error }` cuando el cobro falla por la tarjeta. */
+type ApiErrorBody = { error?: string; code?: string };
+
+const GENERIC_ERROR = 'No se pudo pagar la factura. Inténtalo de nuevo o prueba con otra tarjeta.';
+
+function toPayInvoiceError(error: unknown): PayInvoiceError {
+  const body = (error as { response?: { data?: ApiErrorBody } })?.response?.data;
+  if (body?.error) {
+    return { code: body.code ?? null, message: body.error };
+  }
+  // Un fallo del propio 3DS en el navegador no pasa por la API.
+  if (error instanceof Error && error.message) {
+    return { code: null, message: error.message };
+  }
+  return { code: null, message: GENERIC_ERROR };
+}
+
 /**
  * Cobra una factura pendiente de la suscripción.
  *
- * Lo usan el aviso de impago y las filas del historial, así que vive en un hook
- * para que el 3DS y el refresco de estado se traten igual en los dos sitios.
+ * Se instancia UNA vez por pantalla y se reparte por props: el aviso de impago y
+ * los botones de cada fila comparten el estado, así que el motivo del fallo se ve
+ * en el aviso aunque el intento saliera de una fila, y no se pueden lanzar dos
+ * cobros a la vez.
  *
  * Tras pagar hace falta `checkUserSession()`: el guard y el banner leen el estado
- * de suscripción del JWT, no de la API, y si no se refresca el usuario sigue
- * viendo el aviso de impago con la factura ya pagada.
+ * de suscripción del JWT, no de la API, y sin refrescarlo el usuario sigue viendo
+ * el aviso de impago con la factura ya pagada.
  */
 export function usePayInvoice() {
   const queryClient = useQueryClient();
@@ -32,9 +58,12 @@ export function usePayInvoice() {
   const { notifySuccess, notifyError } = useNotification();
 
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<PayInvoiceError | null>(null);
 
   const payInvoice = async (invoice: Invoice) => {
     setPayingId(invoice.id);
+    setLastError(null);
+
     try {
       const res: PayInvoiceResponse = await post(endpoints.billing.payInvoice(invoice.id), {});
 
@@ -55,14 +84,15 @@ export function usePayInvoice() {
         checkUserSession?.(),
       ]);
     } catch (error) {
-      const message =
-        (error as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-        (error instanceof Error ? error.message : null);
-      notifyError(message ?? 'No se pudo pagar la factura. Revisa tu método de pago.');
+      // El toast avisa, pero el motivo se queda en pantalla: 3,5 segundos no dan
+      // para leer por qué ha fallado ni para actuar en consecuencia.
+      const payError = toPayInvoiceError(error);
+      setLastError(payError);
+      notifyError(payError.message);
     } finally {
       setPayingId(null);
     }
   };
 
-  return { payInvoice, payingId };
+  return { payInvoice, payingId, lastError };
 }

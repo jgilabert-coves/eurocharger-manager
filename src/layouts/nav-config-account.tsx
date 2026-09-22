@@ -8,15 +8,15 @@ import type { AccountDrawerProps } from './components/account-drawer';
 
 export const _account: AccountDrawerProps['data'] = [
   {
-    label: 'Suscripción',
-    href: paths.subscription.root,
-    icon: <Iconify icon="solar:card-bold-duotone" />,
-    roles: ['saas_owner'],
-  },
-  {
     label: 'Mi cuenta',
     href: paths.account.profile,
     icon: <Iconify icon="solar:user-bold-duotone" />,
+    roles: ['saas_owner'],
+  },
+  {
+    label: 'Suscripción',
+    href: paths.subscription.root,
+    icon: <Iconify icon="solar:card-bold-duotone" />,
     roles: ['saas_owner'],
   },
   {
