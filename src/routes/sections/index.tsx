@@ -27,6 +27,7 @@ import { subscriptionRoutes } from './subscription';
 import { managerUsersRoutes } from './manager-users';
 import { payoutAccountRoutes } from './payout-account';
 import { chargerGroupsRoutes } from './charger-groups';
+import { accountProfileRoutes } from './account-profile';
 import { chargerTransferRoutes } from './charger-transfer';
 import { chargingStationsRoutes } from './chargingstations';
 import { adminSelfInvoicesRoutes } from './admin-self-invoices';
@@ -75,6 +76,8 @@ export const routesSection: RouteObject[] = [
   ...subscriptionRoutes,
 
   ...payoutAccountRoutes,
+
+  ...accountProfileRoutes,
 
   ...adminSelfInvoicesRoutes,
 

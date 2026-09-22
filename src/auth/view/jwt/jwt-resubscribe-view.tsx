@@ -25,6 +25,7 @@ import { post, fetcher, endpoints } from 'src/lib/axios';
 import { PlanSelector } from 'src/components/plans/plan-selector';
 
 import { signOut } from 'src/auth/context/jwt/action';
+import { hasPanelAccess } from 'src/auth/guard/subscription-status';
 
 import { useAuthContext } from '../../hooks';
 import { FormHead } from '../../components/form-head';
@@ -33,7 +34,6 @@ import { FormHead } from '../../components/form-head';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '');
 
-const ACTIVE_STATUSES = ['trialing', 'active', 'past_due'];
 
 // ----------------------------------------------------------------------
 
@@ -209,8 +209,10 @@ export function JwtResubscribeView() {
     }
   }, [checkUserSession, router]);
 
-  // Already active → go to dashboard
-  if (user && ACTIVE_STATUSES.includes(user.subscription_status)) {
+  // Si el estado ya da acceso al panel, aquí no hay nada que hacer. Incluye el
+  // impago recuperable: eso se arregla en `/subscription` cambiando la tarjeta o
+  // pagando la factura, no volviendo a suscribirse.
+  if (user && hasPanelAccess(user.subscription_status, !!user.roles?.includes('saas_owner'))) {
     return <Navigate to={paths.dashboard.root} replace />;
   }
 

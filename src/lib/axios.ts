@@ -273,6 +273,7 @@ export const endpoints = {
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
     discountInfo: '/auth/discount-info',
+    changeOwnPassword: '/users/me/password',
   },
   countries: '/countries',
   connect: {
@@ -316,6 +317,11 @@ export const endpoints = {
     resubscribeInfo: '/billing/resubscribe-info',
     invoices: '/billing/invoices',
     invoicePdf: (id: string) => `/billing/invoices/${id}/pdf`,
+    payInvoice: (id: string) => `/billing/invoices/${id}/pay`,
+    account: '/billing/account',
+    paymentMethods: '/billing/payment-methods',
+    setPaymentMethod: '/billing/payment-method',
+    deletePaymentMethod: (id: string) => `/billing/payment-methods/${id}`,
   },
   plans: {
     list: '/plans',

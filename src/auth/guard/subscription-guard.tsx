@@ -3,10 +3,9 @@ import { Navigate } from 'react-router';
 import { paths } from 'src/routes/paths';
 
 import { useAuthContext } from '../hooks';
+import { hasPanelAccess } from './subscription-status';
 
 // ----------------------------------------------------------------------
-
-const ACTIVE_STATUSES = ['trialing', 'active', 'past_due', 'incomplete'];
 
 type Props = {
   children: React.ReactNode;
@@ -20,13 +19,13 @@ export function SubscriptionGuard({ children }: Props) {
   // Platform admins are not subject to subscription restrictions
   if (user.roles?.includes('eurocharger')) return <>{children}</>;
 
-  const isActive = user.subscription_status && ACTIVE_STATUSES.includes(user.subscription_status);
+  const isOwner = !!user.roles?.includes('saas_owner');
 
-  if (!isActive) {
-    const isOwner = user.roles?.includes('saas_owner');
-    if (isOwner) return <Navigate to={paths.auth.jwt.resubscribe} replace />;
-    return <Navigate to={paths.auth.jwt.subscriptionExpired} replace />;
-  }
+  // Con el cobro fallido el owner entra igualmente: `/subscription` es donde
+  // cambia la tarjeta y paga lo pendiente, así que expulsarlo de ahí dejaba el
+  // impago sin salida. Ver `subscription-status.ts` para el reparto por estado.
+  if (hasPanelAccess(user.subscription_status, isOwner)) return <>{children}</>;
 
-  return <>{children}</>;
+  if (isOwner) return <Navigate to={paths.auth.jwt.resubscribe} replace />;
+  return <Navigate to={paths.auth.jwt.subscriptionExpired} replace />;
 }

@@ -109,6 +109,9 @@ export const paths = {
   payouts: {
     root: `/account/payouts`,
   },
+  account: {
+    profile: `/account/profile`,
+  },
   plans: {
     list: `/plans`,
   },
