@@ -344,7 +344,14 @@ function ConnectorCard({
                   <Label color="success" variant="soft" sx={{ minWidth: 0, maxWidth: '100%' }}>
                     <Box
                       component="span"
-                      sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      sx={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        // `LabelRoot` fija `lineHeight: 0`; sin restaurarlo la caja del span
+                        // mide 0 px de alto y el `overflow: hidden` recorta todo el texto.
+                        lineHeight: 1.5,
+                      }}
                     >
                       💶 {connector.rateName}
                     </Box>
