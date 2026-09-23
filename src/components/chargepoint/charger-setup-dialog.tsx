@@ -274,7 +274,9 @@ function ConnectorCard({
               justifyContent="space-between"
               spacing={1}
             >
-              <Box>
+              {/* `minWidth: 0` para que ceda este bloque y no empuje fuera de la
+                  tarjeta al estado y la potencia, que no encogen. */}
+              <Box sx={{ minWidth: 0 }}>
                 <Typography
                   variant="caption"
                   color="text.secondary"
@@ -289,8 +291,8 @@ function ConnectorCard({
                 >
                   Conector {connector.ocppId}
                 </Typography>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box sx={{ color: 'text.primary', display: 'flex' }}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+                  <Box sx={{ color: 'text.primary', display: 'flex', flexShrink: 0 }}>
                     <ConnectorTypeIcon
                       name={
                         connector.connectorTypeId
@@ -300,7 +302,7 @@ function ConnectorCard({
                       size={28}
                     />
                   </Box>
-                  <Typography variant="subtitle2" fontWeight={700}>
+                  <Typography variant="subtitle2" fontWeight={700} noWrap>
                     {connector.connectorTypeId
                       ? (CONNECTOR_TYPE_MAP[connector.connectorTypeId] ?? 'Desconocido')
                       : 'Sin asignar'}
@@ -321,11 +323,31 @@ function ConnectorCard({
             <Divider />
 
             {/* Rate + edit */}
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+            {/*
+              Mismo apretón que en la ficha del cargador, y aquí con menos sitio: el
+              diálogo es `maxWidth="md" fullWidth` pero en móvil el Paper se queda en
+              el ancho de pantalla menos los 32 px de margen a cada lado, así que a la
+              fila le quedan unos 258 px para unos 283 px de contenido. Como `MuiCard`
+              recorta por `overflow: hidden`, el lápiz de editar quedaba cortado.
+            */}
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+            >
               {connector.rateName ? (
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <Label color="success" variant="soft">
-                    💶 {connector.rateName}
+                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
+                  {/* El nombre de la tarifa se trunca antes que desplazar a los botones. */}
+                  <Label color="success" variant="soft" sx={{ minWidth: 0, maxWidth: '100%' }}>
+                    <Box
+                      component="span"
+                      sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      💶 {connector.rateName}
+                    </Box>
                   </Label>
                   <IconButton
                     size="small"

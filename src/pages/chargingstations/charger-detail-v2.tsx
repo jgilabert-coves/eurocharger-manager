@@ -258,7 +258,9 @@ function ConnectorCard({
           <Stack spacing={1.5}>
             {/* Header */}
             <Stack direction="row" alignItems="stretch" justifyContent="space-between" spacing={1}>
-              <Box>
+              {/* `minWidth: 0` para que en móvil ceda este bloque y no empuje fuera de
+                  la tarjeta a los botones de la derecha, que no encogen. */}
+              <Box sx={{ minWidth: 0 }}>
                 <Typography
                   variant="caption"
                   color="text.secondary"
@@ -273,8 +275,8 @@ function ConnectorCard({
                 >
                   Conector {connector.ocppId}
                 </Typography>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box sx={{ color: 'text.primary', display: 'flex' }}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+                  <Box sx={{ color: 'text.primary', display: 'flex', flexShrink: 0 }}>
                     <ConnectorTypeIcon
                       name={
                         connector.connectorTypeId
@@ -284,7 +286,7 @@ function ConnectorCard({
                       size={30}
                     />
                   </Box>
-                  <Typography variant="subtitle2" fontWeight={700}>
+                  <Typography variant="subtitle2" fontWeight={700} noWrap>
                     {connector.connectorTypeId
                       ? (CONNECTOR_TYPE_MAP[connector.connectorTypeId] ?? 'Desconocido')
                       : 'Sin asignar'}
@@ -360,11 +362,32 @@ function ConnectorCard({
             <Divider />
 
             {/* Tariff + actions */}
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+            {/*
+              `flexWrap` con `useFlexGap`: en un móvil la etiqueta de la tarifa, el
+              botón "Cambiar" y los tres iconos de acción no caben en una línea —se
+              iban unos 45 px—, y como `MuiCard` recorta por `overflow: hidden`, el
+              último botón ("Cambiar disponibilidad") quedaba fuera de la tarjeta y
+              era imposible de pulsar. Al envolver, baja a una segunda línea. En
+              escritorio sigue cabiendo todo en una.
+            */}
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+            >
               {connector.rateName ? (
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <Label color="success" variant="soft">
-                    💶 {connector.rateName}
+                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 0 }}>
+                  {/* El nombre de la tarifa se trunca antes que desplazar a los botones. */}
+                  <Label color="success" variant="soft" sx={{ minWidth: 0, maxWidth: '100%' }}>
+                    <Box
+                      component="span"
+                      sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      💶 {connector.rateName}
+                    </Box>
                   </Label>
                   {!isViewOnly() && (
                     <>
