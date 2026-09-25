@@ -239,7 +239,7 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
 
           {groups.length > 0 && (
             <Stack spacing={0.5}>
-              {sectionLabel('Grupos de cargadores')}
+              {sectionLabel('Propietarios')}
               <Autocomplete
                 multiple
                 size="small"
@@ -251,13 +251,13 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
                 getOptionLabel={(group) => group.name}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 {...(severalAccounts && { groupBy: (group: ExportGroup) => group.account_name })}
-                noOptionsText="Ningún grupo coincide"
+                noOptionsText="Ningún propietario coincide"
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     placeholder={
                       selectedGroups.length === 0
-                        ? 'Todos los cargadores · escribe para buscar'
+                        ? 'Todos los propietarios · escribe para buscar'
                         : undefined
                     }
                   />
