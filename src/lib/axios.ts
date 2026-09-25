@@ -143,6 +143,7 @@ export const endpoints = {
     current: '/transactions',
     export: '/transactions/export',
     exportColumns: '/transactions/export/columns',
+    exportGroups: '/transactions/export/groups',
     cancel: (id: number) => `/transactions/${id}/cancel`,
     charge: (id: number) => `/transactions/${id}/charge`,
     stop: (id: number) => `/transactions/${id}/stop`,

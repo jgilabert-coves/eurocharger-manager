@@ -11,6 +11,7 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Checkbox from '@mui/material/Checkbox';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -19,6 +20,7 @@ import DialogActions from '@mui/material/DialogActions';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 
 import { CONFIG } from 'src/global-config';
 import { fetcher, endpoints } from 'src/lib/axios';
@@ -36,6 +38,12 @@ type ExportStatus = 'all' | 'CARGANDO' | 'FINALIZADO';
 type ExportFormat = 'xlsx' | 'csv';
 
 type ExportColumn = { key: string; header: string; default: boolean };
+type ExportGroup = { id: string; name: string; account_name: string };
+
+// Al escribir se busca por el nombre del grupo y por el de su cuenta.
+const filterGroups = createFilterOptions<ExportGroup>({
+  stringify: (group) => `${group.name} ${group.account_name}`,
+});
 
 export type TransactionsExportFilters = {
   from: Dayjs | null;
@@ -90,6 +98,7 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
   const [status, setStatus] = useState<ExportStatus>(initialFilters.status);
   const [format, setFormat] = useState<ExportFormat>('xlsx');
   const [selected, setSelected] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<ExportGroup[]>([]);
   const [downloading, setDownloading] = useState(false);
 
   const columnsQuery = useQuery({
@@ -98,6 +107,18 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
       (await fetcher(endpoints.transactions.exportColumns)).data as ExportColumn[],
   });
   const columns = useMemo(() => columnsQuery.data ?? [], [columnsQuery.data]);
+
+  // Grupos que este usuario puede usar como filtro (los decide la API según el rol).
+  const groupsQuery = useQuery({
+    queryKey: ['transactions-export-groups'],
+    queryFn: async () => (await fetcher(endpoints.transactions.exportGroups)).data as ExportGroup[],
+  });
+  const groups = useMemo(() => groupsQuery.data ?? [], [groupsQuery.data]);
+  // Con grupos de varias cuentas (eurocharger), se agrupan por cuenta en el desplegable.
+  const severalAccounts = useMemo(
+    () => new Set(groups.map((g) => g.account_name)).size > 1,
+    [groups]
+  );
 
   // Selección inicial: la última guardada (solo columnas que este rol puede pedir), o las de por defecto.
   useEffect(() => {
@@ -128,6 +149,9 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
         ...(initialFilters.source ? { source: initialFilters.source } : {}),
         ...(initialFilters.price ? { price: initialFilters.price } : {}),
         ...(initialFilters.search ? { searchQuery: initialFilters.search } : {}),
+        ...(selectedGroups.length > 0
+          ? { group_ids: selectedGroups.map((g) => g.id).join(',') }
+          : {}),
       });
 
       // Binario: no pasa por el `fetcher` de axios (fuerza JSON). Mismo patrón que
@@ -204,6 +228,31 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
               <ToggleButton value="FINALIZADO">Finalizadas</ToggleButton>
             </ToggleButtonGroup>
           </Stack>
+
+          {groups.length > 0 && (
+            <Stack spacing={1}>
+              <Typography variant="subtitle2">Grupos de cargadores</Typography>
+              <Autocomplete
+                multiple
+                size="small"
+                options={groups}
+                value={selectedGroups}
+                onChange={(_, value) => setSelectedGroups(value)}
+                filterOptions={filterGroups}
+                getOptionLabel={(group) => group.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                {...(severalAccounts && { groupBy: (group: ExportGroup) => group.account_name })}
+                noOptionsText="Ningún grupo coincide"
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder={selectedGroups.length === 0 ? 'Todos los cargadores' : undefined}
+                    helperText="Escribe para buscar. Vacío = sin filtrar por grupo."
+                  />
+                )}
+              />
+            </Stack>
+          )}
 
           {activeFilters.length > 0 && (
             <Alert severity="info">
