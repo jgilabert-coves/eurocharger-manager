@@ -47,7 +47,6 @@ const filterGroups = createFilterOptions<ExportGroup>({
 export type TransactionsExportFilters = {
   from: Dayjs | null;
   to: Dayjs | null;
-  status: 'CARGANDO' | 'FINALIZADO';
   /** Ya en minúsculas, como en el listado. Solo los envía eurocharger. */
   source?: string;
   price?: string;
@@ -94,7 +93,8 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
 
   const [from, setFrom] = useState<Dayjs | null>(initialFilters.from);
   const [to, setTo] = useState<Dayjs | null>(initialFilters.to);
-  const [status, setStatus] = useState<ExportStatus>(initialFilters.status);
+  // Siempre empieza en todas, sea cual sea la pestaña de la tabla.
+  const [status, setStatus] = useState<ExportStatus>('all');
   const [format, setFormat] = useState<ExportFormat>('xlsx');
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<ExportGroup[]>([]);

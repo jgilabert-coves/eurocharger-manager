@@ -176,7 +176,6 @@ export default function TransactionsView() {
             initialFilters={{
               from: appliedFrom,
               to: appliedTo,
-              status: statusFilter,
               ...(isEurocharger && sourceFilter !== 'ALL'
                 ? { source: sourceFilter.toLowerCase() }
                 : {}),
