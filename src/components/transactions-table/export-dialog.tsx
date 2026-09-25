@@ -5,19 +5,17 @@ import utc from 'dayjs/plugin/utc';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, useEffect } from 'react';
 
-import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
 import ToggleButton from '@mui/material/ToggleButton';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
@@ -25,6 +23,7 @@ import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import { CONFIG } from 'src/global-config';
 import { fetcher, endpoints } from 'src/lib/axios';
 
+import { Iconify } from 'src/components/iconify';
 import { useNotification } from 'src/components/notification';
 import { DateRangeFilter } from 'src/components/date-range-filter';
 
@@ -190,51 +189,61 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
     initialFilters.price && `precio ${initialFilters.price === 'free' ? 'gratis' : 'de pago'}`,
   ].filter(Boolean);
 
+  const sectionLabel = (text: string) => (
+    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+      {text}
+    </Typography>
+  );
+
   return (
     <Dialog open fullWidth maxWidth="sm" onClose={downloading ? undefined : onClose}>
-      <DialogTitle>Exportar recargas</DialogTitle>
+      <DialogTitle sx={{ pb: 1 }}>Exportar recargas</DialogTitle>
 
       <DialogContent>
-        <Stack spacing={3} sx={{ pt: 1 }}>
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">Rango de fechas (inicio de la recarga)</Typography>
-            <DateRangeFilter
-              from={from}
-              to={to}
-              onChange={(f, t) => {
-                setFrom(f);
-                setTo(t);
-              }}
-            />
-            {!(from && to) && (
-              <Typography variant="caption" color="text.secondary">
-                Elige un rango para exportar.
-              </Typography>
-            )}
-          </Stack>
-
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">Estado</Typography>
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={status}
-              onChange={(_, val) => {
-                if (val) setStatus(val);
-              }}
-            >
-              <ToggleButton value="all">Todas</ToggleButton>
-              <ToggleButton value="CARGANDO">En curso</ToggleButton>
-              <ToggleButton value="FINALIZADO">Finalizadas</ToggleButton>
-            </ToggleButtonGroup>
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          {/* Rango y estado en la misma fila */}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            alignItems={{ sm: 'flex-end' }}
+          >
+            <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+              {sectionLabel('Inicio de la recarga')}
+              <DateRangeFilter
+                from={from}
+                to={to}
+                placeholder="Elige un rango de fechas"
+                onChange={(f, t) => {
+                  setFrom(f);
+                  setTo(t);
+                }}
+                sx={{ width: 1, justifyContent: 'flex-start' }}
+              />
+            </Stack>
+            <Stack spacing={0.5}>
+              {sectionLabel('Estado')}
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={status}
+                onChange={(_, val) => {
+                  if (val) setStatus(val);
+                }}
+              >
+                <ToggleButton value="all">Todas</ToggleButton>
+                <ToggleButton value="CARGANDO">En curso</ToggleButton>
+                <ToggleButton value="FINALIZADO">Finalizadas</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
           </Stack>
 
           {groups.length > 0 && (
-            <Stack spacing={1}>
-              <Typography variant="subtitle2">Grupos de cargadores</Typography>
+            <Stack spacing={0.5}>
+              {sectionLabel('Grupos de cargadores')}
               <Autocomplete
                 multiple
                 size="small"
+                limitTags={3}
                 options={groups}
                 value={selectedGroups}
                 onChange={(_, value) => setSelectedGroups(value)}
@@ -246,84 +255,92 @@ export function TransactionsExportDialog({ onClose, initialFilters }: Props) {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder={selectedGroups.length === 0 ? 'Todos los cargadores' : undefined}
-                    helperText="Escribe para buscar. Vacío = sin filtrar por grupo."
+                    placeholder={
+                      selectedGroups.length === 0
+                        ? 'Todos los cargadores · escribe para buscar'
+                        : undefined
+                    }
                   />
                 )}
               />
             </Stack>
           )}
 
-          {activeFilters.length > 0 && (
-            <Alert severity="info">
-              También se aplican los filtros de la tabla: {activeFilters.join(', ')}.
-            </Alert>
-          )}
-
-          <Stack spacing={1}>
+          <Stack spacing={0.75}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography variant="subtitle2">Columnas</Typography>
-              <Stack direction="row" spacing={1}>
-                <Button size="small" onClick={() => setSelected(columns.map((c) => c.key))}>
+              {sectionLabel(`Columnas (${selected.length}/${columns.length})`)}
+              <Stack direction="row" spacing={0.5}>
+                <Button
+                  size="small"
+                  sx={{ minWidth: 0, px: 1 }}
+                  onClick={() => setSelected(columns.map((c) => c.key))}
+                >
                   Todas
                 </Button>
-                <Button size="small" onClick={() => setSelected([])}>
+                <Button size="small" sx={{ minWidth: 0, px: 1 }} onClick={() => setSelected([])}>
                   Ninguna
                 </Button>
               </Stack>
             </Stack>
 
-            {columnsQuery.isLoading && <CircularProgress size={24} />}
+            {columnsQuery.isLoading && <CircularProgress size={20} />}
             {columnsQuery.isError && (
               <Alert severity="error">No se pudieron cargar las columnas.</Alert>
             )}
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-              {columns.map((column) => (
-                <FormControlLabel
-                  key={column.key}
-                  label={column.header}
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={selected.includes(column.key)}
-                      onChange={() => toggleColumn(column.key)}
-                    />
-                  }
-                />
-              ))}
-            </Box>
+            <Stack direction="row" useFlexGap flexWrap="wrap" spacing={0.75}>
+              {columns.map((column) => {
+                const checked = selected.includes(column.key);
+                return (
+                  <Chip
+                    key={column.key}
+                    size="small"
+                    label={column.header}
+                    variant={checked ? 'filled' : 'outlined'}
+                    color={checked ? 'primary' : 'default'}
+                    icon={checked ? <Iconify icon="eva:checkmark-fill" width={14} /> : undefined}
+                    onClick={() => toggleColumn(column.key)}
+                    aria-pressed={checked}
+                  />
+                );
+              })}
+            </Stack>
           </Stack>
 
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">Formato</Typography>
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={format}
-              onChange={(_, val) => {
-                if (val) setFormat(val);
-              }}
-            >
-              <ToggleButton value="xlsx">Excel (.xlsx)</ToggleButton>
-              <ToggleButton value="csv">CSV</ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>
+          {activeFilters.length > 0 && (
+            <Typography variant="caption" color="text.secondary">
+              También se aplican los filtros de la tabla: {activeFilters.join(', ')}.
+            </Typography>
+          )}
         </Stack>
       </DialogContent>
 
-      <DialogActions>
-        <Button color="inherit" onClick={onClose} disabled={downloading}>
-          Cancelar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleDownload}
-          disabled={!canDownload}
-          startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : undefined}
+      <DialogActions sx={{ justifyContent: 'space-between' }}>
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={format}
+          onChange={(_, val) => {
+            if (val) setFormat(val);
+          }}
         >
-          Descargar
-        </Button>
+          <ToggleButton value="xlsx">Excel</ToggleButton>
+          <ToggleButton value="csv">CSV</ToggleButton>
+        </ToggleButtonGroup>
+
+        <Stack direction="row" spacing={1}>
+          <Button color="inherit" onClick={onClose} disabled={downloading}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleDownload}
+            disabled={!canDownload}
+            startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : undefined}
+          >
+            Descargar
+          </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );
