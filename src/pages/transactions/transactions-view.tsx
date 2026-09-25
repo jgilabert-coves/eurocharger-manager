@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -20,6 +21,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { DateRangeFilter } from 'src/components/date-range-filter';
 import { TransactionsTable } from 'src/components/transactions-table';
+import { TransactionsExportDialog } from 'src/components/transactions-table/export-dialog';
 
 import { useAbility } from 'src/auth/hooks/use-ability';
 
@@ -45,6 +47,7 @@ export default function TransactionsView() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('ALL');
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Rango de fechas aplicado (lo que filtra). El componente gestiona su propio buffer.
   const [appliedFrom, setAppliedFrom] = useState<Dayjs | null>(null);
@@ -54,7 +57,7 @@ export default function TransactionsView() {
     (): Record<string, string> => ({
       ...(statusFilter === 'CARGANDO' ? {} : { status: statusFilter }),
       ...(isEurocharger && sourceFilter !== 'ALL' ? { source: sourceFilter.toLowerCase() } : {}),
-      ...(isEurocharger && priceFilter !== 'ALL' ? { price: priceFilter.toLowerCase() } : {}),  
+      ...(isEurocharger && priceFilter !== 'ALL' ? { price: priceFilter.toLowerCase() } : {}),
       // La hora se elige en local y se envía en UTC (t.started está en UTC en BD).
       ...(appliedFrom ? { start_date: appliedFrom.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
       ...(appliedTo ? { end_date: appliedTo.utc().format('YYYY-MM-DD HH:mm:ss') } : {}),
@@ -155,7 +158,35 @@ export default function TransactionsView() {
               setAppliedTo(t);
             }}
           />
+
+          <Button
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon="solar:download-minimalistic-bold" />}
+            onClick={() => setExportOpen(true)}
+            sx={{ ml: { md: 'auto' }, alignSelf: { xs: 'flex-start', md: 'center' } }}
+          >
+            Exportar
+          </Button>
         </Stack>
+
+        {exportOpen && (
+          <TransactionsExportDialog
+            onClose={() => setExportOpen(false)}
+            initialFilters={{
+              from: appliedFrom,
+              to: appliedTo,
+              status: statusFilter,
+              ...(isEurocharger && sourceFilter !== 'ALL'
+                ? { source: sourceFilter.toLowerCase() }
+                : {}),
+              ...(isEurocharger && priceFilter !== 'ALL'
+                ? { price: priceFilter.toLowerCase() }
+                : {}),
+              search: debouncedSearch,
+            }}
+          />
+        )}
 
         <TransactionsTable
           key={`${statusFilter}-${sourceFilter}-${appliedFrom?.valueOf() ?? ''}-${appliedTo?.valueOf() ?? ''}`}

@@ -141,6 +141,8 @@ export const endpoints = {
   },
   transactions: {
     current: '/transactions',
+    export: '/transactions/export',
+    exportColumns: '/transactions/export/columns',
     cancel: (id: number) => `/transactions/${id}/cancel`,
     charge: (id: number) => `/transactions/${id}/charge`,
     stop: (id: number) => `/transactions/${id}/stop`,
